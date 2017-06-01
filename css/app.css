@@ -1,24 +1,84 @@
-/*-------------------------
-  PCC Links nav bar
--------------------------*/
-.top-bar img {
-	height: 75px;
-	position:relative;
-	width: 150px;
-	background:#e6e6e6;
-	}
-
-/*-------------------------
-  hide visually, but show
-  for screenreaders
--------------------------*/
-.visually-hide {
-  height:1px; /* make sure it doesn't take up vertical space */
-  left:-9999px; /* hide it by moving it way off the screen */
-  overflow:hidden;
-  position:absolute; /* needed for 'left' to work */
+/* ----------------------
+   placeholder text
+-------------------------*/   
+   
+::-webkit-input-placeholder {
+	color: black !important;
+	font-size: 0.9em;
 }
 
+::-moz-placeholder {
+	color: black !important;
+	font-size: 0.9em;
+}
+
+::-ms-input-placeholder {
+	color: black !important;
+	font-size: 0.9em;
+}
+
+:-ms-input-placeholder {
+	color: black !important;
+	font-size: 0.9em;
+}
+
+::placeholder {
+	color: black !important;
+	font-size: 0.9em;
+}
+
+    
+  /*------------------------------------------------------------
+  styles from pcc.css
+  author: Ali Gray, PCC Web Team
+  date:   4/20/17
+------------------------------------------------------------*/
+
+
+/*------------------------------------------------------------
+  general
+------------------------------------------------------------*/
+
+body {
+  background:#fff; /* white */
+  color:#333; /* dark gray */
+}
+
+/*-------------------------
+  headings
+-------------------------*/
+h3, h4, h5, h6 {
+  margin-top:1.3em;
+}
+/* for making the numbers separate and more apparent, like on the Future Connect landing page */
+h3 span, h4 span, h5 span, h6 span {
+  display:block;
+  font-weight:bold;
+  line-height:1; /* less space between the numbers and descriptions */
+}
+
+/* don't become small on small screens (keep same size as base Foundation, but change from rem to em */
+h3 {font-size:1.9375em;}
+h4 {font-size:1.5625em;}
+h5 {font-size:1.25em;}
+h6 {font-size:1em;}
+
+/*------------------------------------------------------------
+  header
+------------------------------------------------------------*/
+
+/*-------------------------
+  header bar
+-------------------------*/
+#header {
+  background:#35475a; /* PCC sapphire - not turquoise so that it's easy to see it's not pcc.edu */
+  -webkit-box-shadow:0px 2px 5px rgba(0, 0, 0, 0.3);
+  -moz-box-shadow:0px 2px 5px rgba(0, 0, 0, 0.3);
+  box-shadow:0px 2px 5px rgba(0, 0, 0, 0.3);
+  padding:15px 0; /* give it some space - left/right padding is taken care of by Foundation row */
+  position:relative; /* needed for z-index */
+  z-index:1; /* put the header "above" the title bar so you can see the shadow */
+}
 
 /*-------------------------
   logo
@@ -58,3 +118,78 @@
     padding:10px 0 0 0; /* add more space on the top, but take away the extra space on the left */
   }
 }
+
+/*-------------------------
+  navigation
+-------------------------*/
+#nav {
+  background:#d9d9d9; /* dark gray, so it looks different from pcc.edu */
+  padding:10px 0; /* space from the top and bottom */
+}
+#nav img {
+  float:left;
+  max-height:80px; /* be the height of the nav bar, with 20px subtracted for 10px top and bottom padding */
+  padding-right:30px; /* mosre space between the logo and menu */
+}
+#nav img + .menu {
+  margin-top:20px; /* center vertically if there's a logo present */
+}
+#nav a {
+  color:#006579; /* accessible turquoise on gray */
+}
+#nav a:hover,
+#nav a:focus {
+  color:#333;
+}
+#nav a:focus {
+  text-decoration:underline; /* make focus more obvious for keyboards */
+}
+#nav a:hover {
+  text-decoration:none; /* but don't show the underline for hover focus - must be below focus style */
+}
+#nav a.current {
+  background:#008099; /* PCC turquoise */
+  color:#fff; /* white */
+}
+
+/* small screens */
+@media only screen and (max-width:641px) {
+  /* put the logo on it's own line, above the stacked menu items */
+  #nav img {
+    display:block;
+    float:none;
+  }
+  /* put nav items on their own lines so they don't get pushed off the screen */
+  .menu.horizontal > li, .menu > li {
+    display:block;
+  }
+  #nav img + .menu {
+    margin-top:10px; /* less space between the logo (if present) and menu */
+  }
+}
+
+/*------------------------------------------------------------
+  extras
+------------------------------------------------------------*/
+
+/*-------------------------
+  hide visually, but show
+  for screenreaders
+-------------------------*/
+.visually-hide {
+  height:1px; /* make sure it doesn't take up vertical space */
+  left:-9999px; /* hide it by moving it way off the screen */
+  overflow:hidden;
+  position:absolute; /* needed for 'left' to work */
+}
+
+/* --------------------------------------
+	remove firefox focus outlines
+-------------------------------------- */
+*:focus {
+  -moz-outline-style:none;
+  outline-color:-moz-use-text-color;
+  outline-style:none;
+  outline-width:0;
+}
+    

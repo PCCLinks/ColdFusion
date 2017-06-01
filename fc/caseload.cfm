@@ -1,91 +1,104 @@
+<!--- menu --->
 <cfsavecontent variable="pcc_menu">
-<nav class="top-bar" >
-    <ul class="menu">
-	  <li><img src="/PCCLinks/images/fclogo.png"/></li>
-      <li><a href="dashboard.cfm">Home</a></li>
-      <li class="active"><a href="caseload.cfm">Caseload</a></li>
-	</ul>
-</nav>
+<header>
+	<div class="row">
+        <div class="small-12 medium-4 large-3 columns">
+            <span class="visually-hide">PCC Links Future Connect</span>
+            <img src="/pcclinks/images/fclogo.png" onerror="this.src='images/logo.png'; this.onerror=null;" alt="PCC Links Future Connect" />
+        </div>
+        <div class="small-12 medium-8 large-9 columns">
+			<br class="clear">
+        	<ul class="menu">
+		      	<li><a href="dashboard.cfm">Home</a></li>
+		      	<li class="active"><a href="caseload.cfm" class="current">Caseload</a></li>
+	 		</ul>
+        </div>
+   </div> <!-- end row -->
+</header>
 </cfsavecontent>
+
+<!--- header --->
 <cfinclude template="includes/header.cfm" />
 
-<cfinvoke component="fc" method="getCases2" returnvariable="qryData">
-
-<div class = "row">
-	<div class = "medium-3 columns"></div>
+<!--- main content --->
+<cfinvoke component="fc" method="getCases2" returnvariable="qryData" />
+<style>
+table thead tr th {
+    background-color: #4CAF50;
+    color: white;
+	padding: 8px;
+    text-align: left;
+    border-bottom: 1px solid #ddd;
+}
+</style>
+<!--- filter row --->
+<div class="row">
 	<div class="medium-3 columns">
-	  <span class = "radios">
-	  <legend>Include out-of-contract students</legend>
-	  <input type="radio" name="contractFilter" class="contractFilter" value="No" id="contractNo"  checked="checked"><label for="contractNo">No</label>
-	  <input type="radio" name="contractFilter" class="contractFilter" value="Yes" id="contractYes"><label for="contractYes">Yes</label>
-	</span>
 	</div>
-</div>
+	<div class="medium-3 columns">
+		<span class="radios">
+			<legend>
+				Include out-of-contract students
+			</legend>
+			<input type="radio" name="contractFilter" class="contractFilter" value="No" id="contractNo" checked="checked" />
+			<label for="contractNo">
+				No
+			</label>
+			<input type="radio" name="contractFilter" class="contractFilter" value="Yes" id="contractYes" />
+			<label for="contractYes">
+				Yes
+			</label>
+		</span>
+	</div>
+</div> <!--- end filter row --->
 
-<cfoutput><div id="dt_div">
-        <table id="dt_table" cellspacing="1" width="95%" class="hover";>
-            <thead>
-                <tr>
-                    <th>Campus</th>
-                    <th>Coach</th>
+<!--- output qryData --->
+<cfoutput>
+	<div>
+		<table id="dt_table" cellspacing="1" width="95%" class="hover" ;>
+			<thead>
+				<tr>
+					<th>Campus</th>
+					<th>Coach</th>
 					<th>Cohort</th>
-                    <th>G</th>
-                    <th>Last name</th>
-                    <th>First Name</th>
-                    <th>ASAP</th>
-                    <th>Status</th>
-                    <th>Contract</th>
-					<th></th>
+					<th>G</th>
+					<th>Last name</th>
+					<th>First Name</th>
+					<th>ASAP</th>
+					<th>Status</th>
+					<th>Contract </th>
 					<th></th>
 				</tr>
-            </thead>
-
-			<tfoot>
-                <tr>
-                    <th>Campus</th>
-                    <th>Coach</th>
-					<th>Cohort</th>
-                    <th>G</th>
-                    <th>Last name</th>
-                    <th>First Name</th>
-                    <th>ASAP</th>
-                    <th>Status</th>
-                    <th>Contract</th>
-					<th></th>
-					<th></th>
-                </tr>
-            </tfoot>
-
-
-
-            <tbody>
-                <cfloop query="qryData">
-                    <tr <cfif ASAP_STATUS eq "SU"> style = "background-color:red;"
-						<cfelseif ASAP_STATUS eq "AP"> style = "background-color:orange;"
-						<cfelseif ASAP_STATUS eq "AW"> style = "background-color:yellow;"
-						</cfif>>
+			</thead>
+			<tbody>
+				<cfloop query="qryData">
+                    <tr>
                         <td>#qryData.CAMPUS#</td>
                         <td>#qryData.COACH#</td>
 						<td>#qryData.COHORT#</td>
                         <td>#qryData.G#</td>
                         <td>#qryData.LAST_NAME#</td>
                         <td>#qryData.FIRST_NAME#</td>
-                        <td>#qryData.ASAP_STATUS#</td>
+						<!--- conditional coloring based on value --->
+                        <td
+							<cfif ASAP_STATUS eq "SU"> style = "background-color: ##f78989;"
+							<cfelseif ASAP_STATUS eq "AP"> style = "background-color: ##eab24c;"
+							<cfelseif ASAP_STATUS eq "AW"> style = "background-color: ##f9f96f;"
+							</cfif>
+						>#qryData.ASAP_STATUS#</td>
                         <td>#qryData.STATUSABCX#</td>
 						<td>#qryData.IN_CONTRACT#</td>
 						<td>#qryData.EditLink#</td>
-						<td>#qryData.Student_dashboard#</td>
                     </tr>
                 </cfloop>
-            </tbody>
-        </table>
-    </div>
-</body>
+			</tbody>
+		</table>
+	</div>
 </cfoutput>
 
+<!--- script referenced in include footer --->
 <cfsavecontent variable="pcc_scripts">
 <script>
-
 	$(document).ready(function() {
 		//intialize table
 		$('#dt_table').DataTable( {
@@ -133,7 +146,16 @@
 		table.column(8).search(filter).draw();
 	}
 
+	function goToDetail(bannerGNumber){
+		sessionStorage.setItem("id", bannerGNumber);
+		saveClientSessionToServer();
+		setTimeout(goToDetailPage,20);
+	}
+	function goToDetailPage(){
+		window.location.href='student.cfm';
+	}
 </script>
 </cfsavecontent>
 
+<!--- footer --->
 <cfinclude template="includes/footer.cfm" />
