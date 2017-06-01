@@ -37,6 +37,7 @@ table thead tr th {
 <cfoutput>
 	<div>
 		<table id="dt_table" cellspacing="1" width="95%" class="hover" ;>
+			<caption class="visually-hide">Future Connect Caseload</caption>
 			<thead>
 				<tr>
 					<th>Campus</th>

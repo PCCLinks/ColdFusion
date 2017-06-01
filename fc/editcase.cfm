@@ -43,7 +43,7 @@
 	</cfoutput>
 	<div class="row">
 		<div class="large-4 columns">
-			<label>
+			<label for="First Name">
 				First Name*
 				<cfoutput>
 					<input type="text" name="first_name" readonly value="#caseload_banner.first_name#" />
