@@ -12,6 +12,13 @@
 <cfparam name="pcc_menu" default='' />
 <!--- end CF Parameters --->
 
+<cfset pcc_title 	= 'PCC Links' /> 	<!--- Page title & h3 --->
+<cfset pcc_logo	  = '<img src="/pcclinks/images/future-connect.png" alt="Future Connect logo">' />	<!--- Include app logo image--->
+<cfsavecontent variable="pcc_menu">	 <!--- List items for menu --->
+	<li><a href="dashboard.cfm">Home</a></li>
+	<li><a href="caseload.cfm">Caseload</a></li>
+</cfsavecontent>
+
 <!-- HEAD -->
   <head>
     <meta charset="utf-8" />

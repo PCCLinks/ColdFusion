@@ -460,10 +460,8 @@
 					>Field trips to other Universities or Colleges</option>
 				</select>
 			</label>
-			<label>
-				Notes
-				<textarea name="notes" rows="10">
-				</textarea>
+			<label>Notes
+				<textarea name="notes" rows="10"></textarea>
 				<cfinclude template="#pcc_source#/includes/notes.cfm" />
 			</label>
 			<input name="submit" value="Save" class="success button" type="submit" />

@@ -1,22 +1,3 @@
-<!--- menu --->
-<cfsavecontent variable="pcc_menu">
-<header>
-	<div class="row">
-        <div class="small-12 medium-4 large-3 columns">
-            <span class="visually-hide">PCC Links Future Connect</span>
-            <img src="/pcclinks/images/fclogo.png" onerror="this.src='images/logo.png'; this.onerror=null;" alt="PCC Links Future Connect" />
-        </div>
-        <div class="small-12 medium-8 large-9 columns">
-			<br class="clear">
-        	<ul class="menu">
-		      	<li><a href="dashboard.cfm">Home</a></li>
-		      	<li class="active"><a href="caseload.cfm" class="current">Caseload</a></li>
-	 		</ul>
-        </div>
-   </div> <!-- end row -->
-</header>
-</cfsavecontent>
-
 <!--- header --->
 <cfinclude template="includes/header.cfm" />
 

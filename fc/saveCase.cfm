@@ -3,4 +3,4 @@
 <cfinvokeargument name="data" value="#FORM#">
 </cfinvoke>
 
-<cflocation url = "student.cfm?id=#FORM.G#">
+<cflocation url = "student.cfm">
