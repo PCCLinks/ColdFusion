@@ -1,0 +1,60 @@
+/*-------------------------
+  PCC Links nav bar
+-------------------------*/
+.top-bar img {
+	height: 75px;
+	position:relative;
+	width: 150px;
+	background:#e6e6e6;
+	}
+
+/*-------------------------
+  hide visually, but show
+  for screenreaders
+-------------------------*/
+.visually-hide {
+  height:1px; /* make sure it doesn't take up vertical space */
+  left:-9999px; /* hide it by moving it way off the screen */
+  overflow:hidden;
+  position:absolute; /* needed for 'left' to work */
+}
+
+
+/*-------------------------
+  logo
+-------------------------*/
+#header h1 {margin:0;} /* we aren't showing text for the h1, so remove all extra space around it */
+#header h1 img {
+  height:auto; /* scale proportionally */
+  max-width:217px; /* same size as the logo on pcc.edu */
+}
+#header h1 a:focus img {
+  background:#00667a; /* darker turquoise, seen when you navigate to the logo link with your keyboard */
+}
+#header h1 a:hover img {
+  background:none; /* but don't show the darker turquoise when you hover over the logo - the hover style must be below the focus style so that when you click it the dark turquoise doesn't appear */
+}
+
+/*-------------------------
+  application title
+-------------------------*/
+#header h2 {
+  color:#fff; /* white */
+  font-size:2.3rem; /* a bit smaller than Foundation */
+  margin:0; /* not needed */
+  padding:5px 0 0 20px; /* center it vertically, give it a little more space from the logo */
+}
+
+/*-------------------------
+  header on small screens
+-------------------------*/
+@media only screen and (max-width:641px) {
+  #header h1 {
+    padding-top:10px; /* a little more space from the top of the page */
+    text-align:center; /* center the logo */
+  }
+  #header h2 {
+    font-size:2rem; /* a bit smaller than on large and medium */
+    padding:10px 0 0 0; /* add more space on the top, but take away the extra space on the left */
+  }
+}

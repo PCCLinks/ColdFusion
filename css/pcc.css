@@ -1,0 +1,358 @@
+/*------------------------------------------------------------
+  styles for PCC applications that:
+    – use Foundation elements and styles in the content area
+    – have a very basic PCC-branded header
+  author: Ali Gray, PCC Web Team
+  date:   4/20/17
+------------------------------------------------------------*/
+
+
+/*------------------------------------------------------------
+  general
+------------------------------------------------------------*/
+
+body {
+  background:#fff; /* white */
+  color:#333; /* dark gray */
+}
+
+
+/*------------------------------------------------------------
+  typography
+------------------------------------------------------------*/
+
+/*-------------------------
+  headings
+-------------------------*/
+h3, h4, h5, h6 {
+  margin-top:1.3em;
+}
+/* for making the numbers separate and more apparent, like on the Future Connect landing page */
+h3 span, h4 span, h5 span, h6 span {
+  display:block;
+  font-weight:bold;
+  line-height:1; /* less space between the numbers and descriptions */
+}
+
+/* don't become small on small screens (keep same size as base Foundation, but change from rem to em */
+h3 {font-size:1.9375em;}
+h4 {font-size:1.5625em;}
+h5 {font-size:1.25em;}
+h6 {font-size:1em;}
+
+/*-------------------------
+  links
+-------------------------*/
+#content a {
+  color:#006b80; /* darker turquoise */
+  text-decoration:underline; /* we need to underline links for accessibility - Foundation doesn't */
+}
+
+/* set up accessible link hover and focus for mouse and keyboard */
+#content a:link:focus,
+#content a:visited:focus,
+#content a:focus {
+  color:#b2451b; /* dark orange */
+  outline:none;
+}
+#content a:link:hover,
+#content a:visited:hover,
+#content a:hover {
+  color:#162330; /* dark blue */
+}
+#content a:visited {
+  color:#008099; /* a slightly different turquoise than unvisited links */
+}
+#content a:link:active,
+#content a:visited:active {
+  color:#263c53; /* dark blue */
+}
+
+
+/*-------------------------
+  buttons
+-------------------------*/
+.button {
+  color:#fff !important; /* white */
+  font-size:0.95rem !important; /* a little bigger */
+  font-weight:bold;
+}
+
+
+
+/*------------------------------------------------------------
+  header
+------------------------------------------------------------*/
+
+/*-------------------------
+  header bar
+-------------------------*/
+#header {
+  background:#35475a; /* PCC sapphire - not turquoise so that it's easy to see it's not pcc.edu */
+  -webkit-box-shadow:0px 2px 5px rgba(0, 0, 0, 0.3);
+  -moz-box-shadow:0px 2px 5px rgba(0, 0, 0, 0.3);
+  box-shadow:0px 2px 5px rgba(0, 0, 0, 0.3);
+  padding:15px 0; /* give it some space - left/right padding is taken care of by Foundation row */
+  position:relative; /* needed for z-index */
+  z-index:1; /* put the header "above" the title bar so you can see the shadow */
+}
+
+/*-------------------------
+  logo
+-------------------------*/
+#header h1 {margin:0;} /* we aren't showing text for the h1, so remove all extra space around it */
+#header h1 img {
+  height:auto; /* scale proportionally */
+  max-width:217px; /* same size as the logo on pcc.edu */
+}
+#header h1 a:focus img {
+  background:#00667a; /* darker turquoise, seen when you navigate to the logo link with your keyboard */
+}
+#header h1 a:hover img {
+  background:none; /* but don't show the darker turquoise when you hover over the logo - the hover style must be below the focus style so that when you click it the dark turquoise doesn't appear */
+}
+
+/*-------------------------
+  application title
+-------------------------*/
+#header h2 {
+  color:#fff; /* white */
+  font-size:2.3rem; /* a bit smaller than Foundation */
+  margin:0; /* not needed */
+  padding:5px 0 0 20px; /* center it vertically, give it a little more space from the logo */
+}
+
+/*-------------------------
+  header on small screens
+-------------------------*/
+@media only screen and (max-width:641px) {
+  #header h1 {
+    padding-top:10px; /* a little more space from the top of the page */
+    text-align:center; /* center the logo */
+  }
+  #header h2 {
+    font-size:2rem; /* a bit smaller than on large and medium */
+    padding:10px 0 0 0; /* add more space on the top, but take away the extra space on the left */
+  }
+}
+
+/*-------------------------
+  navigation
+-------------------------*/
+#nav {
+  background:#d9d9d9; /* dark gray, so it looks different from pcc.edu */
+  padding:10px 0; /* space from the top and bottom */
+}
+#nav img {
+  float:left;
+  max-height:80px; /* be the height of the nav bar, with 20px subtracted for 10px top and bottom padding */
+  padding-right:30px; /* mosre space between the logo and menu */
+}
+#nav img + .menu {
+  margin-top:20px; /* center vertically if there's a logo present */
+}
+#nav a {
+  color:#006579; /* accessible turquoise on gray */
+}
+#nav a:hover,
+#nav a:focus {
+  color:#333;
+}
+#nav a:focus {
+  text-decoration:underline; /* make focus more obvious for keyboards */
+}
+#nav a:hover {
+  text-decoration:none; /* but don't show the underline for hover focus - must be below focus style */
+}
+#nav a.current {
+  background:#008099; /* PCC turquoise */
+  color:#fff; /* white */
+}
+
+/* small screens */
+@media only screen and (max-width:641px) {
+  /* put the logo on it's own line, above the stacked menu items */
+  #nav img {
+    display:block;
+    float:none;
+  }
+  /* put nav items on their own lines so they don't get pushed off the screen */
+  .menu.horizontal > li, .menu > li {
+    display:block;
+  }
+  #nav img + .menu {
+    margin-top:10px; /* less space between the logo (if present) and menu */
+  }
+}
+
+
+/*------------------------------------------------------------
+  content area
+------------------------------------------------------------*/
+
+#content {
+  padding:15px 0 40px; /* give it some space - left/right padding is taken care of by Foundation row */
+}
+
+/* --------------------------------------
+	forms
+-------------------------------------- */
+form {
+  background:#e9e9e9; /* light gray */
+  padding:20px; /* give it some space */
+}
+form fieldset {
+  margin-top:20px; /* more space between sections */
+}
+form > fieldset:first-of-type {
+  margin-top:0; /* no extra margin on the first fieldset in the form */
+}
+form fieldset fieldset {
+  margin-top:10px; /* less margin between nested fieldsets */
+}
+form legend {
+  font-size:120%; /* just a little bigger */
+}
+form fieldset:first-of-type legend {
+  margin-top:0; /* but not before the first one in the form */
+}
+form .label {
+  color:#444; /* a little bit lighter so bold isn't overkill */
+  font-size:0.875rem; /* all be the same size */
+  font-weight:bold; /* bold the labels to make them stand out more */
+}
+.instructions {
+  color:#333; /* back to default color, since they're not bold */
+  display:block; /* needed for margin to work */
+  font-style:italic;
+  margin:-0.9rem 0 0.9rem; /* negative to pull the instructions up closer to the input, then add the missing spacing back on the bottom */
+}
+form input,
+form textarea,
+form select {
+  color:#444 !important; /* a little lighter */
+  font-size:0.875rem !important; /* a little smaller */
+}
+
+/* required labels */
+form span.required::after {
+  color:#9e0c0f; /* accessible red */
+  content:" *";
+}
+
+/* buttons in inline rows */
+form .columns input[type="submit"] {
+  margin-top:20px; /* since they don't have a label, line them up with the other inputs */
+}
+
+/* accessible form focus */
+form input:focus, form textarea:focus, form#searchform p label input:focus, form#askpanther p label input:focus, form#searchstaff p label input:focus, form#searchweb p label input:focus, form#searchform input[type="text"]:focus, form#askpanther input[type="text"]:focus, form#searchstaff input[type="text"]:focus, form#searchweb input[type="text"]:focus, form#ask-the-panther label input:focus {
+    background: rgba(0, 128, 153, 0.08) !important;
+    border: 1px solid #008099 !important;
+}
+
+form .input-group {
+  margin-bottom:0; /* remove Foundation's extra margin on form groups, can add back in if needed */
+}
+
+/*-------------------------
+  tables
+-------------------------*/
+table {
+  border-collapse:collapse; /* no space between the cells */
+  font-size:0.875em; /* a little smaller */
+  margin:10px 0 25px; /* a little more space around them */
+  text-align:left; /* no centering */
+}
+table caption {
+  background:#e9e9e9; /* light gray for accessibility */
+  border-radius:12px 12px 0 0; /* rounded top corners but not bottom corners */
+  font-weight:normal; /* not bold */
+  text-align:left; /* no centering */
+}
+table thead tr th {
+  background:#cecece; /* medium gray for accessibility */
+  border:1px solid #afafaf; /* give them a border for accessibility */
+}
+table tbody tr th {
+  background:#e9e9e9; /* light gray for accessibility */
+  border:1px solid #c8c8c8; /* give them a border for accessibility */
+}
+table tbody tr td {
+  background:#fff; /* white */
+  border:1px solid #d7d7d7; /* give them a border for accessibility */
+}
+
+/* future connect ASAP colors */
+table .su, table .aw, table .ap {
+  font-weight:bold;
+}
+table .su {
+  color:#9e0c0f; /* accessible red */
+}
+table .gs {
+  color:#333; /* matches default type color, but can change here */
+}
+table .aw {
+  color:#006b80; /* accessible turquoise - yellow on white isn't accessible */
+}
+table .ap {
+  color:#c84e1e; /* acessible orange */
+}
+
+/* billing table colors */
+#content table a.red:not(:hover):not(:focus) {
+  color:#9e0c0f; /* accessible red */
+}
+
+/* responsive tables */
+.table {
+  position:relative;
+}
+.table table {
+  border:none;
+  display:block;
+  overflow-x:auto;
+  position:static;
+}
+.table div.shadow-right,
+.table div.shadow-left {
+  background:linear-gradient(to right, rgba(255, 255, 255, 0) 0%, rgba(0, 0, 0, 0.3) 100%);
+  display:none;
+  height:100%;
+  position:absolute;
+  right:0;
+  top:0;
+  width:10px;
+  z-index:2;
+}
+.table div.shadow-left {
+  background:linear-gradient(to left, rgba(255, 255, 255, 0) 0%, rgba(0, 0, 0, 0.3) 100%);
+  left:0;
+}
+
+
+/*------------------------------------------------------------
+  extras
+------------------------------------------------------------*/
+
+/*-------------------------
+  hide visually, but show
+  for screenreaders
+-------------------------*/
+.visually-hide {
+  height:1px; /* make sure it doesn't take up vertical space */
+  left:-9999px; /* hide it by moving it way off the screen */
+  overflow:hidden;
+  position:absolute; /* needed for 'left' to work */
+}
+
+/* --------------------------------------
+	remove firefox focus outlines
+-------------------------------------- */
+*:focus {
+  -moz-outline-style:none;
+  outline-color:-moz-use-text-color;
+  outline-style:none;
+  outline-width:0;
+}
