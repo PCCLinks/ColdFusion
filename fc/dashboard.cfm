@@ -82,7 +82,7 @@ function buildChart(type, labels, data, ctx, bgcolors, bcolors, ymax, title){
 	GROUP BY CAMPUS, STATUSABCX
 	ORDER BY 1,2;
 </cfquery>
-<!--><-->
+
 <!--- Main Title --->
 <cfoutput query="fcTotal">
 <div>
