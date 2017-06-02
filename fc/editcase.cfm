@@ -330,11 +330,34 @@
 					<cfif "Housing insecurity / homeless" eq caseload_banner.outcome_exit_reason>
 						selected
 					</cfif>
-					> Housing insecurity / homeless</option> <option value="Mental health barriers"
+					> Housing insecurity / homeless</option>
+
+					<option value="Mental health barriers"
 					<cfif "Mental health barriers" eq caseload_banner.outcome_exit_reason>
 						selected
-					</cfif>
-					> Mental health barriers</option> <option value="Leaving school to work"
+					</cfif>> Mental health barriers
+					</option>
+
+					<option value="Academic frustration"
+					<cfif "Academic frustration" eq caseload_banner.outcome_exit_reason>
+						selected
+					</cfif>> Academic frustration
+					</option>
+
+					<option value="Moving out of PCC district"
+					<cfif "Moving out of PCC district" eq caseload_banner.outcome_exit_reason>
+						selected
+					</cfif>> Moving out of PCC district
+					</option>
+
+					<option value="ASAP Issue"
+					<cfif "ASAP Issue" eq caseload_banner.outcome_exit_reason>
+						selected
+					</cfif>> ASAP Issue
+					</option>
+
+
+					<option value="Leaving school to work"
 					<cfif "Leaving school to work" eq caseload_banner.outcome_exit_reason>
 						selected
 					</cfif>
