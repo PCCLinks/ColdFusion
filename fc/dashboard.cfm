@@ -57,10 +57,10 @@ function buildChart(type, labels, data, ctx, bgcolors, bcolors, ymax, title){
 </cfquery>
 
 <cfquery name="fcCampusCount" datasource="pcclinks">
-  SELECT CASE CAMPUS WHEN 'CAS' THEN 'CASCADE'
-		WHEN 'SYL' THEN 'SYLVANIA'
-		WHEN 'RC' THEN 'ROCK CREEK'
-		WHEN'SE' THEN 'SOUTHEAST'
+  SELECT CASE CAMPUS WHEN 'CAS' THEN 'Cascade'
+		WHEN 'SYL' THEN 'Sylvania'
+		WHEN 'RC' THEN 'Rock Creek'
+		WHEN'SE' THEN 'Souteast'
 		ELSE CAMPUS
 		END AS CampusName
 	, Campus
@@ -89,7 +89,7 @@ function buildChart(type, labels, data, ctx, bgcolors, bcolors, ymax, title){
 	<div class="callout primary">
 		<h2 span style = "text-align:center">
 		<span style="font-size:3.6rem;line-height:4rem;font-weight:300; vertical-align: top;"> #TotalNumberStudents#</span><br />
-		<span style="font-size:1.4rem;line-height:2rem;">FUTURE CONNECT STUDENTS SINCE INCEPTION</span>
+		<span style="font-size:1.4rem;line-height:2rem;">Future Connect Students Since Inception</span>
 		</h2>
 	</div>
 </div>
