@@ -1,8 +1,9 @@
+<cfinvoke component="fc" method="getCaseload" returnvariable="qryData" />
+
 <!--- header --->
 <cfinclude template="includes/header.cfm" />
 
 <!--- main content --->
-<cfinvoke component="fc" method="getCases2" returnvariable="qryData" />
 <style>
 table thead tr th {
     background-color: #4CAF50;
@@ -127,15 +128,18 @@ table thead tr th {
 		filter =  $('#contractNo').is(':checked') ? "Yes" : "";
 		table.column(8).search(filter).draw();
 	}
-
+	
 	function goToDetail(bannerGNumber){
-		sessionStorage.setItem("id", bannerGNumber);
-		saveClientSessionToServer();
-		setTimeout(goToDetailPage,20);
+		var dt = $('#dt_table').DataTable();
+		var gList = dt.columns({search:'applied'}).data()[0];
+		var url = 'student.cfm';
+		var form = $('<form action="' + url + '" method="post">' +
+ 				'<input type="text" name="bannerGNumber" value="' + bannerGNumber + '" />' +
+ 				'</form>');
+		$('body').append(form);
+		form.submit();
 	}
-	function goToDetailPage(){
-		window.location.href='student.cfm';
-	}
+		
 </script>
 </cfsavecontent>
 

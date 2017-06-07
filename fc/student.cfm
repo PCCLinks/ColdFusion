@@ -1,5 +1,5 @@
-<cfparam name="studentvar_id" default="#Session.ID#">
-<cfinvoke component="fc" method="getCases2" G="#studentvar_id#" returnvariable="caseload_banner"></cfinvoke>
+<cfparam name="studentvar_id" default="#FORM.bannerGNumber#">
+<cfinvoke component="fc" method="getCaseload" G="#studentvar_id#" returnvariable="caseload_banner"></cfinvoke>
 <cfparam name="studentvar_cohort" default="#caseload_banner.cohort#" >
 
 <!--- menu --->

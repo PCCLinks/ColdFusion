@@ -1,4 +1,4 @@
-<cfinvoke component="fc" method="getNotes"  id = #Session.ID# returnvariable="notes"></cfinvoke>
+<cfinvoke component="fc" method="getNotes"  id = #studentvar_id# returnvariable="notes"></cfinvoke>
 
 <div class="card" style="overflow-y: scroll;height:150px">
 <cfoutput query="notes">

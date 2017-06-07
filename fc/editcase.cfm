@@ -2,46 +2,49 @@
  cohort varialbe set by student.cfm
 --->
 
-<cfinvoke component="fc" method="getFirstYearMetrics" id="#studentvar_id#" cohort="#studentvar_cohort#" returnvariable="firstYearMetrics">
-</cfinvoke>
-<cfinvoke component="fc" method="getCGPassed" id="#studentvar_id#" cohort="#studentvar_cohort#" returnvariable="cgPassed">
-</cfinvoke>
-<cfinvoke component="fc" method="getASAP_Degree" id="#studentvar_id#" returnvariable="ASAP_Degree">
-</cfinvoke>
-<cfquery datasource="pcclinks" name="list_status">
+<cfinvoke component="fc" method="getFirstYearMetrics" id="#studentvar_id#" cohort="#studentvar_cohort#" returnvariable="firstYearMetrics"></cfinvoke>
+<cfinvoke component="fc" method="getCGPassed" id="#studentvar_id#" cohort="#studentvar_cohort#" returnvariable="cgPassed"></cfinvoke>
+<cfinvoke component="fc" method="getASAP_Degree" id="#studentvar_id#" returnvariable="ASAP_Degree"></cfinvoke>
+
+<!---- Lookup Fields --->
+<cfquery name="list_status">
 	SELECT distinct statusabcx
 	FROM pcc_links.fc
 	where statusabcx is not null
 	ORDER BY 1 ASC
 </cfquery>
-<cfquery datasource="pcclinks" name="list_cohort">
+<cfquery name="list_cohort">
 	SELECT distinct cohort
 	FROM pcc_links.fc
 	where cohort is not null
 	ORDER BY 1 ASC
 </cfquery>
-<cfquery datasource="pcclinks" name="list_coach">
+<cfquery name="list_coach">
 	SELECT distinct CoachName
 	FROM pcc_links.coach
 	ORDER BY 1 ASC
 </cfquery>
-<cfquery datasource="pcclinks" name="list_gender">
+<cfquery name="list_gender">
 	SELECT distinct GenderName
 	FROM pcc_links.gender
 	ORDER BY 1 ASC
 </cfquery>
-<cfquery datasource="pcclinks" name="list_campus">
+<cfquery name="list_campus">
 	SELECT distinct CampusName
 	FROM pcc_links.campus
 	ORDER BY 1 ASC
 </cfquery>
 
+
+<!--- FORM ---->
 <form action="saveCase.cfm" method="post" id="editForm" name="editForm">
 	<input name="method" type="hidden" value="update" />
 	<cfoutput>
 		<input name="G" type="hidden" value="#caseload_banner.G#" />
 	</cfoutput>
+	<!--- MAIN ROW ---->
 	<div class="row">
+		<!--- COLUMN 1 --->
 		<div class="large-4 columns">
 			<label for="First Name">
 				First Name*
@@ -121,6 +124,7 @@
 					>No >No</option>
 				</select>
 			</label>
+			<!--- Household Information --->
 			<label>
 				Household Information
 				<select name="household_information">
@@ -155,6 +159,9 @@
 					>Supplemental Security Income</option>
 				</select>
 			</label>
+			<!--- End Household Information --->
+
+			<!--- Living Situation --->
 			<label>
 				Living Situation
 				<select name="living_situation">
@@ -177,6 +184,7 @@
 					>Emancipated minor</option>
 				</select>
 			</label>
+			<!--- End Living Situation --->
 			<!--- <label>Citizen Status -- REMOVE fix so it updates with selection
 				<select name='citizen_status' selected=#caseload_banner.citizen_status#>
 				<option value="Unknown">Unknown</option>
@@ -226,6 +234,9 @@
 				</cfoutput>
 			</label>
 		</div>
+		<!--- END COLUMN 1 --->
+
+		<!--- COLUMN 2 --->
 		<div class="large-4 columns">
 			<label>
 				StatusABCX
@@ -323,6 +334,8 @@
 					<input type="text" name="firstYearGPA" readonly value="#DecimalFormat(firstYearMetrics.firstYearGPA)#" />
 				</cfoutput>
 			</label>
+
+			<!--- Exit Reason --->
 			<label>
 				Exit Reason
 				<select name="outcome_exit_reason">
@@ -356,7 +369,6 @@
 					</cfif>> ASAP Issue
 					</option>
 
-
 					<option value="Leaving school to work"
 					<cfif "Leaving school to work" eq caseload_banner.outcome_exit_reason>
 						selected
@@ -372,7 +384,11 @@
 					> Left without contact</option>
 				</select>
 			</label>
+			<!--- End Exit Reason --->
 		</div>
+		<!--- END COLUMN 2 --->
+
+		<!--- COLUMN 3 --->
 		<div class="large-4 columns">
 			<label>
 				Coach
@@ -489,6 +505,6 @@
 			</label>
 			<input name="submit" value="Save" class="success button" type="submit" />
 		</div>
-	</div>
-	<!--- end row class --->
+		<!---- END COLUMN 3 --->
+	</div> 	<!--- end row class --->
 </form>

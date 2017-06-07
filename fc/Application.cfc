@@ -5,10 +5,9 @@
 	<cfset This.setclientcookies = "yes" />
 	<cfset This.setdomaincookies = "no" />
 	<cfset This.loginstorage = "session" />
+	<cfset This.datasource = "pcclinks" />
 
-	<cffunction name="OnApplicationStart">
-        <cfset application.dsn = "pcclinks">
-    </cffunction>
+	<cffunction name="OnApplicationStart"></cffunction>
 
     <cffunction name="OnSessionStart">
         <CFLOCK SCOPE="SESSION" TYPE="READONLY" TIMEOUT="5">
@@ -16,7 +15,5 @@
         </CFLOCK>
     </cffunction>
 
-    <cffunction name="OnRequestStart">
-
-    </cffunction>
+    <cffunction name="OnRequestStart"></cffunction>
 </cfcomponent>
