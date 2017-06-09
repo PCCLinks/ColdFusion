@@ -1,9 +1,14 @@
+<cfset debug=false>
 <cfif structKeyExists(FORM, "bannerGNumber")>
 	<cfset Session.bannerGNumber = FORM.bannerGNumber>
+	<cfif debug><cfdump var="#FORM#"></cfif>
 </cfif>
+<cfif debug><cfdump var="#SESSION#"></cfif>
 <cfparam name="studentvar_id" default="#Session.bannerGNumber#">
+<cfif debug><cfdump var="#studentvar_id#"></cfif>
 
-<cfinvoke component="fc" method="getCaseload" G="#studentvar_id#" returnvariable="caseload_banner"></cfinvoke>
+
+<cfinvoke component="fc" method="getCaseload" bannerGNumber="#studentvar_id#" returnvariable="caseload_banner"></cfinvoke>
 <cfparam name="studentvar_cohort" default="#caseload_banner.cohort#" >
 <cfdump var="#caseload_banner.contactID#">
 <!--- menu --->
