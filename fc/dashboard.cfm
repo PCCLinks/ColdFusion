@@ -60,7 +60,7 @@ function buildChart(type, labels, data, ctx, bgcolors, bcolors, ymax, title){
   SELECT CASE CAMPUS WHEN 'CAS' THEN 'Cascade'
 		WHEN 'SYL' THEN 'Sylvania'
 		WHEN 'RC' THEN 'Rock Creek'
-		WHEN'SE' THEN 'Souteast'
+		WHEN'SE' THEN 'Southeast'
 		ELSE CAMPUS
 		END AS CampusName
 	, Campus

@@ -16,12 +16,16 @@
 	<cffunction name="getCoursesByStudent" returntype="query" access="remote">
 		<cfargument name="id" type="string" required="yes" default="">
 		<cfargument name="cohort" type="string" required="yes" default="">
+		<cfset firstYearBeginningTerm = LEFT(arguments.cohort,4) & '04' >
+		<cfset firstYearEndingTerm = (VAL(LEFT(arguments.cohort,4))+1) & '03' >
+		<!--- note that  for Oracle, select "*" did not work in this query
+		  unlike MySql --->
 		<cfquery datasource="bannerpcclinks" name="coursesByStudent">
-			SELECT *
-			, case when (TERM >= convert(Concat(CAST(left(<cfqueryparam  value="#arguments.cohort#">,4) as char(50)),'04'), unsigned integer)
-							and TERM < convert(Concat(CAST((left(<cfqueryparam  value="#arguments.cohort#">,4)+1) as char(50)),'04'), unsigned integer))
+			SELECT STU_ID, TERM, CRN, SUBJ, CRSE, TITLE, CREDITS, GRADE, PASSED
+			, case when (TERM >= <cfqueryparam value="#firstYearBeginningTerm#">
+							and TERM <= <cfqueryparam value="#firstYearEndingTerm#"> )
 						then 1 else 0 end as inFirstYear
-			, case when PASSED = "Y" THEN CREDITS ELSE 0 END AS passedCredits
+			, case when PASSED = 'Y' THEN CREDITS ELSE 0 END AS passedCredits
 
 			, case when GRADE= 'A' then 4*CREDITS
 				when GRADE = 'B' then 3*CREDITS
@@ -35,8 +39,8 @@
 				when GRADE = 'D' then CREDITS
 				else 0 end as creditsForGPA
 
-			, case when SUBJ = 'CG' AND CRSE = '100' AND PASSED = 'Y' THEN 1 ELSE 0 END AS 'cg100Passed'
-			, case when SUBJ = 'CG' AND CRSE = '130' AND PASSED = 'Y' THEN 1 ELSE 0 END AS 'cg130Passed'
+			, case when SUBJ = 'CG' AND CRSE = '100' AND PASSED = 'Y' THEN 1 ELSE 0 END AS cg100Passed
+			, case when SUBJ = 'CG' AND CRSE = '130' AND PASSED = 'Y' THEN 1 ELSE 0 END AS cg130Passed
 			FROM swvlinks_course
 			WHERE STU_ID = <cfqueryparam  value="#arguments.id#">
 		</cfquery>
@@ -65,7 +69,7 @@
 		<cfquery name="ASAP_Degree" datasource="bannerpcclinks">
 			SELECT swvlinks_term.STU_ID
 				, TERM
-				, P_DEGR
+				, P_DEGREE
 				, INCOMING_SAP
 			FROM swvlinks_term
 				JOIN (
@@ -117,13 +121,65 @@
 				<!---_personal = <cfqueryparam cfsqltype="cf_sql_varchar" value="#trim(arguments.data._personal)#">,--->
 				notes = <cfqueryparam cfsqltype="cf_sql_varchar" value="#trim(arguments.data.notes)#">
 
-			WHERE fc.G =  <cfqueryparam cfsqltype="cf_sql_varchar" value="#trim(arguments.data.G)#">
+			WHERE fc.G =  <cfqueryparam cfsqltype="cf_sql_varchar" value="#trim(arguments.data.bannerGNumber)#">
 		  </cfquery>
 		<cfif len(trim(arguments.data.notes)) GT 0>
 			<cfset insertNote(tableID="#arguments.data.G#", noteText="#trim(arguments.data.notes)#")>
 		</cfif>
+		<cfset saveEnrichmentProgramData(data=arguments.data) >
 	</cffunction>
 
+	<cffunction name="saveEnrichmentProgramData" access="private">
+		<cfargument name="data" required="true">
+		<cfset contactID = "#trim(arguments.data.contactid)#">
+		<cfset debug=false>
+		<cfquery name="existingEntries">
+			SELECT *
+			FROM enrichmentProgramContact
+			WHERE contactID = <cfqueryparam value="#contactID#">
+				AND tableName = 'fc'
+		</cfquery>
+		<cfloop query="existingEntries">
+			<cfset exists=false>
+			<cfloop collection="#arguments.data#" item="key">
+				<cfif debug>key left,19:<cfdump var="#left(key,19)#"><br></cfif>
+				<cfif left(key,19) EQ "enrichmentProgramID">
+					<cfset checkedID = RIGHT(key,len(key)-19)>
+					<cfif debug>checkedid=<cfdump var="#checkedID#"><br></cfif>
+					<cfif debug>existingEntries=<cfdump var="#existingEntries.enrichmentProgramID#"><br></cfif>
+					<cfif existingEntries.enrichmentProgramID EQ checkedID>
+						<cfset exists=true>
+						<cfif debug>found<br></cfif>
+					</cfif> <!--- matches a value that is checked --->
+				</cfif> <!-- if enrichment field --->
+			</cfloop> <!--- form values --->
+			<!--- no longer checked, delete it --->
+			<cfif exists EQ false>
+				<cfif debug>delete entry:<cfdump var="#existingEntries.enrichmentProgramContactID#"></cfif>
+				<cfquery name="deleteEntry">
+					delete from enrichmentProgramContact
+					where enrichmentProgramContactID = <cfqueryparam value="#existingEntries.enrichmentProgramContactID#">
+				</cfquery>
+			</cfif>
+		</cfloop>
+		<cfloop collection="#arguments.data#" item="key">
+			<cfif left(key,19) EQ "enrichmentProgramID">
+				<cfset checkedID = RIGHT(key,len(key)-19)>
+				<cfset exists=false>
+				<cfloop query="existingEntries">
+					<cfif existingEntries.enrichmentProgramID EQ checkedID>
+						<cfset exists=true>
+					</cfif> <!--- matches a value that is checked --->
+				</cfloop> <!---existing entries --->
+				<cfif exists EQ false>
+					<cfquery name="insertEntry">
+						insert into enrichmentProgramContact(contactID, enrichmentProgramID, tableName)
+						values(#contactID#, #checkedID#, 'fc')
+					</cfquery>
+				</cfif>
+			</cfif> <!-- if enrichment field --->
+		</cfloop> <!--- form values --->
+	</cffunction>
 
 	<cffunction name="insertNote" access="private">
 		<cfargument name="tableID" required="true">
@@ -139,7 +195,7 @@
 		<cfargument name="cohort" type="string" default="">
 		<cfargument name="campus" type="string" default="">
 		<cfargument name="coach" type="string" default="">
-		<cfargument name="G" type="string" default="">
+		<cfargument name="bannerGNumber" type="string" default="">
 		<cfargument name="last_name" type="string" default="">
 		<cfargument name="first_name" type="string" default="">
 		<cfargument name="asap_status" type="string" default="">
@@ -149,7 +205,7 @@
 		<!--- SIDNY Future Connect Data ---->
 		<!---------------------------------->
 		<cfquery name="fcTbl">
-			SELECT *
+			SELECT fc.*, c.contactID
 			, case when CAST(right(cohort,1) as char(50)) = '1' then 'Portland'
 				when CAST(right(cohort,1) as char(50)) = '2' then 'Beaverton'
 				when CAST(right(cohort,1) as char(50)) = '3' then 'Hillsboro'
@@ -167,10 +223,11 @@
 			,  convert(Concat(CAST(left(cohort,4) as char(50)),'04'), unsigned integer) as cohortFirstFall
 			,  convert(Concat(CAST((left(cohort,4)+1) as char(50)),'04'), unsigned integer) as cohortSecondFall
 
-			FROM pcc_links.fc
+			FROM pcc_links.fc fc
+				join contact c on fc.G = c.bannerGNumber
 			WHERE 1=1
-			<cfif len(#arguments.G#) gt 0>
-				and G = <cfqueryparam  value="#arguments.G#">
+			<cfif len(#arguments.bannerGNumber#) gt 0>
+				and G = <cfqueryparam  value="#arguments.bannerGNumber#">
 			</cfif>
 			<cfif len(trim(arguments.cohort))>
 				AND cohort = <cfqueryparam  value="#arguments.cohort#">
@@ -180,9 +237,6 @@
 			</cfif>
 			<cfif len(trim(arguments.coach))>
 				AND coach = <cfqueryparam  value="#arguments.coach#">
-			</cfif>
-			<cfif len(trim(arguments.G))>
-				AND G = <cfqueryparam  value="#arguments.G#">
 			</cfif>
 			<cfif len(trim(arguments.last_name))>
 				AND last_name = <cfqueryparam  value="#arguments.last_name#">
@@ -206,8 +260,8 @@
 			SELECT *
 			FROM swvlinks_person
 			WHERE 1=1
-			<cfif len(#arguments.G#) gt 0>
-				and STU_ID = <cfqueryparam  value="#arguments.G#">
+			<cfif len(#arguments.bannerGNumber#) gt 0>
+				and STU_ID = <cfqueryparam  value="#arguments.bannerGNumber#">
 			</cfif>
 		</cfquery>
 		<!---- end Banner Person Data ---->
@@ -239,7 +293,6 @@
 		<cfset TermData = getTermByStudent(id=#arguments.id#)>
 		<cfquery datasource="bannerpcclinks" name="StudentTermMetrics">
 			SELECT STU_ID
-				, STU_NAME
 				, TERM
 				, T_GPA
 				, T_EARNED
@@ -252,17 +305,32 @@
 
 
 	<cffunction name="getNotes">
-		<cfargument name="ID" required="yes">
+		<cfargument name="contactID" required="yes">
 		<cfset tableName="fc">
 		<cfquery name="comments">
 		select *
-		from pcc_links.notes
+		from notes
 		where tableName = <cfqueryparam value="#tablename#">
-			and tableID = <cfqueryparam value="#arguments.ID#">
+			and contactID = <cfqueryparam value="#arguments.contactID#">
 		order by noteDateAdded desc
 	</cfquery>
 		<cfreturn comments>
 	</cffunction>
 
+	<cffunction name="getEnrichmentProgramsWithAssignments">
+		<cfargument name="contactID" required="yes">
+		<cfset tableName="fc">
+		<cfquery name="programs">
+		select ep.enrichmentProgramID id
+			,enrichmentProgramDescription description
+			,CASE WHEN contactID IS NULL THEN 0 ELSE 1 END checked
+		from enrichmentProgram ep
+			left outer join enrichmentProgramContact epc
+				on ep.enrichmentProgramID = epc.enrichmentProgramID
+					and tableName = <cfqueryparam value="#tablename#">
+					and epc.contactID = <cfqueryparam value="#arguments.contactID#">
+	</cfquery>
+		<cfreturn programs>
+	</cffunction>
 
 </cfcomponent>

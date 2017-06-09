@@ -10,7 +10,7 @@
 <script src="<cfoutput>#pcc_source#</cfoutput>/js/vendor/foundation.min.js"></script>
 <script src="<cfoutput>#pcc_source#</cfoutput>/js/pcc.js"></script>
 <script type="text/javascript" src="<cfoutput>#pcc_source#</cfoutput>/js/vendor/datatables.min.js"></script>
-<script type="text/javascript" charset="utf8" src="<cfoutput>#pcc_source#</cfoutput>/js/jquery.blockUI.js"></script>
+<script type="text/javascript" charset="utf8" src="<cfoutput>#pcc_source#</cfoutput>/js/vendor/jquery.blockUI.js"></script>
 
 <script>
 	//generic function to save client session object to server session

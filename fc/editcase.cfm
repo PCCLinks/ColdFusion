@@ -40,7 +40,8 @@
 <form action="saveCase.cfm" method="post" id="editForm" name="editForm">
 	<input name="method" type="hidden" value="update" />
 	<cfoutput>
-		<input name="G" type="hidden" value="#caseload_banner.G#" />
+		<input name="contactID" type="hidden" value="#caseload_banner.contactID#" />
+		<input name="bannerGNumber" type="hidden" value="#caseload_banner.G#" />
 	</cfoutput>
 	<!--- MAIN ROW ---->
 	<div class="row">
@@ -85,7 +86,7 @@
 			<label>
 				Race*
 				<cfoutput>
-					<input type="text" name="race" readonly value="#caseload_banner.BI_REP_RACE#" />
+					<input type="text" name="race" readonly value="#caseload_banner.REP_RACE#" />
 				</cfoutput>
 			</label>
 			<label>
@@ -277,7 +278,7 @@
 			<label>
 				Degree Declared
 				<cfoutput>
-					<input type="text" name="degree_declared" readonly value="#ASAP_Degree.P_DEGR#" />
+					<input type="text" name="degree_declared" readonly value="#ASAP_Degree.P_DEGREE#" />
 				</cfoutput>
 			</label>
 			<label>
@@ -429,76 +430,13 @@
 					<input type="text" name="email_personal" value="#caseload_banner.email_personal#" />
 				</cfoutput>
 			</label>
-			<label>
-				Enrichment Programs
-				<select multiple name="enrichment">
-					<option value="CG 190 Leadership"
-					<cfif "CG 190 Leadership" eq caseload_banner.enrichment_programs>
-						selected
-					</cfif>
-					>CG 190 Leadership</option> <option value="WSI - Summer Works Internship"
-					<cfif "WSI - Summer Works Internship" eq caseload_banner.enrichment_programs>
-						selected
-					</cfif>
-					>WSI - Summer Works Internship</option> <option value="Portland Bureau Internship"
-					<cfif "Portland Bureau Internship" eq caseload_banner.enrichment_programs>
-						selected
-					</cfif>
-					>Portland Bureau Internship</option> <option value="Providence Health related Internship"
-					<cfif "Providence Health related Internship" eq caseload_banner.enrichment_programs>
-						selected
-					</cfif>
-					>Providence Health related Internship</option> <option value="City of Hillsboro Internship"
-					<cfif "City of Hillsboro Internship" eq caseload_banner.enrichment_programs>
-						selected
-					</cfif>
-					>City of Hillsboro Internship</option> <option value="City of Beaverton Internship"
-					<cfif "City of Beaverton Internship" eq caseload_banner.enrichment_programs>
-						selected
-					</cfif>
-					>City of Beaverton Internship</option> <option value="BEC Internship"
-					<cfif "BEC Internship" eq caseload_banner.enrichment_programs>
-						selected
-					</cfif>
-					>BEC Internship</option> <option value="AVID Tutor"
-					<cfif "AVID Tutor" eq caseload_banner.enrichment_programs>
-						selected
-					</cfif>
-					>AVID Tutor</option> <option value="GearUp CAM Mentor"
-					<cfif "GearUp CAM Mentor" eq caseload_banner.enrichment_programs>
-						selected
-					</cfif>
-					>GearUp CAM Mentor</option> <option value="Volunteer work in community"
-					<cfif "Volunteer work in community" eq caseload_banner.enrichment_programs>
-						selected
-					</cfif>
-					>Volunteer work in community</option> <option value="Volunteer work in community from CG 190 Leadership"
-					<cfif "Volunteer work in community from CG 190 Leadership" eq caseload_banner.enrichment_programs>
-						selected
-					</cfif>
-					>Volunteer work in community from CG 190 Leadership</option> <option value="Work Study"
-					<cfif "Work Study" eq caseload_banner.enrichment_programs>
-						selected
-					</cfif>
-					>Work Study</option> <option value="ASPCC"
-					<cfif "ASPCC" eq caseload_banner.enrichment_programs>
-						selected
-					</cfif>
-					>ASPCC</option> <option value="FC Outreach with Coordinator"
-					<cfif "FC Outreach with Coordinator" eq caseload_banner.enrichment_programs>
-						selected
-					</cfif>
-					>FC Outreach with Coordinator</option> <option value="FC Ambassador @ Orientation"
-					<cfif "FC Ambassador @ Orientation" eq caseload_banner.enrichment_programs>
-						selected
-					</cfif>
-					>FC Ambassador @ Orientation</option> <option value="Field trips to other Universities or Colleges"
-					<cfif "Field trips to other Universities or Colleges" eq caseload_banner.enrichment_programs>
-						selected
-					</cfif>
-					>Field trips to other Universities or Colleges</option>
-				</select>
-			</label>
+
+			<cfinvoke component="fc" method="getEnrichmentProgramsWithAssignments" contactID=#caseload_banner.contactID#  returnVariable="mscb_data">
+			<cfset mscb_fieldNameDescription = 'Enrichment Programs'>
+			<cfset mscb_fieldName = 'enrichmentProgramID'>
+			<cfinclude template="#pcc_source#/includes/multiSelectCheckboxes.cfm">
+
+			<cfinvoke component="fc" method="getNotes"  contactID = #caseload_banner.contactID# returnvariable="notesvar_data"></cfinvoke>
 			<label>Notes
 				<textarea name="notes" rows="10"></textarea>
 				<cfinclude template="#pcc_source#/includes/notes.cfm" />
