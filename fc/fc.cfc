@@ -106,6 +106,7 @@
 		<cfargument name="data" type="struct">
 		<cfquery name="create" result = "r">
 			UPDATE pcc_links.fc SET cohort = <cfqueryparam cfsqltype="cf_sql_varchar" value="#trim(arguments.data.cohort)#">,
+				preferred_name = <cfqueryparam cfsqltype="cf_sql_varchar" value="#trim(arguments.data.preferred_name)#">,
 				<!---gender = <cfqueryparam cfsqltype="cf_sql_varchar" value="#trim(arguments.data.gender)#">,--->
 				campus = <cfqueryparam cfsqltype="cf_sql_varchar" value="#trim(arguments.data.campus)#">,
 				parental_status = <cfqueryparam cfsqltype="cf_sql_varchar" value="#trim(arguments.data.parental_status)#">,

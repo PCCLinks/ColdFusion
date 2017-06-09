@@ -59,6 +59,15 @@
 					<input type="text" name="last_name" readonly value="#caseload_banner.last_name#" />
 				</cfoutput>
 			</label>
+
+			<label>
+				Preferred Name
+				<cfoutput>
+					<input type="text" name="preferred_name" value="#caseload_banner.preferred_name#" />
+				</cfoutput>
+			</label>
+
+
 			<label>
 				Cohort
 				<select name="cohort">
