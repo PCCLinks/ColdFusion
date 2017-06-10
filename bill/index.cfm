@@ -1,65 +1,56 @@
+<!--- header template --->
+<cfinclude template="includes/header.cfm" />
 
-<!--- globals --->
-<cfparam name="url.ticket" default="">
-<cfparam name="username" default="">
-<cfparam name="url.action" default="">
-<cfscript>
- cas_path = "https://authenticate-test.pcc.edu/cas/";
- app_path = "https://intranettest.pcc.edu/pcclinks/billing";
- cas_url = cas_path & "login?" & "service=" & app_path;
-</cfscript>
-<cfdump var="#cas_url#">
-
-<!--- session init --->
-<cflock timeout="10" scope="session" type="readonly">
- <cfparam name="session.username" default="">
- <cfparam name="session.authorized" default="0">
+<cfinvoke component="ProgramBilling" method="getCurrentTermSummary"  returnvariable="qryData">
+</cfinvoke>
+<cfset Session.Term = qryData.Term>
+<cflock timeout=20 scope="Session" type="Exclusive">
+	<cfset StructDelete(Session, "Program")>
+	<cfset StructDelete(Session, "SchoolDistrict")>
 </cflock>
 
-<!--- logout action --->
-<cfif url.action eq "logout">
- <!--- session reset --->
- <cflock scope="session" timeout="30" type="exclusive">
-     <cfset session.username = "">
-     <cfset session.authorized = "0">
- </cflock>
+<!--- main content --->
+<div class="row">
+	<div class="callout primary">
+		<cfoutput>Billing for Term: #qryData.Term#</cfoutput>
+	</div>
+</div>
+<div class="row">
+	<table id="dt_table" class="stripe compact" cellspacing="0" width="100%">
+		<thead>
+        	<tr>
+            	<th id="SchoolDistrict">School District</th>
+				<th id="Program">Program</th>
+				<th id="StudentsStillBeingReviewed">Review in Progress</th>
+				<th id="StudentsReviewed">Reviewed</th>
+           </tr>
+        </thead>
+        <tbody>
+		<cfif not isNull(qryData)>
+        	<cfoutput query="qryData">
+            <tr>
+            	<td>#qryData.schoolDistrict#</td>
+				<td>#qryData.program#</td>
+				<td>#qryData.StudentsStillBeingReviewed#</td>
+				<td>#qryData.StudentsReviewed#</td>
+            </tr>
+            </cfoutput>
+		</cfif>
+        </tbody>
+	</table>
+</div>
 
- <cfset cas_url = cas_path & "logout">
- <cflocation url="#cas_url#" addtoken="false">
+<!--- scripts referenced in footer --->
+<cfsavecontent variable="pcc_scripts">
+<script>
+	$(document).ready(function() {
+		$('#dt_table').dataTable({
+			paging:false,
+			searching:false
+		});
+	});
+</script>
+</cfsavecontent>
 
-<cfelse>
- <!--- auth check --->
- <cfif not len(trim(session.username))>
-     <cfif not len(trim(ticket))>
-        <cflocation url="#cas_url#" addtoken="no">
-     <cfelse>
-         <cfset cas_url = #cas_path# & "serviceValidate?ticket=" & url.ticket & "&" & "service=" & app_path & "/">
-
-         <cfhttp url="#cas_url#" method="get" />
-
-         <cfset objXML = xmlParse(cfhttp.filecontent)>
-         <cfset SearchResults = XmlSearch(objXML,"cas:serviceResponse/cas:authenticationSuccess/cas:user")>
-
-         <cfif arraylen(SearchResults)>
-             Raw XML:<cfdump var="#cfhttp.filecontent#">
-             <cfdump var="#objXML#" label="CAS Results">
-             <cfdump var="#SearchResults#" label="Parsed CAS Results">
-             <cfset username = SearchResults[1].XmlText>
-             <cflock scope="session" timeout="30" type="exclusive">
-                 <cfset session.username = username>
-                 <cfset session.authorized = "1">
-             </cflock>
-         <cfelse>
-                <cflocation url="#cas_url#" addtoken="no">
-         </cfif>
-     </cfif>
- </cfif>
-
- <cfif structKeyExists(url, "accessdenied")>
-     Access Error
- <cfelse>
-     Authenticated.<br/>
-     <cfdump var="#session#" label="ColdFusion Session Object">
-     <a href="?action=logout">Logout</a><br/>
- </cfif>
-</cfif>
+<!--- footer template --->
+<cfinclude template="includes/footer.cfm">

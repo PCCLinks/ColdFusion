@@ -1,25 +1,12 @@
 <cfinvoke component="LookUp" method="getTerms" returnvariable="qryTerms"></cfinvoke>
 <cfinvoke component="LookUp" method="getPrograms" returnvariable="qryPrograms"></cfinvoke>
-<html>
-<head>
- <link rel="stylesheet" href="css/foundation.css">
-  <script src="js/vendor/modernizr.js"></script>
-  <script src="js/vendor/jquery.js"></script>
-</head>
-<body>
-<nav class="top-bar" >
-    <ul class="menu">
-     	 <li><a href="Billing.cfm">Home</a></li>
-     	 <li><a href="SetUpBilling.cfm">Generate</a></li>
-     	 <li><a href="ProgramStudent.cfm">Submit Billing</a></li>
-     	 <li><a href="Reconcile.cfm">Reconcile Previous Billing</a></li>
-     	 <li><a href="BillingSummary.cfm">Reports</a></li>
-	  </ul>
-</nav>
+<cfinclude template="includes/header.cfm" />
 <div class="callout primary">
+
+<!--- query parameters --->
 <form id="pageForm" action="javascript:setUpBilling();" method="post">
 	<div class="row">
-		<div class="small-3 columns">
+		<!---<div class="small-3 columns">
 			<label>Program:<br/>
 				<select name="program" id="program"/>
 					<option disabled selected value="" >
@@ -30,8 +17,8 @@
 					</cfoutput>
 				</select>
 			</label>
-		</div>
-		<div class="small-2 columns">
+		</div> --->
+		<div class="small-5 columns">
 			<label>Term:<br/>
 				<select name="term" id="term"/>
 					<option disabled selected value="" >
@@ -60,6 +47,7 @@
 		</cfoutput>
 	</div>
 </form>
+<!--- end query parameters --->
 </div>
 <div  id="progressBar" class="success progress" role="progressbar" tabindex="0" aria-valuenow="0" aria-valuemin="0" aria-valuetext="0 percent" aria-valuemax="100">
   <div class="progress-meter" style="width: 0%">
@@ -67,8 +55,7 @@
   </div>
 </div>
 
-</body>
-<footer>
+<cfsavecontent variable="pcc_scripts">
 <script type="text/javascript">
 	$(document).ready(function(){
 		function setDate(term, displayField, idName){
@@ -107,23 +94,7 @@
 				serverBillingSetupComplete = data;
 			},
 			error: function (jqXHR, exception) {
-		        var msg = '';
-		        if (jqXHR.status === 0) {
-		            msg = 'Not connect.\n Verify Network.';
-		        } else if (jqXHR.status == 404) {
-		            msg = 'Requested page not found. [404]';
-		        } else if (jqXHR.status == 500) {
-		            msg = 'Internal Server Error [500].';
-		        } else if (exception === 'parsererror') {
-		            msg = 'Requested JSON parse failed.';
-		        } else if (exception === 'timeout') {
-		            msg = 'Time out error.';
-		        } else if (exception === 'abort') {
-		            msg = 'Ajax request aborted.';
-		        } else {
-		            msg = 'Uncaught Error.\n' + jqXHR.responseText;
-		        }
-		        alert(msg);
+				handleAjaxError(jqXHR, exception);
 			}
 		});
 		showStatus(0, 0);
@@ -139,10 +110,11 @@
 			$('.progress-meter-text').text(percentComplete + '%');
 			waitCount++;
 			setTimeout(function(){showStatus(percentComplete, waitCount);},1000);
+		}else if(serverBillingSetupComplete == -1){
 		}else{
-			window.location="Billing.cfm";
+			window.location="index.cfm";
 		}
 	}
 </script>
-</footer>
-</html>
+</cfsavecontent>
+<cfinclude template="includes/footer.cfm">

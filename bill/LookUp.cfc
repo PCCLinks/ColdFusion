@@ -5,7 +5,7 @@
 	    <cfargument name="gridsortcolumn" type="string" required="no">
 	    <cfargument name="gridsortdir" type="string" required="no">
 		<cfargument name="LookUpType">
-		<cfquery datasource="fc" name="data" >
+		<cfquery datasource="pcclinks" name="data" >
 			SELECT LookupID, LookupName
 			FROM LookUp
 			WHERE LookUpType = <cfqueryparam value="#arguments.LookUpType#">
@@ -21,13 +21,13 @@
     	<cfset var id = structfind(gridrow,"LookupID")>
 		<cfif isStruct(gridrow) and isStruct(gridchanged)>
         	<cfif gridaction eq "U">
-	            <cfquery name="updateRows" datasource="fc">
+	            <cfquery name="updateRows" datasource="pcclinks">
 	                UPDATE LookUp
 	                	SET LookUpName = <cfqueryparam value="#value#" CFSQLType = "CF_SQL_VARCHAR"  >
 	                WHERE LookUpID = <cfqueryparam value="#id#" CFSQLType = "CF_SQL_INTEGER">
 	            </cfquery>
 			<cfelseif gridaction eq "I">
- 				<cfquery name="insertRow" datasource="fc">
+ 				<cfquery name="insertRow" datasource="pcclinks">
 					INSERT INTO LookUp(LookupName, LookupType)
 					VALUES('#value#', '#arguments.LookUpType#')
 				</cfquery>
@@ -35,7 +35,7 @@
 		</cfif>
 	</cffunction>
 	<cffunction name="getTerms" access="remote">
-		<cfquery name="data" datasource="fc">
+		<cfquery name="data" datasource="pcclinks">
 			select *
 			from pcc_links.BannerCalendar
 			order by term
@@ -45,7 +45,7 @@
 	<cffunction name="getFilteredTerm" access="remote" >
 		<cfargument name="term">
 		<cfargument name="displayField">
-		<cfquery name="data" datasource="fc" result="r">
+		<cfquery name="data" datasource="pcclinks" result="r">
 			select *
 			from pcc_links.BannerCalendar
 			where term = <cfqueryparam value="#arguments.term#">
@@ -55,7 +55,7 @@
 		<cfreturn r>
 	</cffunction>
 	<cffunction name="getprograms" access="remote">
-		<cfquery name="data" datasource="fc">
+		<cfquery name="data" datasource="pcclinks">
 			select programName
 			from sidny.keyProgram
 			where programName <> 'ytc'
@@ -67,14 +67,14 @@
 		<cfreturn data>
 	</cffunction>
 		<cffunction name="getschools" access="remote">
-		<cfquery name="data" datasource="fc">
+		<cfquery name="data" datasource="pcclinks">
 			select *
 			from sidny.keySchoolDistrict
 		</cfquery>
 		<cfreturn data>
 	</cffunction>
 <cffunction name="getLastTermBilled" access="remote">
-	<cfquery datasource="fc" name="data">
+	<cfquery datasource="pcclinks" name="data">
 		SELECT ProgramQuarter, ProgramYear, maxTerm.Term MaxTerm
 		FROM pcc_links.BannerCalendar c
 			JOIN (SELECT MAX(Term) Term
@@ -83,7 +83,7 @@
 	<cfreturn data>
 </cffunction>
 <cffunction name="getNextTermToBill" access="remote">
-	<cfquery datasource="fc" name="data">
+	<cfquery datasource="pcclinks" name="data">
 		SELECT *
 		FROM pcc_links.BannerCalendar
 		WHERE Term = (SELECT MIN(Term) Term
@@ -95,7 +95,7 @@
 </cffunction>
 <cffunction name="getProgramYearTerms" access="remote">
 	<cfargument name="term" required="true">
-	<cfquery datasource="fc" name="data">
+	<cfquery datasource="pcclinks" name="data">
 		SELECT CurrentTerm
 			,MAX(CASE ProgramQuarter WHEN 1 THEN Term ELSE NULL END) Term1
 			,MAX(CASE ProgramQuarter WHEN 2 THEN Term ELSE NULL END) Term2

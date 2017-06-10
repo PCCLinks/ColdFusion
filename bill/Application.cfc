@@ -1,12 +1,19 @@
-/**
- * Application
- *
- * @author arlette.slachmuylder
- * @date 5/3/17
- **/
-component {
+<cfcomponent>
+	<cfset This.name = "PCC Links Billing" />
+	<cfset This.sessionManagement = True />
+	<cfset This.clientmanagement = "yes" />
+	<cfset This.setclientcookies = "yes" />
+	<cfset This.setdomaincookies = "no" />
+	<cfset This.loginstorage = "session" />
+	<cfset This.datasource = "pcclinks" />
 
-    this.name = "PCC Links Billing";
-    this.sessionManagement = true;
+	<cffunction name="OnApplicationStart"></cffunction>
 
-}
+    <cffunction name="OnSessionStart">
+        <CFLOCK SCOPE="SESSION" TYPE="READONLY" TIMEOUT="5">
+	        <cfset SESSION.DateInitialized = Now() />
+        </CFLOCK>
+    </cffunction>
+
+    <cffunction name="OnRequestStart"></cffunction>
+</cfcomponent>

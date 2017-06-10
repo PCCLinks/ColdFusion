@@ -1,11 +1,15 @@
 <cfcomponent displayname="programbilling">
 
-<cffunction name="yearlybilling" returntype="query" access="remote">
+	<cffunction name="yearlyBilling" returntype="query" access="remote">
+		<!--- arguments --->
 		<cfargument name="program" default="">
 		<cfargument name="schooldistrict" default="">
 		<cfargument name="term" default="">
 		<cfargument name="bannerGNumber" default="">
+
 		<cfset debug="false">
+
+		<!--- build array to be used to get one program year of datat --->
 		<cfset quarters = ArrayNew(1)>
 		<cfif right(arguments.term,2) GT 2>
 			<cfset var year1 = left(arguments.term,4) >
@@ -18,6 +22,8 @@
 		<cfset quarters[2] = year1 & "04">
 		<cfset quarters[3] = year2 & "01">
 		<cfset quarters[4] = year2 & "02">
+
+		<!--- main query --->
 		<cfquery name="data" datasource="pcclinks" result="r">
 			select c.firstname, c.lastname, c.bannergnumber
 				,Date_Format(currentEnrolledStatus.StatusDate, '%m/%d/%Y') CurrentEnrolledDate
@@ -52,19 +58,19 @@
 					CAST(IFNULL(SpringNoOfClasses,0) as unsigned) CurrentTermNoOfCredits,
 					BSIDQ4 CurrentStudentBillingID
 				</cfif>
-			from sidny.contact c
-			    join sidny.status currentEnrolledStatus on c.contactID = currentEnrolledStatus.contactID
+			from contact c
+			    join status currentEnrolledStatus on c.contactID = currentEnrolledStatus.contactID
 					and currentEnrolledStatus.statusID = (select statusid from sidny.status where keyStatusID IN (2,13,14,15,16) and contactid = c.contactid and undoneStatusID is null order by statusdate desc limit 1)
 				<cfif len(#arguments.bannerGNumber#) GT 0>
 			    	and c.bannerGNumber = <cfqueryparam value="#arguments.bannerGNumber#">
 			    </cfif>
-			    join sidny.keyStatus keyStatus on currentEnrolledStatus.keyStatusID = keyStatus.keyStatusID
-			    left outer join sidny.status currentExitStatus on c.contactID = currentExitStatus.contactID
+			    join keyStatus keyStatus on currentEnrolledStatus.keyStatusID = keyStatus.keyStatusID
+			    left outer join status currentExitStatus on c.contactID = currentExitStatus.contactID
 					and currentExitStatus.statusID = (select statusid from sidny.status where keyStatusID = 3 and contactid = c.contactid and statusDate >= currentEnrolledStatus.statusDate and undoneStatusID is null order by statusdate desc limit 1)
-			    join sidny.status currentSchoolStatus on c.contactid = currentSchoolStatus.contactID
+			    join status currentSchoolStatus on c.contactid = currentSchoolStatus.contactID
 					and currentSchoolStatus.statusID = (select statusID from sidny.status where keyStatusID = 7 and contactid = c.contactid and undoneStatusID is null order by statusdate desc limit 1)
-				join sidny.statusSchoolDistrict statusSchoolDistrict on currentSchoolStatus.statusid = statusSchoolDistrict.statusID
-			    join sidny.keySchoolDistrict keySchoolDistrict on statusSchoolDistrict.keySchoolDistrictID = keySchoolDistrict.keySchoolDistrictID
+				join statusSchoolDistrict statusSchoolDistrict on currentSchoolStatus.statusid = statusSchoolDistrict.statusID
+			    join keySchoolDistrict keySchoolDistrict on statusSchoolDistrict.keySchoolDistrictID = keySchoolDistrict.keySchoolDistrictID
 			    join (select contactid, districtid, program, enrolleddate, exitdate, MAX(BillingDate) BillingDate, MAX(BillingStatus) BillingStatus, MAX(BSIDQ1) BSIDQ1, MAX(BSIDQ2) BSIDQ2, MAX(BSIDQ3) BSIDQ3, MAX(BSIDQ4) BSIDQ4
 			    		,sum(SummerNoOfClasses) SummerNoOfClasses
 			    		,sum(SummerNoOfCredits) SummerNoOfCredits
@@ -79,8 +85,8 @@
 							,CASE bs.term WHEN #term# THEN bs.BillingDate ELSE NULL END BillingDate
 							,CASE bs.term WHEN #term# THEN bs.BillingStatus ELSE NULL END BillingStatus
 							,bs.BillingStudentID BSIDQ1, NULL BSIDQ2, NULL BSIDQ3, NULL BSIDQ4,  count(*) SummerNoOfClasses, sum(bsi.coursevalue) SummerNoOfCredits, Null FallNoOfClasses, Null FallNoOfCredits, NULL WinterNoOfClasses, NULL WinterNoOfCredits, NULL SpringNoOfClasses, NULL SpringNoOfCredits
-					from pcc_links.BillingStudent bs
-						join pcc_links.BillingStudentItem bsi on bs.BillingStudentid = bsi.billingstudentid
+					from billingStudent bs
+						join billingStudentItem bsi on bs.BillingStudentid = bsi.billingstudentid
 					where bs.includeflag = 1 and bsi.includeflag = 1 and bs.term = #quarters[1]#
 					group by bs.contactid, bs.districtid, program, enrolleddate, exitdate
 					union
@@ -88,8 +94,8 @@
 							,CASE bs.term WHEN #term# THEN bs.BillingDate ELSE NULL END BillingDate
 							,CASE bs.term WHEN #term# THEN bs.BillingStatus ELSE NULL END BillingStatus
 							,NULL BSIDQ1, bs.BillingStudentID BSIDQ2, NULL BSIDQ3, NULL BSIDQ4,  NULL SummerNoOfClasses, NULL SummerNoOfCredits, count(*) FallNoOfClasses, sum(bsi.coursevalue) FallNoOfCredits, NULL WinterNoOfClasses, NULL WinterNoOfCredits, NULL SpringNoOfClasses, NULL SpringNoOfCredits
-					from pcc_links.BillingStudent bs
-						join pcc_links.BillingStudentItem bsi on bs.BillingStudentid = bsi.billingstudentid
+					from billingStudent bs
+						join billingStudentItem bsi on bs.BillingStudentid = bsi.billingstudentid
 					where bs.includeflag = 1 and bsi.includeflag = 1 and bs.term = #quarters[2]#
 					group by bs.contactid, bs.districtid, program, enrolleddate, exitdate
 					union
@@ -97,8 +103,8 @@
 							,CASE bs.term WHEN #term# THEN bs.BillingDate ELSE NULL END BillingDate
 							,CASE bs.term WHEN #term# THEN bs.BillingStatus ELSE NULL END BillingStatus
 							,NULL BSIDQ1, NULL BSIDQ2, bs.BillingStudentID BSIDQ3, NULL BSIDQ4,  NULL SummerNoOfClasses, NULL SummerNoOfCredits, null FallNoOfClasses, null FallNoOfCredits, count(*) WinterNoOfClasses, sum(bsi.coursevalue) WinterNoOfCredits, NULL SpringNoOfClasses, NULL SpringNoOfCredits
-					from pcc_links.BillingStudent bs
-						join pcc_links.BillingStudentItem bsi on bs.BillingStudentid = bsi.billingstudentid
+					from billingStudent bs
+						join billingStudentItem bsi on bs.BillingStudentid = bsi.billingstudentid
 					where bs.includeflag = 1 and bsi.includeflag = 1 and bs.term = #quarters[3]#
 					group by bs.contactid, bs.districtid, program, enrolleddate, exitdate
 					union
@@ -106,15 +112,15 @@
 							,CASE bs.term WHEN #term# THEN bs.BillingDate ELSE NULL END BillingDate
 							,CASE bs.term WHEN #term# THEN bs.BillingStatus ELSE NULL END BillingStatus
 							,NULL BSIDQ1, NULL BSIDQ2, NULL BSIDQ3, bs.BillingStudentID BSIDQ4,  NULL SummerNoOfClasses, NULL SummerNoOfCredits, null FallNoOfClasses, null FallNoOfCredits, NULL WinterNoOfClasses, NULL WinterNoOfCredits, count(*) SpringNoOfClasses, sum(bsi.coursevalue) SpringNoOfCredits
-					from pcc_links.BillingStudent bs
-						join pcc_links.BillingStudentItem bsi on bs.BillingStudentid = bsi.billingstudentid
+					from billingStudent bs
+						join billingStudentItem bsi on bs.BillingStudentid = bsi.billingstudentid
 					where bs.includeflag = 1 and bsi.includeflag = 1 and bs.term = #quarters[4]#
 					group by bs.contactid, bs.districtid, program, enrolleddate, exitdate
 					) data
 				group by contactid, districtid, program, enrolleddate, exitdate
 				) bs
 					on bs.contactid = c.contactid
-			    join sidny.keySchoolDistrict sd on bs.districtid = sd.keyschooldistrictid
+			    join keySchoolDistrict sd on bs.districtid = sd.keyschooldistrictid
 			    where 1=1
 			    	<cfif len(#arguments.bannerGNumber#) GT 0>
 			    		and c.bannerGNumber = <cfqueryparam value="#arguments.bannerGNumber#">
@@ -141,27 +147,38 @@
 		<cfreturn QueryConvertForGrid(data,  arguments.page, arguments.pageSize)>
 	</cffunction>
 
-	<cffunction name="selectprogramstudentlist" returntype = "query" returnformat="json" access="remote">
+	<cffunction name="selectProgramStudentList" returntype = "query" returnformat="json" access="remote">
+		<!--- arguments --->
 		<cfargument name="program" type="string">
 		<cfargument name="term" >
 		<cfargument name="schooldistrict" default="" >
 		<cfargument name="columns" type="array">
 		<cfset debug="true">
+
+		<!--- get the yearly data for the parameters --->
 		<cfset var yearlybilling = yearlybilling(program=#arguments.program#, term=#arguments.term#, schooldistrict=#arguments.schooldistrict#) >
+
+		<!------------------------------------------------------->
+		<!--- build the subset of columns needed for the page --->
+		<!------------------------------------------------------->
 		<cfset var sql="">
 		<cfloop array="#arguments.columns#" item="col">
 			<cfset sql = #sql# & #col# & ","  >
 		</cfloop>
 		<cfset sql = RemoveChars(#sql#, len(#sql#), 1)>
 		<cfif debug><cfdump var="#sql#"></cfif>
+		<!--- query for the needed subset of columns --->
 		<cfquery name="data" dbtype="query" result="r">
 			select #sql#
 			from yearlybilling
 		</cfquery>
+		<!--- debug code --->
 		<cfif debug><cfdump var="#r#"></cfif>
 		<cfif debug><cfdump var="#data#"></cfif>
+		<!--- final return  --->
 		<cfreturn data>
 	</cffunction>
+
 	<cffunction name="groupBySchoolDistrictAndProgram" returntype="query" access="remote">
 		<cfargument name="term" required="yes">
 		<cfset quarters = ArrayNew(1)>
@@ -340,20 +357,22 @@
 	</cffunction>
 
 	<cffunction name ="selectBillingEntries" access="remote" returnType="query">
+		<!--- arguments --->
 		<cfargument name="billingstudentid" type="string" required="no" default="">
 		<cfargument name="bannerGNumber" type="string" required="no" default="">
 		<cfargument name="term" type="numeric" required="no" default="0">
+		<!--- debug code --->
 		<cfset debug="false">
 		<cfif debug>
 			<cfoutput>selectstudent arguments:</cfoutput>
 			<cfdump var="#arguments#">
 		</cfif>
-		<cfquery name="data" datasource="pcclinks">
+		<!--- main query --->
+		<cfquery name="data">
 			select *
-			from pcc_links.BillingStudentItem bsi
-				join pcc_links.BillingStudent bs on bsi.BillingStudentId  =bs.BillingStudentId
-				join sidny.contact c on bs.contactid = c.contactid
-				join pcc_links.BannerCourse bc on bsi.CRN = bc.CRN and bc.term = bs.term and bs.gnumber = bc.stu_id
+			from billingStudentItem bsi
+				join billingStudent bs on bsi.BillingStudentId=bs.BillingStudentId
+				join contact c on bs.contactid = c.contactid
 			where 1=1
 				<cfif len(#arguments.billingstudentid#) GT 0 >
 					and bs.billingstudentid = <cfqueryparam value="#arguments.billingstudentid#">
@@ -367,6 +386,7 @@
 	</cffunction>
 
 	<cffunction name ="getBillingEntries" access="remote" returnType="struct">
+		<!--- arguments --->
 		<cfargument name="page" type="numeric" required="no" default=1>
 	    <cfargument name="pageSize" type="numeric" required="no" default=40>
 	    <cfargument name="gridsortcolumn" type="string" required="no">
@@ -375,15 +395,17 @@
 		<cfargument name="gNumber" type="string" required="yes">
 		<cfargument name="program" type="string" required="yes">
 		<cfargument name="termcode" type="string" required="yes">
+
+		<!--- debug code --->
 		<cfset debug="false">
-		<cfif debug>
-			<cfdump var="#arguments#">
-		</cfif>
+		<cfif debug><cfdump var="#arguments#"></cfif>
+
+
 		<cfset billingdate = #arguments.termcode# & "01">
-		<cfquery name="existingBilling" datasource="pcclinks" result="rexistingBilling">
+		<cfquery name="existingBilling" result="rexistingBilling">
 			select distinct bsi.courseid
-			from pcc_links.BillingStudent bs
-				join pcc_links.BillingStudentItem bsi on bs.BillingStudentID = bsi.BillingStudentID
+			from billingStudent bs
+				join billingStudentItem bsi on bs.BillingStudentID = bsi.BillingStudentID
 			where
 			<cfif len(trim(#arguments.billingstudentid#))>
 				bs.billingstudentid = <cfqueryparam value="#arguments.billingstudentid#">
@@ -480,15 +502,14 @@
 		<cfargument name="row" type="struct" required="yes">
 		<cfset debug="false">
 		<cfif debug><cfdump var="#arguments.row#"></cfif>
-		<cfquery name="bannerclasses" datasource="pcclinks">
+		<cfquery name="bannerclasses" datasource="bannerpcclinks">
 			select *
-			from pcc_links.BannerCourse
+			from swvlinks_course
 			where stu_id = <cfqueryparam value="#arguments.row.gnumber#">
-				and term < <cfqueryparam value="#arguments.row.term#">
+				and term <= <cfqueryparam value="#arguments.row.term#">
 				<cfif len(arguments.row.subj) GT 0>
-				and subj = (SELECT SUBJ FROM pcc_links.BannerCourse WHERE CRN = <cfqueryparam value="#arguments.row.crn#">
+				and subj = (SELECT SUBJ FROM swvlinks_course WHERE CRN = <cfqueryparam value="#arguments.row.crn#">
 				</cfif>
-			order by TERM
 		</cfquery>
 		<cfif debug><cfdump var="#bannerclasses#"></cfif>
 		<cfreturn  bannerclasses>
@@ -525,20 +546,22 @@
     </cffunction>
 
 	<cffunction name="updatestudentbillinginclude" access="remote">
-      	<cfargument name="row" type="struct" required="yes">
+      	<cfargument name="billingstudentid" required="yes">
+		<cfargument name="includeflag" required="yes">
 		<cfquery datasource="pcclinks">
-		UPDATE BillingStudent
-		SET IncludeFlag = '#ARGUMENTS.grid.includeflag#'
-		WHERE billingstudentid = <cfqueryparam value="#ARGUMENTS.grid.billingstudentid#">
+			UPDATE billingStudent
+			SET IncludeFlag = '#ARGUMENTS.includeflag#'
+			WHERE billingstudentid = <cfqueryparam value="#ARGUMENTS.billingstudentid#">
 		</cfquery>
     </cffunction>
 
-	<cffunction name="editstudentbillingiteminclude" access="remote">
-      	<cfargument name="row" type="struct" required="yes">
+	<cffunction name="updatestudentbillingiteminclude" access="remote">
+      	<cfargument name="billingstudentitemid" required="yes">
+		<cfargument name="includeflag" required="yes">
 		<cfquery datasource="pcclinks">
-		UPDATE pcc_links.BillingStudentItem
-		SET IncludeFlag = '#ARGUMENTS.row.includeflag#'
-		WHERE billingstudentitemid = <cfqueryparam value="#ARGUMENTS.row.billingstudentitemid#">
+			UPDATE billingStudentItem
+			SET IncludeFlag = '#ARGUMENTS.includeflag#'
+			WHERE billingstudentitemid = <cfqueryparam value="#ARGUMENTS.billingstudentitemid#">
 		</cfquery>
     </cffunction>
 
@@ -557,22 +580,34 @@
 		<cfdump var="xxx">
     </cfif>
 	</cffunction>
-	<cffunction name="getGNumber" access="remote">
+	<cffunction name="setNextGNumberInSession" access="remote">
 		<cfargument name="getNext" type="numeric" value=0>
 		<cfargument name="getPrev" type="numeric" val=0>
 		<cfset debug="true">
 		<cfif debug><cfdump var="#Session#"></cfif>
-		<cfset gList = ListToArray(Session.gList)>
+		<cfset gList = ListToArray(mid(Session.gList,2,len(Session.glist)-3))>
+		<cfloop index="i" from="1" to="#arrayLen(gList)#" >
+			<cfset gList[i] = #replace(gList[i],"""","","all")#>
+		</cfloop>
+		<cfif debug>gList:<cfdump var="#gList#"><br></cfif>
 		<cfset gNumber = Session.bannerGNumber>
 		<cfloop index="i" from="1" to="#arrayLen(gList)#" >
 			<cfset prev = gList[#i#]>
 			<cfset next = gList[#i#]>
-			<cfif debug><cfdump var="#i#">:<cfdump var="#prev#">,<cfdump var="#next#"><br/></cfif>
-			<cfif gList[#i#] EQ #gNumber#>
+			<cfif debug>
+				<cfdump var="#i#">:<cfdump var="#prev#">,<cfdump var="#next#"><br/>
+				gList: <cfdump var="#replace(gList[i],"""","","all")#"><br>
+				gNumber: <cfdump var="#gNumber#"><br>
+			</cfif>
+
+			<cfif gList[i] EQ gNumber>
+				<cfif debug>'gList[#i#] EQ #gNumber#'<br/></cfif>
 				<cfif #i# GT 1>
+					<cfif debug>'cfif #i# GT 1'<br/></cfif>
 					<cfset prev = gList[#i# - 1]>
 				</cfif>
 				<cfif #i# LT #arrayLen(gList)#>
+					<cfif debug>'#i# LT #arrayLen(gList)#'<br/></cfif>
 					<cfset next = gList[#i# + 1]>
 				</cfif>
 				<cfif debug><cfdump var="#i#">:<cfdump var="#prev#">,<cfdump var="#next#"><br/></cfif>
@@ -609,12 +644,12 @@
 	</cffunction>
 
 	<cffunction name="getCurrentTermSummary" access="remote" returntype="query">
-		<cfquery datasource="pcclinks" name="data">
+		<cfquery name="data">
 			SELECT bs.Program, sd.schoolDistrict, bs.term
 				,SUM(CASE WHEN bs.BillingStatus = 'IN PROGRESS' THEN 1 ELSE 0 END) StudentsStillBeingReviewed
 				,SUM(CASE WHEN bs.BillingStatus = 'COMPLETED' THEN 1 ELSE 0 END) StudentsReviewed
-			from pcc_links.BillingStudent bs
-			    join sidny.keySchoolDistrict sd on bs.DistrictID = sd.keySchoolDistrictID
+			from billingStudent bs
+			    join keySchoolDistrict sd on bs.DistrictID = sd.keySchoolDistrictID
 			where bs.term = (select max(term) from pcc_links.BillingStudent)
 			group by bs.Program, sd.schoolDistrict, bs.term
 		</cfquery>
