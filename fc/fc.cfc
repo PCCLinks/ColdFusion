@@ -37,6 +37,7 @@
 				when GRADE = 'B' then CREDITS
 				when GRADE = 'C' then CREDITS
 				when GRADE = 'D' then CREDITS
+				when GRADE = 'F' then CREDITS
 				else 0 end as creditsForGPA
 
 			, case when SUBJ = 'CG' AND CRSE = '100' AND PASSED = 'Y' THEN 1 ELSE 0 END AS cg100Passed
@@ -54,12 +55,23 @@
 		<cfquery dbtype="query" name="firstYearMetrics">
 			SELECT BannerCourses.STU_ID
 				, SUM(BannerCourses.passedCredits) AS firstYearCredits
-				, SUM(BannerCourses.pointsForGPA) / SUM(BannerCourses.creditsForGPA) as firstYearGPA
+				, SUM(BannerCourses.pointsForGPA)/SUM(BannerCourses.creditsForGPA) as firstYearGPA
 			FROM BannerCourses
 			WHERE STU_ID = <cfqueryparam  value="#arguments.id#">
 				AND inFirstYear = 1
 			GROUP BY STU_ID
+			HAVING SUM(BannerCourses.creditsForGPA) > 0
+			UNION
+			SELECT BannerCourses.STU_ID
+				, 0 AS firstYearCredits
+				, 0 as firstYearGPA
+			FROM BannerCourses
+			WHERE STU_ID = <cfqueryparam  value="#arguments.id#">
+				AND inFirstYear = 1
+			GROUP BY STU_ID
+			HAVING SUM(BannerCourses.creditsForGPA) = 0
 			</cfquery>
+		<cf>
 		<cfreturn firstYearMetrics>
 	</cffunction>
 
@@ -258,7 +270,34 @@
 		<!------- Banner Person Data ------->
 		<!---------------------------------->
 		<cfquery datasource="bannerpcclinks" name="BannerPopulation">
-			SELECT *
+			SELECT distinct STU_ID
+		    , STU_NAME
+		    , STU_ZIP
+		    , STU_CITY
+		    , O_GPA
+		    , O_ATTEMPTED
+		    , O_EARNED
+		    , O_EARNED_CAT
+		    , GENDER
+		    , BIRTHDATE
+		    , REP_RACE
+		    , ASIAN
+		    , NATIVE
+		    , BLACK
+		    , HISPANIC
+		    , ISLANDER
+		    , WHITE
+		    , HS_CODE
+		    , HS_NAME
+		    , HS_CITY
+		    , HS_STATE
+		    , HS_GRAD_DATE
+		    , HS_DPLM
+		    , TE_MATH
+		    , TE_READ
+		    , TE_WRITE
+		    , RE_HOLD
+		    , PCC_EMAIL
 			FROM swvlinks_person
 			WHERE 1=1
 			<cfif len(#arguments.bannerGNumber#) gt 0>
@@ -271,6 +310,7 @@
 		<cfquery dbtype="query" name="caseload_banner">
 			SELECT fcTbl.*
 				, BannerPopulation.*
+			<!--- coalesce the incoming and outgoing asap from the term extract --->
 			FROM fcTbl, BannerPopulation
 			WHERE fcTbl.G = BannerPopulation.STU_ID
 		</cfquery>
