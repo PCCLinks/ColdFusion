@@ -179,16 +179,16 @@
 					<cfif "None of the above" eq caseload_banner.living_situation>
 						selected
 					</cfif>
-					>None of the above</option> <option value="Is/was in foster care"
-					<cfif "Is/was in foster care" eq caseload_banner.living_situation>
+					>None of the above</option> <option value="I am/was in foster care"
+					<cfif "I am/was in foster care" eq caseload_banner.living_situation>
 						selected
 					</cfif>
-					>Is/was in foster care</option> <option value="Is/was homeless"
-					<cfif "Is/was homeless" eq caseload_banner.living_situation>
+					>Is/was in foster care</option> <option value="I am/was homeless (lack of permanent or stable home)"
+					<cfif "I am/was homeless (lack of permanent or stable home)" eq caseload_banner.living_situation>
 						selected
 					</cfif>
-					>Is/was homeless</option> <option value="Emancipated minor"
-					<cfif "Emancipated minor" eq caseload_banner.living_situation>
+					>Is/was homeless</option> <option value="I am an Emancipated minor"
+					<cfif "I am an Emancipated minor" eq caseload_banner.living_situation>
 						selected
 					</cfif>
 					>Emancipated minor</option>
