@@ -51,38 +51,33 @@ function buildChart(type, labels, data, ctx, bgcolors, bcolors, ymax, title){
 } //function buildChart
 </script>
 
-<cfquery name="fcTotal" datasource="pcclinks">
+<cfquery name="fcTotal">
   SELECT COUNT(*) TotalNumberStudents
-   FROM pcc_links.fc;
+   FROM futureConnect;
 </cfquery>
 
-<cfquery name="fcCampusCount" datasource="pcclinks">
-  SELECT CASE CAMPUS WHEN 'CAS' THEN 'Cascade'
-		WHEN 'SYL' THEN 'Sylvania'
-		WHEN 'RC' THEN 'Rock Creek'
-		WHEN'SE' THEN 'Southeast'
-		ELSE CAMPUS
-		END AS CampusName
-	, Campus
+<cfquery name="fcCampusCount">
+  SELECT campus
 	, COUNT(*) NumberStudents
-  FROM pcc_links.fc fc1
-  WHERE Campus IN ('CAS','SE','SYL','RC')
-  GROUP BY CAMPUS;
+  FROM futureConnect
+  GROUP BY campus;
+
+
 </cfquery>
 
-<cfquery name="fcOutcome" datasource="pcclinks">
-  SELECT CAMPUS
-		, CASE WHEN STATUSABCX = 'A' THEN 'ACTIVE'
-			WHEN STATUSABCX = 'B' THEN 'BREAK'
-			WHEN STATUSABCX = 'C' THEN 'COMPLET'
-			WHEN STATUSABCX = 'X' THEN 'EXIT'
-			ELSE 'OTHER' END AS Status
-	, ROUND(count(*) / (SELECT COUNT(*) FROM pcc_links.fc WHERE Campus = fc1.Campus),2) Outcome
-	FROM pcc_links.fc fc1
-	GROUP BY CAMPUS, STATUSABCX
+<cfquery name="fcOutcome">
+  SELECT campus
+		, CASE WHEN statusInternal = 'A' THEN 'ACTIVE'
+			WHEN statusInternal = 'B' THEN 'BREAK'
+			WHEN statusInternal = 'C' THEN 'COMPLET'
+			WHEN statusInternal = 'X' THEN 'EXIT'
+			ELSE 'OTHER' END AS statusInternal
+	, ROUND(count(*) / (SELECT COUNT(*) FROM futureConnect WHERE campus = fc1.campus),2) Outcome
+	FROM futureConnect fc1
+	GROUP BY campus, statusInternal
 	ORDER BY 1,2;
 </cfquery>
-<!--><-->
+
 <!--- Main Title --->
 <cfoutput query="fcTotal">
 <div>
@@ -101,23 +96,23 @@ function buildChart(type, labels, data, ctx, bgcolors, bcolors, ymax, title){
 		<div class="small-3 columns">
 			<!--- row count --->
 			<div class="row" style="text-align: center">
-				<span style="font-size:2.25rem;line-height:3rem;;font-weight:300;">#CampusName#</span><br/>
+				<span style="font-size:2.25rem;line-height:3rem;;font-weight:300;">#campus#</span><br/>
 				<span style="font-size:1.5rem;line-height:1.5rem;">#NumberStudents# students</span><br/>
 			</div> <!-- end row  count -->
 			<br class="clear">
 			<br class="clear">
 			<!--- row bar chart --->
 			<div class="row">
-				<cfquery name="fcOutcome" datasource="pcclinks">
-					SELECT CASE WHEN STATUSABCX = 'A' THEN 'ACTIVE'
-					        WHEN STATUSABCX = 'B' THEN 'BREAK'
-					        WHEN STATUSABCX = 'C' THEN 'COMPLETE'
-			    		    WHEN STATUSABCX = 'X' THEN 'EXIT'
+				<cfquery name="fcOutcome">
+					SELECT CASE WHEN statusInternal = 'A' THEN 'ACTIVE'
+					        WHEN statusInternal = 'B' THEN 'BREAK'
+					        WHEN statusInternal = 'C' THEN 'COMPLETE'
+			    		    WHEN statusInternal = 'X' THEN 'EXIT'
 			        		ELSE 'OTHER' END AS Status
-						,ROUND(count(*) / (SELECT COUNT(*) FROM pcc_links.fc WHERE Campus = fc1.Campus),2) Outcome
-				    FROM pcc_links.fc fc1
-			    	WHERE Campus = <cfqueryparam value="#campus#">
-			    	GROUP BY CAMPUS, STATUSABCX;
+						,ROUND(count(*) / (SELECT COUNT(*) FROM futureConnect WHERE campus = fc1.campus),2) Outcome
+				    FROM futureConnect fc1
+			    	WHERE campus = <cfqueryparam value="#campus#">
+			    	GROUP BY campus, statusInternal;
 				</cfquery>
 				<!--- Create Unique Id Per Chart --->
 				<cfset graphId= '#campus#' & "barchart">
@@ -146,10 +141,10 @@ function buildChart(type, labels, data, ctx, bgcolors, bcolors, ymax, title){
 			<br class="clear">
 			<!--- row line chart --->
 			<div class="row">
-			<cfquery name="fcOutcomeTrend" datasource="pcclinks">
-				  	SELECT CONVERT(LEFT(COHORT,4), unsigned integer) Year, ROUND(COUNT(CASE WHEN STATUSABCX <> 'X' THEN G END) / COUNT(*),2)  NonExits
-					FROM pcc_links.fc
-					WHERE Campus = '#Campus#'
+			<cfquery name="fcOutcomeTrend">
+				  	SELECT CONVERT(LEFT(COHORT,4), unsigned integer) Year, ROUND(COUNT(CASE WHEN statusInternal <> 'X' THEN bannerGNumber END) / COUNT(*),2)  NonExits
+					FROM futureConnect
+					WHERE campus = '#Campus#'
 					GROUP BY LEFT(COHORT,4)
 			</cfquery>
 			<!--- Create Unique Id Per Chart --->

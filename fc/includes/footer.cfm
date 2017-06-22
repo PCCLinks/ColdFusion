@@ -18,6 +18,8 @@
 	  	var data = $.param({data:encodeURIComponent(JSON.stringify(sessionStorage))});
   		$.post("saveSession.cfm", data);
 	}
+	$(document).foundation();
+
 </script>
 
 <!--- script content created in content pages and referenced here --->

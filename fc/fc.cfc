@@ -42,8 +42,10 @@
 
 			, case when SUBJ = 'CG' AND CRSE = '100' AND PASSED = 'Y' THEN 1 ELSE 0 END AS cg100Passed
 			, case when SUBJ = 'CG' AND CRSE = '130' AND PASSED = 'Y' THEN 1 ELSE 0 END AS cg130Passed
+			, case when SUBJ = 'CG' AND CRSE = '190' AND PASSED = 'Y' THEN 1 ELSE 0 END AS cg190Passed
 			FROM swvlinks_course
 			WHERE STU_ID = <cfqueryparam  value="#arguments.id#">
+
 		</cfquery>
 		<cfreturn coursesByStudent>
 	</cffunction>
@@ -75,28 +77,64 @@
 		<cfreturn firstYearMetrics>
 	</cffunction>
 
-	<cffunction name="getASAP_Degree" access="remote" returntype="query">
-		<cfargument name="id" type="string" required="yes" default="">
-		<cfset TermData = getTermByStudent(id=#arguments.id#)>
-		<cfquery name="ASAP_Degree" datasource="bannerpcclinks">
+	<cffunction name="getMaxTermData" access="remote" returntype="query">
+		<cfargument name="id" type="string" required="no" default="">
+		<cfquery name="MaxTermData" datasource="bannerpcclinks">
 			SELECT swvlinks_term.STU_ID
 				, TERM
 				, P_DEGREE
-				, INCOMING_SAP
+				, EFC
+				, coalesce(OUTGOING_SAP, INCOMING_SAP) AS ASAP_STATUS
 			FROM swvlinks_term
 				JOIN (
 					SELECT STU_ID, MAX(TERM) AS maxTerm
 					FROM swvlinks_term
 					WHERE 1=1
-					AND STU_ID = <cfqueryparam  value="#arguments.id#">
+					<cfif len(#arguments.id#) gt 0>
+						and STU_ID = <cfqueryparam  value="#arguments.id#">
+					</cfif>
+
 					GROUP BY STU_ID
 					) maxs
 						ON swvlinks_term.STU_ID = maxs.STU_ID
 							and swvlinks_term.TERM = maxs.maxTerm
-			WHERE swvlinks_term.STU_ID = <cfqueryparam  value="#arguments.id#">
+
 		</cfquery>
-		<cfreturn ASAP_Degree>
+		<cfreturn MaxTermData>
 	</cffunction>
+
+
+	<cffunction name="getMaxRegistration" access="remote" returntype="query">
+		<cfargument name="id" type="string" required="yes" default="">
+		<cfquery datasource="bannerpcclinks" name="maxRegistration">
+
+			SELECT swvlinks_course.STU_ID
+			, swvlinks_course.TERM as maxRegistrationTerm
+			, sum(CREDITS) AS maxRegistrationCredits
+			FROM swvlinks_course
+
+				JOIN (
+					SELECT STU_ID, MAX(TERM) AS maxTerm
+					FROM swvlinks_course
+					WHERE 1=1
+					<cfif len(#arguments.id#) gt 0>
+						and STU_ID = <cfqueryparam  value="#arguments.id#">
+					</cfif>
+
+					GROUP BY STU_ID
+					) maxs
+						ON swvlinks_course.STU_ID = maxs.STU_ID
+							and swvlinks_course.TERM = maxs.maxTerm
+
+			WHERE swvlinks_course.STU_ID = <cfqueryparam  value="#arguments.id#">
+
+			GROUP BY swvlinks_course.STU_ID
+			, swvlinks_course.TERM
+
+		</cfquery>
+		<cfreturn maxRegistration >
+	</cffunction>
+
 
 
 	<cffunction name="getCGPassed" access="remote" returntype="query">
@@ -107,6 +145,7 @@
 			SELECT BannerCourses.STU_ID
 				, MAX(cg100Passed) as cg100Passed
 				, MAX(cg130Passed) as cg130Passed
+				, MAX(cg190Passed) as cg190Passed
 			FROM BannerCourses
 			WHERE STU_ID = <cfqueryparam  value="#arguments.id#">
 			GROUP BY STU_ID
@@ -117,27 +156,33 @@
 	<cffunction name="updateCase" access="remote">
 		<cfargument name="data" type="struct">
 		<cfquery name="create" result = "r">
-			UPDATE pcc_links.fc SET cohort = <cfqueryparam cfsqltype="cf_sql_varchar" value="#trim(arguments.data.cohort)#">,
-				preferred_name = <cfqueryparam cfsqltype="cf_sql_varchar" value="#trim(arguments.data.preferred_name)#">,
-				<!---gender = <cfqueryparam cfsqltype="cf_sql_varchar" value="#trim(arguments.data.gender)#">,--->
+			UPDATE futureConnect SET
+				cohort = <cfqueryparam cfsqltype="cf_sql_varchar" value="#trim(arguments.data.cohort)#">,
+				preferredName = <cfqueryparam cfsqltype="cf_sql_varchar" value="#trim(arguments.data.preferredName)#">,
+				gender = <cfqueryparam cfsqltype="cf_sql_varchar" value="#trim(arguments.data.gender)#">,
 				campus = <cfqueryparam cfsqltype="cf_sql_varchar" value="#trim(arguments.data.campus)#">,
-				parental_status = <cfqueryparam cfsqltype="cf_sql_varchar" value="#trim(arguments.data.parental_status)#">,
-				household_information = <cfqueryparam cfsqltype="cf_sql_varchar" value="#trim(arguments.data.household_information)#">,
-				living_situation = <cfqueryparam cfsqltype="cf_sql_varchar" value="#trim(arguments.data.living_situation)#">,
+				parentalStatus = <cfqueryparam cfsqltype="cf_sql_varchar" value="#trim(arguments.data.parentalStatus)#">,
+<!---
+				Household = <cfqueryparam cfsqltype="cf_sql_varchar" value="#trim(arguments.data.household_information)#">,
+				LivingSituation = <cfqueryparam cfsqltype="cf_sql_varchar" value="#trim(arguments.data.living_situation)#">,
 				<!---citizen_status = <cfqueryparam cfsqltype="cf_sql_varchar" value="#trim(arguments.data.citizen_status)#">, --->
-				professional_goal = <cfqueryparam cfsqltype="cf_sql_varchar" value="#trim(arguments.data.professional_goal)#">,
-				work_hours_weekly = <cfqueryparam cfsqltype="cf_sql_varchar" value="#trim(arguments.data.work_hours_weekly)#">,
-				statusabcx = <cfqueryparam cfsqltype="cf_sql_varchar" value="#trim(arguments.data.statusabcx)#">,
-				outcome_exit_reason = <cfqueryparam cfsqltype="cf_sql_varchar" value="#trim(arguments.data.outcome_exit_reason)#">,
-				coach = <cfqueryparam cfsqltype="cf_sql_varchar" value="#trim(arguments.data.coach)#">,
-				phone2 = <cfqueryparam cfsqltype="cf_sql_varchar" value="#trim(arguments.data.phone2)#">,
-				<!---_personal = <cfqueryparam cfsqltype="cf_sql_varchar" value="#trim(arguments.data._personal)#">,--->
-				notes = <cfqueryparam cfsqltype="cf_sql_varchar" value="#trim(arguments.data.notes)#">
+--->
+				careerPlan = <cfqueryparam cfsqltype="cf_sql_varchar" value="#trim(arguments.data.careerPlan)#">,
 
-			WHERE fc.G =  <cfqueryparam cfsqltype="cf_sql_varchar" value="#trim(arguments.data.bannerGNumber)#">
+				weeklyWorkHours = <cfqueryparam cfsqltype="cf_sql_varchar" value="#trim(arguments.data.weeklyWorkHours)#">,
+				statusInternal = <cfqueryparam cfsqltype="cf_sql_varchar" value="#trim(arguments.data.statusInternal)#">,
+				exitReason = <cfqueryparam cfsqltype="cf_sql_varchar" value="#trim(arguments.data.exitReason)#">,
+				coach = <cfqueryparam cfsqltype="cf_sql_varchar" value="#trim(arguments.data.coach)#">,
+				cellPhone = <cfqueryparam cfsqltype="cf_sql_varchar" value="#trim(arguments.data.cellPhone)#">,
+				phone2 = <cfqueryparam cfsqltype="cf_sql_varchar" value="#trim(arguments.data.phone2)#">,
+				emailPersonal = <cfqueryparam cfsqltype="cf_sql_varchar" value="#trim(arguments.data.emailPersonal)#">
+
+
+			WHERE futureConnect.bannerGNumber =  <cfqueryparam cfsqltype="cf_sql_varchar" value="#trim(arguments.data.bannerGNumber)#">
 		  </cfquery>
+
 		<cfif len(trim(arguments.data.notes)) GT 0>
-			<cfset insertNote(tableID="#arguments.data.G#", noteText="#trim(arguments.data.notes)#")>
+			<cfset insertNote(contactID="#arguments.data.contactID#", noteText="#trim(arguments.data.notes)#")>
 		</cfif>
 		<cfset saveEnrichmentProgramData(data=arguments.data) >
 	</cffunction>
@@ -195,30 +240,28 @@
 	</cffunction>
 
 	<cffunction name="insertNote" access="private">
-		<cfargument name="tableID" required="true">
+		<cfargument name="contactID" required="true">
 		<cfargument name="noteText" required="true">
 		<cfquery name="insert" >
-			INSERT INTO pcc_links.notes(tableName, tableID, noteText)
-			VALUES('fc','#arguments.tableID#', '#arguments.noteText#')
+			INSERT INTO sidny.notes(tableName, contactID, noteText, noteDateAdded, noteAddedBy)
+			VALUES('futureConnect','#arguments.contactID#', '#arguments.noteText#', Now(), 'changeme')
+
 		</cfquery>
 	</cffunction>
 
 
 	<cffunction name="getCaseload" access="remote" returntype="query">
-		<cfargument name="cohort" type="string" default="">
-		<cfargument name="campus" type="string" default="">
-		<cfargument name="coach" type="string" default="">
 		<cfargument name="bannerGNumber" type="string" default="">
-		<cfargument name="last_name" type="string" default="">
-		<cfargument name="first_name" type="string" default="">
-		<cfargument name="asap_status" type="string" default="">
-		<cfargument name="statusabcx" type="string" default="">
+
+		<cfset maxTermData = getMaxTermData(id=#arguments.bannerGNumber#)>
+
 
 		<!---------------------------------->
 		<!--- SIDNY Future Connect Data ---->
 		<!---------------------------------->
 		<cfquery name="fcTbl">
-			SELECT fc.*, c.contactID
+			SELECT futureConnect.*
+			, futureConnectApplication.*
 			, case when CAST(right(cohort,1) as char(50)) = '1' then 'Portland'
 				when CAST(right(cohort,1) as char(50)) = '2' then 'Beaverton'
 				when CAST(right(cohort,1) as char(50)) = '3' then 'Hillsboro'
@@ -236,34 +279,16 @@
 			,  convert(Concat(CAST(left(cohort,4) as char(50)),'04'), unsigned integer) as cohortFirstFall
 			,  convert(Concat(CAST((left(cohort,4)+1) as char(50)),'04'), unsigned integer) as cohortSecondFall
 
-			FROM pcc_links.fc fc
-				join contact c on fc.G = c.bannerGNumber
+			FROM futureConnect
+				LEFT JOIN futureConnectApplication
+					on futureConnect.bannerGNumber = futureConnectApplication.StudentID
 			WHERE 1=1
 			<cfif len(#arguments.bannerGNumber#) gt 0>
-				and G = <cfqueryparam  value="#arguments.bannerGNumber#">
+				and bannerGNumber = <cfqueryparam  value="#arguments.bannerGNumber#">
 			</cfif>
-			<cfif len(trim(arguments.cohort))>
-				AND cohort = <cfqueryparam  value="#arguments.cohort#">
-			</cfif>
-			<cfif len(trim(arguments.campus))>
-				AND campus = <cfqueryparam  value="#arguments.campus#">
-			</cfif>
-			<cfif len(trim(arguments.coach))>
-				AND coach = <cfqueryparam  value="#arguments.coach#">
-			</cfif>
-			<cfif len(trim(arguments.last_name))>
-				AND last_name = <cfqueryparam  value="#arguments.last_name#">
-			</cfif>
-			<cfif len(trim(arguments.first_name))>
-				AND first_name = <cfqueryparam  value="#arguments.first_name#">
-			</cfif>
-			<cfif len(trim(arguments.asap_status))>
-				AND asap_status = <cfqueryparam  value="#arguments.asap_status#">
-			</cfif>
-			<cfif len(trim(arguments.statusabcx))>
-				AND statusabcx = <cfqueryparam  value="#arguments.statusabcx#">
-			</cfif>
+
 		</cfquery>
+
 		<!---  end SIDNY Future Connect Data --->
 
 		<!---------------------------------->
@@ -299,27 +324,78 @@
 		    , RE_HOLD
 		    , PCC_EMAIL
 			FROM swvlinks_person
+
 			WHERE 1=1
 			<cfif len(#arguments.bannerGNumber#) gt 0>
 				and STU_ID = <cfqueryparam  value="#arguments.bannerGNumber#">
 			</cfif>
+
+
 		</cfquery>
 		<!---- end Banner Person Data ---->
 
-		<!------ Merge SIDNY and Banner Data ----->
-		<cfquery dbtype="query" name="caseload_banner">
+
+
+
+		<!------ Merge SIDNY and Banner Person and Term ----->
+		<cfquery dbtype="query" name="futureConnect_bannerPerson">
 			SELECT fcTbl.*
 				, BannerPopulation.*
 			<!--- coalesce the incoming and outgoing asap from the term extract --->
 			FROM fcTbl, BannerPopulation
-			WHERE fcTbl.G = BannerPopulation.STU_ID
+			WHERE fcTbl.bannerGNumber = BannerPopulation.STU_ID
 		</cfquery>
+
+
+		<cfquery dbtype="query" name="caseload_banner">
+			SELECT futureConnect_bannerPerson.STU_ID
+			, futureConnect_bannerPerson.contactID
+			, futureConnect_bannerPerson.bannerGNumber
+			, futureConnect_bannerPerson.STU_NAME
+			, futureConnect_bannerPerson.preferredName
+			, futureConnect_bannerPerson.gender
+			, futureConnect_bannerPerson.REP_RACE
+			, futureConnect_bannerPerson.HighSchool
+			, futureConnect_bannerPerson.parentalStatus
+			, futureConnect_bannerPerson.Household
+			, futureConnect_bannerPerson.LivingSituation
+			, futureConnect_bannerPerson.careerPlan
+			, maxTermData.EFC
+			, futureConnect_bannerPerson.RE_HOLD
+			, futureConnect_bannerPerson.cohort
+			, futureConnect_bannerPerson.campus
+			, futureConnect_bannerPerson.coach
+			, futureConnect_bannerPerson.statusInternal
+			, futureConnect_bannerPerson.O_EARNED
+			, futureConnect_bannerPerson.O_GPA
+			, futureConnect_bannerPerson.te_read
+			, futureConnect_bannerPerson.te_write
+			, futureConnect_bannerPerson.te_math
+			, futureConnect_bannerPerson.exitReason
+			, futureConnect_bannerPerson.cellPhone
+			, futureConnect_bannerPerson.phone2
+			, futureConnect_bannerPerson.PCC_EMAIL
+			, futureConnect_bannerPerson.emailPersonal
+			, futureConnect_bannerPerson.weeklyWorkHours
+
+			, ASAP_STATUS
+			, in_contract
+		    , RE_HOLD
+
+			FROM futureConnect_bannerPerson, maxTermData
+			WHERE maxTermData.STU_ID = futureConnect_bannerPerson.STU_ID
+			<cfif len(#arguments.bannerGNumber#) gt 0>
+				and futureConnect_bannerPerson.STU_ID = <cfqueryparam  value="#arguments.bannerGNumber#">
+			</cfif>
+		</cfquery>
+
+
 
 		<!---- add URL link to go to edit screen ---->
 		<cfset queryAddColumn(caseload_banner,"editlink","varchar",arrayNew(1))>
 		<cfloop query="caseload_banner">
 			<cfsavecontent variable="edittext">
-				<cfoutput><a href="javascript:goToDetail('#caseload_banner.G#')">Edit</a></cfoutput>
+				<cfoutput><a href="javascript:goToDetail('#caseload_banner.bannerGNumber#')">Edit</a></cfoutput>
 			</cfsavecontent>
 			<cfset querySetCell(caseload_banner, "editlink", edittext, currentRow)>
 		</cfloop>
@@ -331,7 +407,6 @@
 
 	<cffunction name="getStudentTermMetrics" access="remote" returntype="query">
 		<cfargument name="id" type="string" required="yes" default="">
-		<cfset TermData = getTermByStudent(id=#arguments.id#)>
 		<cfquery datasource="bannerpcclinks" name="StudentTermMetrics">
 			SELECT STU_ID
 				, TERM
@@ -347,12 +422,13 @@
 
 	<cffunction name="getNotes">
 		<cfargument name="contactID" required="yes">
-		<cfset tableName="fc">
+		<cfset tableName="futureConnect">
 		<cfquery name="comments">
 		select *
 		from notes
 		where tableName = <cfqueryparam value="#tablename#">
 			and contactID = <cfqueryparam value="#arguments.contactID#">
+
 		order by noteDateAdded desc
 	</cfquery>
 		<cfreturn comments>

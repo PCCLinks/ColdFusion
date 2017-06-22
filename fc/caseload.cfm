@@ -1,5 +1,6 @@
 <cfinvoke component="fc" method="getCaseload" returnvariable="qryData" />
 
+
 <!--- header --->
 <cfinclude template="includes/header.cfm" />
 
@@ -45,8 +46,7 @@ table thead tr th {
 					<th>Coach</th>
 					<th>Cohort</th>
 					<th>G</th>
-					<th>Last name</th>
-					<th>First Name</th>
+					<th>Name</th>
 					<th>ASAP</th>
 					<th>Status</th>
 					<th>Contract </th>
@@ -59,17 +59,19 @@ table thead tr th {
                         <td>#qryData.CAMPUS#</td>
                         <td>#qryData.COACH#</td>
 						<td>#qryData.COHORT#</td>
-                        <td>#qryData.G#</td>
-                        <td>#qryData.LAST_NAME#</td>
-                        <td>#qryData.FIRST_NAME#</td>
-						<!--- conditional coloring based on value --->
-                        <td
+                        <td>#qryData.STU_ID#</td>
+                        <td>#qryData.STU_NAME#</td>
+						<!--- conditional coloring based on value
+                    	--->
+					    <td
 							<cfif ASAP_STATUS eq "SU"> style = "background-color: ##f78989;"
 							<cfelseif ASAP_STATUS eq "AP"> style = "background-color: ##eab24c;"
 							<cfelseif ASAP_STATUS eq "AW"> style = "background-color: ##f9f96f;"
 							</cfif>
+
 						>#qryData.ASAP_STATUS#</td>
-                        <td>#qryData.STATUSABCX#</td>
+
+                        <td>#qryData.STATUSINTERNAL#</td>
 						<td>#qryData.IN_CONTRACT#</td>
 						<td>#qryData.EditLink#</td>
                     </tr>
@@ -86,8 +88,8 @@ table thead tr th {
 		//intialize table
 		$('#dt_table').DataTable( {
 			lengthMenu: [[100, 50, -1], [100, 50, "All"]],
-			order: [[ 1, "desc" ],[0, "desc"],[2, "asc"] ],
-			columnDefs: [{targets: 8,visible:false}],
+			order: [[ 1, "asc" ],[2, "desc"] ],
+			columnDefs: [{targets: 7,visible:false}],
 			dom: '<"top">rt<"bottom"iflp><"clear">',
 		}); //end intialize
 
@@ -117,6 +119,7 @@ table thead tr th {
 			} );
 		});// end search
 
+
 		$('.contractFilter').change(function(){
 			filterContract();
 		});
@@ -126,9 +129,9 @@ table thead tr th {
 	function filterContract() {
 		var table = $('#dt_table').DataTable();
 		filter =  $('#contractNo').is(':checked') ? "Yes" : "";
-		table.column(8).search(filter).draw();
+		table.column(7).search(filter).draw();
 	}
-	
+
 	function goToDetail(bannerGNumber){
 		var dt = $('#dt_table').DataTable();
 		var gList = dt.columns({search:'applied'}).data()[0];
@@ -139,7 +142,7 @@ table thead tr th {
 		$('body').append(form);
 		form.submit();
 	}
-		
+
 </script>
 </cfsavecontent>
 

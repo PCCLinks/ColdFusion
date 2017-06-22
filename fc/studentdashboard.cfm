@@ -4,6 +4,8 @@
 </cfinvoke>
 <cfinvoke component="fc" method="getCoursesByStudent" id="#studentvar_id#" returnvariable="coursesByStudent">
 </cfinvoke>
+<cfinvoke component="fc" method="getCaseload" returnvariable="qryData" />
+
 <style>
 	.top-bar img { height: 75px; position:relative; width: 150px; background:#e6e6e6; }
 	.highlight { background-color:rgb(255, 255, 128) !important; }
@@ -125,6 +127,7 @@ function buildChart(type, labels, data, ctx, bgcolors, bcolors, yAxesMax, yAxesS
 	    	rowGroup: {
 	    		dataSrc: 'Term'
 	    	},
+	    		orderFixed: [0, "desc" ],
 
 	    }); //end datatable
 	}); //end document.ready
