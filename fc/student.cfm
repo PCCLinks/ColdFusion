@@ -10,7 +10,7 @@
 
 <cfinvoke component="fc" method="getCaseload" bannerGNumber="#studentvar_id#" returnvariable="caseload_banner"></cfinvoke>
 <cfparam name="studentvar_cohort" default="#caseload_banner.cohort#" >
-<cfinvoke component="fc" method="getMaxRegistration" bannerGNumber="#studentvar_id#" returnvariable="maxRegistration"></cfinvoke>
+<cfinvoke component="fc" method="getMaxRegistration" id ="#studentvar_id#" returnvariable="maxRegistration"></cfinvoke>
 
 
 <!--- menu --->
@@ -48,11 +48,11 @@
 		<h3>#caseload_banner.STU_NAME# <br> #caseload_banner.STU_ID#</h3>
 		</div>
 		<div class = "large-4 columns" style="text-align:left">
-		<h3>GPA: #caseload_banner.O_GPA# <br>Credits Earned: #caseload_banner.O_EARNED#</h3>
+		<h3>Overall GPA: #caseload_banner.O_GPA# <br>Total Credits Earned: #caseload_banner.O_EARNED#</h3>
 		</div>
 
 		<div class = "large-4 columns" style="text-align:left">
-		<h3>Last Registered: #maxRegistration.maxRegistrationTerm# <br> with #maxRegistration.maxRegistrationCredits# credits</h3>
+		<h3>Last Registration: <br> #maxRegistration.maxRegistrationTerm# for #maxRegistration.maxRegistrationCredits# credits</h3>
 		</div>
 	</div>
 	</cfoutput>

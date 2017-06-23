@@ -1,3 +1,5 @@
+
+
 <!--- this requires that variables be set for:
 	mscb_fieldNamedescription, mscb_fieldname, mscb_data query of values that has id, description, checked
 
@@ -17,11 +19,12 @@
   		<li class="accordion-item" data-accordion-item>
     		<a href="#" class="accordion-title"><cfoutput>#Variables.summary#</cfoutput></a>
  			<div class="accordion-content" data-tab-content>
- 			<cfoutput query="mscb_data">
+			<cfoutput query="mscb_data">
 				<cfset idname="#mscb_fieldName#" & #id#>
-  				<input id="#idname#" name="#idname#" type="checkbox" <cfif #checked#>checked</cfif>><label for="#description#">#description#</label>
-				<br>
+				<label for="#description#"><input id="#idname#" name="#idname#" type="checkbox" <cfif #checked#>checked</cfif>>#description#</label>
+
 			</cfoutput>
+
     		</div>
   		</li>
 	</ul>

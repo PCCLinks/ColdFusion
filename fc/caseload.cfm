@@ -1,6 +1,9 @@
 <cfinvoke component="fc" method="getCaseload" returnvariable="qryData" />
 
 
+
+
+
 <!--- header --->
 <cfinclude template="includes/header.cfm" />
 
@@ -42,7 +45,7 @@ table thead tr th {
 			<caption class="visually-hide">Future Connect Caseload</caption>
 			<thead>
 				<tr>
-					<th>Campus</th>
+					<th>Last Contact</th>
 					<th>Coach</th>
 					<th>Cohort</th>
 					<th>G</th>
@@ -50,13 +53,14 @@ table thead tr th {
 					<th>ASAP</th>
 					<th>Status</th>
 					<th>Contract </th>
+					<th>PCCEmail </th>
 					<th></th>
 				</tr>
 			</thead>
 			<tbody>
 				<cfloop query="qryData">
                     <tr>
-                        <td>#qryData.CAMPUS#</td>
+	                    <td>#DateFormat(qryData.LASTCONTACTDATE,'m/d/y')#</td>
                         <td>#qryData.COACH#</td>
 						<td>#qryData.COHORT#</td>
                         <td>#qryData.STU_ID#</td>
@@ -73,6 +77,7 @@ table thead tr th {
 
                         <td>#qryData.STATUSINTERNAL#</td>
 						<td>#qryData.IN_CONTRACT#</td>
+						<td>#qryData.PCC_EMAIL#</td>
 						<td>#qryData.EditLink#</td>
                     </tr>
                 </cfloop>
@@ -89,8 +94,18 @@ table thead tr th {
 		$('#dt_table').DataTable( {
 			lengthMenu: [[100, 50, -1], [100, 50, "All"]],
 			order: [[ 1, "asc" ],[2, "desc"] ],
-			columnDefs: [{targets: 7,visible:false}],
-			dom: '<"top">rt<"bottom"iflp><"clear">',
+			columnDefs: [{targets: 7,visible:false},{targets: 8,visible:false}],
+			dom: '<"top"B>rt<"bottom"iflp><"clear">',
+			buttons: [
+            {
+                extend: 'copy',
+                text: 'Copy PCCemail',
+                exportOptions: {
+                    columns: [8]
+            	}
+            }]
+
+
 		}); //end intialize
 
 		//hide main filter

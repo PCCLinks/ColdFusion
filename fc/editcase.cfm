@@ -9,28 +9,20 @@
 
 
 <!---- Lookup Fields --->
-<cfquery name="list_status">
-	SELECT distinct statusabcx
-	FROM pcc_links.fc
-	where statusabcx is not null
-	ORDER BY 1 ASC
-</cfquery>
-<cfquery name="list_cohort">
-	SELECT distinct cohort
-	FROM pcc_links.fc
-	where cohort is not null
-	ORDER BY 1 ASC
-</cfquery>
+
 <cfquery name="list_coach">
-	SELECT distinct CoachName
-	FROM pcc_links.coach
+	SELECT distinct displayName as coachName
+	FROM applicationUser
+	WHERE position = 'coach'
 	ORDER BY 1 ASC
 </cfquery>
+
 <cfquery name="list_gender">
 	SELECT distinct GenderName
 	FROM pcc_links.gender
 	ORDER BY 1 ASC
 </cfquery>
+
 <cfquery name="list_campus">
 	SELECT distinct CampusName
 	FROM pcc_links.campus
@@ -57,20 +49,16 @@
 				</cfoutput>
 			</label>
 
+			<label> Cohort
+			<cfoutput>
+				<input type="text" name="cohort" readonly value="#caseload_banner.cohort#" />
+			</cfoutput>
+			</label>
+
+
 
 			<label>
-				Cohort
-				<select name="cohort">
-					<cfoutput query="list_cohort">
-						<option value="#cohort#"
-						<cfif cohort eq caseload_banner.cohort>
-							selected
-						</cfif>
-						> #cohort#</option>
-					</cfoutput>
-				</select>
-			</label>
-			<label>
+
 				Gender
 				<select name="gender">
 					<cfoutput query="list_gender">
@@ -125,67 +113,22 @@
 					>No </option>
 				</select>
 			</label>
+
 			<!--- Household Information --->
-			<label>
-				Household Information
-				<select name="Household">
-					<option value="None of the above"
-					<cfif "None of the above" eq caseload_banner.Household>
-						selected
-					</cfif>
-					>None of the above</option> <option value="Housing assistance from Home Forward"
-					<cfif "Housing assistance from Home Forward" eq caseload_banner.Household>
-						selected
-					</cfif>
-					>Housing assistance from Home Forward </option> <option value="Special Supplemental Nutrition Program for Woman, Infants & Children (WIC)"
-					<cfif "Special Supplemental Nutrition Program for Woman, Infants & Children (WIC)" eq caseload_banner.Household>
-						selected
-					</cfif>
-					>Special Supplemental Nutrition Program for Woman, Infants & Children (WIC)</option> <option value="Free or Reduced Price School Lunch"
-					<cfif "Free or Reduced Price School Lunch" eq caseload_banner.Household>
-						selected
-					</cfif>
-					>Free or Reduced Price School Lunch</option> <option value="Food Stamps"
-					<cfif "Food Stamps" eq caseload_banner.Household>
-						selected
-					</cfif>
-					>Food Stamps</option> <option value="Temporary Assistance for Needy Families (TANF)"
-					<cfif "Temporary Assistance for Needy Families (TANF)" eq caseload_banner.Household>
-						selected
-					</cfif>
-					>Temporary Assistance for Needy Families (TANF)</option> <option value="Supplemental Security Income"
-					<cfif "Supplemental Security Income" eq caseload_banner.Household>
-						selected
-					</cfif>
-					>Supplemental Security Income</option>
-				</select>
-			</label>
-			<!--- End Household Information --->
+			<cfinvoke component="fc" method="getHouseholdWithAssignments" contactID=#caseload_banner.contactID#  returnVariable="mscb_data">
+			<cfset mscb_fieldNameDescription = 'Household Information'>
+			<cfset mscb_fieldName = 'householdID'>
+			<cfinclude template="#pcc_source#/includes/multiSelectCheckboxes.cfm">
 
 			<!--- Living Situation --->
-			<label>
-				Living Situation
-				<select name="LivingSituation">
-					<option value="None of the above"
-					<cfif "None of the above" eq caseload_banner.LivingSituation>
-						selected
-					</cfif>
-					>None of the above</option> <option value="I am/was in foster care"
-					<cfif "I am/was in foster care" eq caseload_banner.LivingSituation>
-						selected
-					</cfif>
-					>Is/was in foster care</option> <option value="I am/was homeless (lack of permanent or stable home)"
-					<cfif "I am/was homeless (lack of permanent or stable home)" eq caseload_banner.LivingSituation>
-						selected
-					</cfif>
-					>Is/was homeless</option> <option value="I am an Emancipated minor"
-					<cfif "I am an Emancipated minor" eq caseload_banner.LivingSituation>
-						selected
-					</cfif>
-					>Emancipated minor</option>
-				</select>
-			</label>
-			<!--- End Living Situation --->
+			<cfinvoke component="fc" method="getLivingSituationWithAssignments" contactID=#caseload_banner.contactID#  returnVariable="mscb_data">
+			<cfset mscb_fieldNameDescription = 'Living Situation'>
+			<cfset mscb_fieldName = 'livingSituationID'>
+			<cfinclude template="#pcc_source#/includes/multiSelectCheckboxes.cfm">
+
+
+
+
 			<!--- <label>Citizen Status -- REMOVE fix so it updates with selection
 				<select name='citizen_status' selected=#caseload_banner.citizen_status#>
 				<option value="Unknown">Unknown</option>
@@ -194,6 +137,8 @@
 				<option value="Undocumented">Undocumented</option>
 				</select>
 				</label> --->
+
+
 			<label>
 				Career Plan
 				<cfoutput>
@@ -240,18 +185,40 @@
 
 		<!--- COLUMN 2 --->
 		<div class="large-4 columns">
-			<label>
+
+					<label>
 				Status Internal
 				<select name="statusInternal">
-					<cfoutput query="list_status">
-						<option value="#statusabcx#"
-						<cfif statusabcx eq caseload_banner.statusInternal>
-							selected
-						</cfif>
-						>#statusabcx#</OPTION>
-					</cfoutput>
+					<option value="A"
+					<cfif "A" eq caseload_banner.statusInternal>
+						selected
+					</cfif>>A
+					</option>
+
+					<option value="B"
+					<cfif "B" eq caseload_banner.statusInternal>
+						selected
+					</cfif>
+					>B </option>
+
+					<option value="C"
+					<cfif "C" eq caseload_banner.statusInternal>
+						selected
+					</cfif>
+					>C </option>
+
+					<option value="X"
+					<cfif "X" eq caseload_banner.statusInternal>
+						selected
+					</cfif>
+					>X </option>
+
 				</select>
 			</label>
+
+
+
+
 			<label>
 				ASAP
 				<cfoutput>
@@ -411,9 +378,6 @@
 		<div class="large-4 columns">
 			<label>
 				Coach
-				<a href="http://localhost:8500/pcclinks/Lookup.cfm?LookUpType=Coach" style="font-size: 0.75em;">
-					edit coach list
-				</a>
 				<select name="coach">
 					<cfoutput query="list_coach">
 						<option value="#CoachName#"

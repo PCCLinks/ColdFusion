@@ -157,7 +157,6 @@
 		<cfargument name="data" type="struct">
 		<cfquery name="create" result = "r">
 			UPDATE futureConnect SET
-				cohort = <cfqueryparam cfsqltype="cf_sql_varchar" value="#trim(arguments.data.cohort)#">,
 				preferredName = <cfqueryparam cfsqltype="cf_sql_varchar" value="#trim(arguments.data.preferredName)#">,
 				gender = <cfqueryparam cfsqltype="cf_sql_varchar" value="#trim(arguments.data.gender)#">,
 				campus = <cfqueryparam cfsqltype="cf_sql_varchar" value="#trim(arguments.data.campus)#">,
@@ -185,6 +184,8 @@
 			<cfset insertNote(contactID="#arguments.data.contactID#", noteText="#trim(arguments.data.notes)#")>
 		</cfif>
 		<cfset saveEnrichmentProgramData(data=arguments.data) >
+		<cfset savehouseholdData(data=arguments.data) >
+		<cfset saveLivingSituationData(data=arguments.data) >
 	</cffunction>
 
 	<cffunction name="saveEnrichmentProgramData" access="private">
@@ -195,7 +196,7 @@
 			SELECT *
 			FROM enrichmentProgramContact
 			WHERE contactID = <cfqueryparam value="#contactID#">
-				AND tableName = 'fc'
+				AND tableName = 'futureConnect'
 		</cfquery>
 		<cfloop query="existingEntries">
 			<cfset exists=false>
@@ -232,12 +233,128 @@
 				<cfif exists EQ false>
 					<cfquery name="insertEntry">
 						insert into enrichmentProgramContact(contactID, enrichmentProgramID, tableName)
-						values(#contactID#, #checkedID#, 'fc')
+						values(#contactID#, #checkedID#, 'futureConnect')
 					</cfquery>
 				</cfif>
 			</cfif> <!-- if enrichment field --->
 		</cfloop> <!--- form values --->
 	</cffunction>
+
+
+
+
+	<cffunction name="savehouseholdData" access="private">
+		<cfargument name="data" required="true">
+		<cfset contactID = "#trim(arguments.data.contactid)#">
+		<cfset debug=false>
+		<cfquery name="existingEntries">
+			SELECT *
+			FROM householdContact
+			WHERE contactID = <cfqueryparam value="#contactID#">
+				AND tableName = 'futureConnect'
+		</cfquery>
+		<cfloop query="existingEntries">
+			<cfset exists=false>
+			<cfloop collection="#arguments.data#" item="key">
+				<cfif debug>key left,11:<cfdump var="#left(key,11)#"><br></cfif>
+				<cfif left(key,11) EQ "householdID">
+					<cfset checkedID = RIGHT(key,len(key)-11)>
+					<cfif debug>checkedid=<cfdump var="#checkedID#"><br></cfif>
+					<cfif debug>existingEntries=<cfdump var="#existingEntries.householdID#"><br></cfif>
+					<cfif existingEntries.householdID EQ checkedID>
+						<cfset exists=true>
+						<cfif debug>found<br></cfif>
+					</cfif> <!--- matches a value that is checked --->
+				</cfif> <!-- if enrichment field --->
+			</cfloop> <!--- form values --->
+			<!--- no longer checked, delete it --->
+			<cfif exists EQ false>
+				<cfif debug>delete entry:<cfdump var="#existingEntries.householdContactID#"></cfif>
+				<cfquery name="deleteEntry">
+					delete from householdContact
+					where householdContactID = <cfqueryparam value="#existingEntries.householdContactID#">
+				</cfquery>
+			</cfif>
+		</cfloop>
+		<cfloop collection="#arguments.data#" item="key">
+			<cfif left(key,11) EQ "householdID">
+				<cfset checkedID = RIGHT(key,len(key)-11)>
+				<cfset exists=false>
+				<cfloop query="existingEntries">
+					<cfif existingEntries.householdID EQ checkedID>
+						<cfset exists=true>
+					</cfif> <!--- matches a value that is checked --->
+				</cfloop> <!---existing entries --->
+				<cfif exists EQ false>
+					<cfquery name="insertEntry">
+						insert into householdContact(contactID, householdID, tableName)
+						values(#contactID#, #checkedID#, 'futureConnect')
+					</cfquery>
+				</cfif>
+			</cfif> <!-- if enrichment field --->
+		</cfloop> <!--- form values --->
+	</cffunction>
+
+
+
+
+	<cffunction name="savelivingSituationData" access="private">
+		<cfargument name="data" required="true">
+		<cfset contactID = "#trim(arguments.data.contactid)#">
+		<cfset debug=false>
+		<cfquery name="existingEntries">
+			SELECT *
+			FROM livingSituationContact
+			WHERE contactID = <cfqueryparam value="#contactID#">
+				AND tableName = 'futureConnect'
+		</cfquery>
+		<cfloop query="existingEntries">
+			<cfset exists=false>
+			<cfloop collection="#arguments.data#" item="key">
+				<cfif debug>key left,11:<cfdump var="#left(key,11)#"><br></cfif>
+				<cfif left(key,17) EQ "livingSituationID">
+					<cfset checkedID = RIGHT(key,len(key)-17)>
+					<cfif debug>checkedid=<cfdump var="#checkedID#"><br></cfif>
+					<cfif debug>existingEntries=<cfdump var="#existingEntries.livingSituationID#"><br></cfif>
+					<cfif existingEntries.livingSituationID EQ checkedID>
+						<cfset exists=true>
+						<cfif debug>found<br></cfif>
+					</cfif> <!--- matches a value that is checked --->
+				</cfif> <!-- if enrichment field --->
+			</cfloop> <!--- form values --->
+			<!--- no longer checked, delete it --->
+			<cfif exists EQ false>
+				<cfif debug>delete entry:<cfdump var="#existingEntries.livingSituationContactID#"></cfif>
+				<cfquery name="deleteEntry">
+					delete from livingSituationContact
+					where livingSituationContactID = <cfqueryparam value="#existingEntries.livingSituationContactID#">
+				</cfquery>
+			</cfif>
+		</cfloop>
+		<cfloop collection="#arguments.data#" item="key">
+			<cfif left(key,17) EQ "livingSituationID">
+				<cfset checkedID = RIGHT(key,len(key)-17)>
+				<cfset exists=false>
+				<cfloop query="existingEntries">
+					<cfif existingEntries.livingSituationID EQ checkedID>
+						<cfset exists=true>
+					</cfif> <!--- matches a value that is checked --->
+				</cfloop> <!---existing entries --->
+				<cfif exists EQ false>
+					<cfquery name="insertEntry">
+						insert into livingSituationContact(contactID, livingSituationID, tableName)
+						values(#contactID#, #checkedID#, 'futureConnect')
+					</cfquery>
+				</cfif>
+			</cfif> <!-- if enrichment field --->
+		</cfloop> <!--- form values --->
+	</cffunction>
+
+
+
+
+
+
 
 	<cffunction name="insertNote" access="private">
 		<cfargument name="contactID" required="true">
@@ -262,6 +379,7 @@
 		<cfquery name="fcTbl">
 			SELECT futureConnect.*
 			, futureConnectApplication.*
+			, lastContact.lastContactDate
 			, case when CAST(right(cohort,1) as char(50)) = '1' then 'Portland'
 				when CAST(right(cohort,1) as char(50)) = '2' then 'Beaverton'
 				when CAST(right(cohort,1) as char(50)) = '3' then 'Hillsboro'
@@ -282,6 +400,12 @@
 			FROM futureConnect
 				LEFT JOIN futureConnectApplication
 					on futureConnect.bannerGNumber = futureConnectApplication.StudentID
+				LEFT JOIN (
+					select contactID, max(noteDateAdded) as lastContactDate
+					from notes
+					group by contactID) lastContact
+						on futureConnect.contactID = lastContact.contactID
+
 			WHERE 1=1
 			<cfif len(#arguments.bannerGNumber#) gt 0>
 				and bannerGNumber = <cfqueryparam  value="#arguments.bannerGNumber#">
@@ -361,6 +485,7 @@
 			, futureConnect_bannerPerson.LivingSituation
 			, futureConnect_bannerPerson.careerPlan
 			, maxTermData.EFC
+			, maxTermData.TERM
 			, futureConnect_bannerPerson.RE_HOLD
 			, futureConnect_bannerPerson.cohort
 			, futureConnect_bannerPerson.campus
@@ -381,6 +506,7 @@
 			, ASAP_STATUS
 			, in_contract
 		    , RE_HOLD
+		    , lastContactDate
 
 			FROM futureConnect_bannerPerson, maxTermData
 			WHERE maxTermData.STU_ID = futureConnect_bannerPerson.STU_ID
@@ -436,7 +562,7 @@
 
 	<cffunction name="getEnrichmentProgramsWithAssignments">
 		<cfargument name="contactID" required="yes">
-		<cfset tableName="fc">
+		<cfset tableName="futureConnect">
 		<cfquery name="programs">
 		select ep.enrichmentProgramID id
 			,enrichmentProgramDescription description
@@ -449,5 +575,39 @@
 	</cfquery>
 		<cfreturn programs>
 	</cffunction>
+
+	<cffunction name="getHouseholdWithAssignments">
+		<cfargument name="contactID" required="yes">
+		<cfset tableName="futureConnect">
+		<cfquery name="household">
+		select h.householdID id
+			,householdDescription description
+			,CASE WHEN contactID IS NULL THEN 0 ELSE 1 END checked
+		from household h
+			left outer join householdContact hc
+				on h.householdID = hc.householdID
+					and tableName = <cfqueryparam value="#tablename#">
+					and hc.contactID = <cfqueryparam value="#arguments.contactID#">
+	</cfquery>
+		<cfreturn household>
+	</cffunction>
+
+	<cffunction name="getLivingSituationWithAssignments">
+		<cfargument name="contactID" required="yes">
+		<cfset tableName="futureConnect">
+		<cfquery name="livingSituation">
+		select ls.livingSituationID id
+			,livingSituationDescription description
+			,CASE WHEN contactID IS NULL THEN 0 ELSE 1 END checked
+		from livingSituation ls
+			left outer join livingSituationContact lsc
+				on ls.livingSituationID = lsc.livingSituationID
+					and tableName = <cfqueryparam value="#tablename#">
+					and lsc.contactID = <cfqueryparam value="#arguments.contactID#">
+	</cfquery>
+		<cfreturn livingSituation>
+	</cffunction>
+
+
 
 </cfcomponent>
