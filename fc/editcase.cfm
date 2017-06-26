@@ -32,7 +32,6 @@
 
 <!--- FORM ---->
 <form action="saveCase.cfm" method="post" id="editForm" name="editForm">
-	<input name="method" type="hidden" value="update" />
 	<cfoutput>
 		<input name="contactID" type="hidden" value="#caseload_banner.contactID#" />
 		<input name="bannerGNumber" type="hidden" value="#caseload_banner.bannerGNumber#" />
@@ -58,18 +57,29 @@
 
 
 			<label>
-
 				Gender
 				<select name="gender">
-					<cfoutput query="list_gender">
-						<option value="#GenderName#"
-						<cfif GenderName eq caseload_banner.gender >
+					<option value="Female"
+						<cfif "Female" eq caseload_banner.gender >
 							selected
-						</cfif>
-						> #GenderName# </option>
-					</cfoutput>
+						</cfif>> Female
+					</option>
+
+					<option value="Male"
+						<cfif "Male" eq caseload_banner.gender >
+							selected
+						</cfif>> Male
+					</option>
+
+					<option value="Non-binary"
+						<cfif "Non-binary" eq caseload_banner.gender >
+							selected
+						</cfif>> Non-binary
+					</option>
 				</select>
 			</label>
+
+
 			<label>
 				Race
 				<cfoutput>
@@ -85,15 +95,35 @@
 			<label>
 				Campus
 				<select name="campus">
-					<cfoutput query="list_campus">
-						<option value="#CampusName#"
-						<cfif CampusName eq caseload_banner.campus>
+					<option value="Cascade"
+						<cfif "Cascade" eq caseload_banner.campus>
 							selected
-						</cfif>
-						> #CampusName# </option>
-					</cfoutput>
+						</cfif>> Cascade
+					</option>
+
+					<option value="Southest"
+						<cfif "Southest" eq caseload_banner.campus>
+							selected
+						</cfif>> Southest
+					</option>
+
+					<option value="Sylvania"
+						<cfif "Sylvania" eq caseload_banner.campus>
+							selected
+						</cfif>> Sylvania
+					</option>
+
+					<option value="Rock Creek"
+						<cfif "Rock Creek" eq caseload_banner.campus>
+							selected
+						</cfif>> Rock Creek
+					</option>
+
 				</select>
 			</label>
+
+
+
 
 			<label>
 				Parental status
