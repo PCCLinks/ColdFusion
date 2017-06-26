@@ -16,4 +16,94 @@
     </cffunction>
 
     <cffunction name="OnRequestStart"></cffunction>
+
+	<cffunction name="onError">
+	    <cfargument name="exception" >
+	    <cfargument name="thrownError" default="">
+	    <cfargument name="eventname" type="string" >
+
+	    <cfset var errortext = "">
+		<!---cfdump var="#arguments#">--->
+
+	    <cfset logentry(value="-------------BEGIN ENTRY------------") >
+	    <cfset logentry(value="#arguments.exception#") >
+	    <cfif StructkeyExists(arguments.exception, "cause")>
+		    <cfset logEntry(label="Message", value="#arguments.exception.cause.message#")>
+		    <cfset msg = arguments.exception.cause.message>
+		    <cfset logEntry(label="StackTrace", value="#arguments.exception.cause.StackTrace#")>
+		    <cfif StructKeyExists(arguments.exception.cause, "TagContext")>
+			    <cfset tag = arguments.exception.cause.TagContext>
+			 </cfif>
+		<cfelse>
+		    <cfset logEntry(label="Message", value="#arguments.exception.message#")>
+		    <cfset msg = arguments.exception.message>
+		    <cfset logEntry(label="StackTrace", value="#arguments.exception.StackTrace#")>
+		    <cfif StructKeyExists(arguments.exception, "TagContext")>
+			    <cfset tag = arguments.exception.TagContext>
+			 </cfif>
+		</cfif>
+		<cfif len(arguments.thrownError) GT 0>
+			<cfset logEntry(label="ThrownError", value="#arguments.thrownError#")>
+		</cfif>
+		<cfif IsDefined("tag")>
+	    	<cfif IsArray(tag) and arrayLen(tag) EQ 1>
+			    <cfset tg = tag[1]>
+				<cfset tagContext = "Column:" & tg.Column
+	    			& " ID: "& tg.ID & " LINE: " & tg.Line & " RAW_TRACE: " & tg.Raw_Trace
+	    			& " TEMPLATE: " & tg.Template & " TYPE: " & tg.Type >
+		    </cfif>
+		</cfif>
+		<cfif StructKeyExists(arguments.exception, "DataSource") >
+		    <cfset logEntry(label="DataSource", value="#arguments.exception.DataSource#")>
+		</cfif>
+		<cfif StructKeyExists(arguments.exception, "Detail") >
+	    	<cfset logEntry(label="Detail", value="#arguments.exception.Detail#")>
+	    </cfif>
+		<cfif StructKeyExists(arguments.exception, "Sql") >
+	    	<cfset logEntry(label="Sql", value="#arguments.exception.Sql#")>
+	    </cfif>
+	    <cfset logentry(value="-------------END ENTRY------------") >
+
+
+		<cfset Session.Exception = arguments.exception >
+		<cfset Session.ThrownError = arguments.thrownError>
+		<cfset Session.Error = "#msg#<br/>
+			    http://#cgi.server_name##cgi.script_name#?#cgi.query_string#<br />
+			    Time: #dateFormat(now(), 'short')# #timeFormat(now(), 'short')#<br /><br/>" >
+
+	    <!---<cfsavecontent variable="errortext">
+		    <cfoutput>
+			    An error occurred:<br/>
+			    http://#cgi.server_name##cgi.script_name#?#cgi.query_string#<br />
+			    Time: #dateFormat(now(), "short")# #timeFormat(now(), "short")#<br /><br/>
+
+			    <cfdump var="#arguments.exception#" label="Error">
+			    <cfdump var="#form#" label="Form">
+			    <cfdump var="#url#" label="URL">
+		    </cfoutput>
+	    </cfsavecontent>--->
+
+	    <cflocation url="error.cfm">
+
+	   <!---<cfmail to="arlette.slachmuylder@pcc.edu" from="arlette.slachmuylder@pcc.edu" subject="Error: #arguments.exception.message#" type="html">
+	        #errortext#
+	    </cfmail>
+	    <cfif "#CGI.SCRIPT_NAME#" NEQ "Error.cfm">
+		<cfif Session.DebugCount LT 5>
+			<cflocation url="Error.cfm">
+		<cfelse>
+			<br>SCRIPT NAME<cfdump var="#CGI.SCRIPT_NAME#"><br>
+			<cfdump var="#errortext#">
+		</cfif>--->
+	</cffunction>
+	<cffunction name="logEntry">
+		<cfargument name="label" default="">
+		<cfargument name="value" required=true>
+		<cfif len(label) GT 0>
+			<cfset logtext= arguments.label & ":" & arguments.value>
+		<cfelse>
+			<cfset logtext = value>
+		</cfif>
+		<cflog file="pcclinks_fc" text="#logtext#">
+	</cffunction>
 </cfcomponent>

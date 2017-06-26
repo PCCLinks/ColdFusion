@@ -1,10 +1,12 @@
 <!--- called by student.cfm --->
+<cfparam name="studentparam_pidm">
+<cfparam name="studentparam_cohort">
+<cflog file="pcclinks_fc" text="starting getStudentTermMetrics">
+<cfinvoke component="fc" method="getStudentTermMetrics" pidm="#studentparam_pidm#" returnvariable="studentTermMetrics"></cfinvoke>
+<cflog file="pcclinks_fc" text="starting getCoursesByStudent">
+<cfinvoke component="fc" method="getCoursesByStudent" pidm="#studentparam_pidm#" cohort="#studentparam_cohort#" returnvariable="coursesByStudent"></cfinvoke>
+<cflog file="pcclinks_fc" text="finished getCoursesByStudent">
 
-<cfinvoke component="fc" method="getStudentTermMetrics" id="#studentvar_id#" returnvariable="studentTermMetrics">
-</cfinvoke>
-<cfinvoke component="fc" method="getCoursesByStudent" id="#studentvar_id#" returnvariable="coursesByStudent">
-</cfinvoke>
-<cfinvoke component="fc" method="getCaseload" returnvariable="qryData" />
 
 <style>
 	.top-bar img { height: 75px; position:relative; width: 150px; background:#e6e6e6; }
@@ -67,7 +69,7 @@ function buildChart(type, labels, data, ctx, bgcolors, bcolors, yAxesMax, yAxesS
 				</canvas>
 				<!--- Build chart gpa by term --->
 				<script>
-					buildChart('line',['#ValueList(studentTermMetrics.TERM, "','")#'],[#ValueList(studentTermMetrics.T_GPA,",")#], #graphId#, 'rgba(144, 103, 167, 1.0)', 'rgba(144, 103, 167, 1.0)', 4, 0.5);
+					buildChart('line',['#ValueList(studentTermMetrics.TERM, "','")#'],[#ValueList(studentTermMetrics.T_GPA,",")#], '#graphId#', 'rgba(144, 103, 167, 1.0)', 'rgba(144, 103, 167, 1.0)', 4, 0.5);
 				</script>
 			</div>
 		</div>
@@ -81,7 +83,7 @@ function buildChart(type, labels, data, ctx, bgcolors, bcolors, yAxesMax, yAxesS
 				</canvas>
 				<!--- Build chart earned credits by term --->
 				<script>
-					buildChart('bar',['#ValueList(studentTermMetrics.TERM, "','")#'],[#ValueList(studentTermMetrics.T_EARNED,",")#], #graphId#, 'rgba(144, 103, 167, 1.0)', 'rgba(144, 103, 167, 1.0)', 30, 5);
+					buildChart('bar',['#ValueList(studentTermMetrics.TERM, "','")#'],[#ValueList(studentTermMetrics.T_EARNED,",")#], '#graphId#', 'rgba(144, 103, 167, 1.0)', 'rgba(144, 103, 167, 1.0)', 30, 5);
 				</script>
 			</div>
 		</div>
@@ -116,7 +118,7 @@ function buildChart(type, labels, data, ctx, bgcolors, bcolors, yAxesMax, yAxesS
 	</tbody>
 </table>
 
-<cfsavecontent variable="pcc_scripts">
+<cfsavecontent variable="studentdashboard_script">
 <script>
 	$(document).ready(function() {
 		$('#dt_table').DataTable({
@@ -127,7 +129,7 @@ function buildChart(type, labels, data, ctx, bgcolors, bcolors, yAxesMax, yAxesS
 	    	rowGroup: {
 	    		dataSrc: 'Term'
 	    	},
-	    		orderFixed: [0, "desc" ],
+	    	orderFixed: [0, "desc" ],
 
 	    }); //end datatable
 	}); //end document.ready

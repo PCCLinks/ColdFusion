@@ -1,11 +1,14 @@
 <!--- called by student.cfm
- cohort varialbe set by student.cfm
+ pidm and cohort variable set by student.cfm
 --->
 
-<cfinvoke component="fc" method="getFirstYearMetrics" id="#studentvar_id#" cohort="#studentvar_cohort#" returnvariable="firstYearMetrics"></cfinvoke>
-<cfinvoke component="fc" method="getCGPassed" id="#studentvar_id#" cohort="#studentvar_cohort#" returnvariable="cgPassed"></cfinvoke>
-<cfinvoke component="fc" method="getMaxTermData" id="#studentvar_id#" returnvariable="maxTermData"></cfinvoke>
-
+<cfparam name="studentparam_pidm">
+<cfparam name="studentparam_cohort">
+<cflog file="pcclinks_fc" text="starting getFirstYearMetrics">
+<cfinvoke component="fc" method="getFirstYearMetrics" pidm="#studentparam_pidm#" cohort="#studentparam_cohort#" returnvariable="firstYearMetrics"></cfinvoke>
+<cflog file="pcclinks_fc" text="starting getCGPassed">
+<cfinvoke component="fc" method="getCGPassed" pidm="#studentparam_pidm#" cohort="#studentparam_cohort#" returnvariable="cgPassed"></cfinvoke>
+<cflog file="pcclinks_fc" text="finished getCGPassed">
 
 
 <!---- Lookup Fields --->
@@ -29,18 +32,18 @@
 	ORDER BY 1 ASC
 </cfquery>
 
-
+<div id="savemessage"></div>
 <!--- FORM ---->
-<form action="saveCase.cfm" method="post" id="editForm" name="editForm">
+<form action="javascript:saveContent();" method="post" id="editForm" name="editForm">
+	<input name="method" type="hidden" value="update" />
 	<cfoutput>
 		<input name="contactID" type="hidden" value="#caseload_banner.contactID#" />
-		<input name="bannerGNumber" type="hidden" value="#caseload_banner.bannerGNumber#" />
+		<input name="pidm" type="hidden" value="#caseload_banner.pidm#" />
 	</cfoutput>
 	<!--- MAIN ROW ---->
 	<div class="row">
 		<!--- COLUMN 1 --->
 		<div class="large-4 columns">
-
 			<label>
 				Preferred Name
 				<cfoutput>
@@ -53,8 +56,6 @@
 				<input type="text" name="cohort" readonly value="#caseload_banner.cohort#" />
 			</cfoutput>
 			</label>
-
-
 
 			<label>
 				Gender
@@ -78,8 +79,6 @@
 					</option>
 				</select>
 			</label>
-
-
 			<label>
 				Race
 				<cfoutput>
@@ -122,9 +121,6 @@
 				</select>
 			</label>
 
-
-
-
 			<label>
 				Parental status
 				<select name="parentalStatus">
@@ -156,9 +152,6 @@
 			<cfset mscb_fieldName = 'livingSituationID'>
 			<cfinclude template="#pcc_source#/includes/multiSelectCheckboxes.cfm">
 
-
-
-
 			<!--- <label>Citizen Status -- REMOVE fix so it updates with selection
 				<select name='citizen_status' selected=#caseload_banner.citizen_status#>
 				<option value="Unknown">Unknown</option>
@@ -167,7 +160,6 @@
 				<option value="Undocumented">Undocumented</option>
 				</select>
 				</label> --->
-
 
 			<label>
 				Career Plan
@@ -200,7 +192,7 @@
 			<label>
 				EFC
 				<cfoutput>
-					<input type="text" name="EFC" readonly value="#maxTermData.EFC#" />
+					<input type="text" name="EFC" readonly value="#caseload_banner.EFC#" />
 				</cfoutput>
 
 			</label>
@@ -215,8 +207,7 @@
 
 		<!--- COLUMN 2 --->
 		<div class="large-4 columns">
-
-					<label>
+				<label>
 				Status Internal
 				<select name="statusInternal">
 					<option value="A"
@@ -242,17 +233,13 @@
 						selected
 					</cfif>
 					>X </option>
-
 				</select>
 			</label>
-
-
-
 
 			<label>
 				ASAP
 				<cfoutput>
-					<input type="text" name="ASAP_STATUS" readonly value="#maxTermData.ASAP_STATUS#" />
+					<input type="text" name="ASAP_STATUS" readonly value="#caseload_banner.ASAP_STATUS#" />
 				</cfoutput>
 			</label>
 			<label>
@@ -279,7 +266,7 @@
 			<label>
 				Degree Declared
 				<cfoutput>
-					<input type="text" name="P_DEGREE" readonly value="#maxTermData.P_DEGREE#" />
+					<input type="text" name="P_DEGREE" readonly value="#caseload_banner.P_DEGREE#" />
 				</cfoutput>
 			</label>
 			<label>
@@ -458,3 +445,23 @@
 		<!---- END COLUMN 3 --->
 	</div> 	<!--- end row class --->
 </form>
+<cfsavecontent variable="editcase_script">
+<script>
+   function saveContent(){
+		$.blockUI({ message: 'Saving...' });
+		 $.ajax({
+            type: 'post',
+            url: 'saveCase.cfm',
+            data: $('form').serialize(),
+            success: function () {
+            	var d = new Date();
+              $('#savemessage').html('Last saved ' + d.getHours() + ':' + d.getMinutes() );
+            },
+            error: function (xhr, textStatus, thrownError) {
+				        handleAjaxError(xhr, textStatus, thrownError);
+			}
+          });
+		$.unblockUI();
+	}
+</script>
+</cfsavecontent>
