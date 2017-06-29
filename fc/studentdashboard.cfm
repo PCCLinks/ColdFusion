@@ -126,11 +126,10 @@ function buildChart(type, labels, data, ctx, bgcolors, bcolors, yAxesMax, yAxesS
 			paging: false,
 			info: false,
 			columns:[{data:'Term'},{data:'CRSE'},{data:'SUBJ'},{data:'Title'},{data:'Credits'},{data:'Grade'},{data:'Passed'}],
+	    	orderFixed: [0, "desc" ],
 	    	rowGroup: {
 	    		dataSrc: 'Term'
-	    	},
-	    	orderFixed: [0, "desc" ],
-
+	    	}
 	    }); //end datatable
 	}); //end document.ready
 </script>

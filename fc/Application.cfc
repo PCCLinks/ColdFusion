@@ -15,7 +15,18 @@
         </CFLOCK>
     </cffunction>
 
-    <cffunction name="OnRequestStart"></cffunction>
+    <cffunction name="OnRequestStart">
+		<cfscript>
+			StructDelete(Session, "Exception");
+			StructDelete(Session, "ThrownError");
+			StructDelete(Session, "Error");
+		</cfscript>
+	</cffunction>
+
+	<cffunction name="onRequest" returnType="void">
+		<cfargument name="targetPage" type="String" required=true/>
+		<cfinclude template="#Arguments.targetPage#">
+	</cffunction>
 
 	<cffunction name="onError">
 	    <cfargument name="exception" >
@@ -23,7 +34,6 @@
 	    <cfargument name="eventname" type="string" >
 
 	    <cfset var errortext = "">
-		<!---cfdump var="#arguments#">--->
 
 	    <cfset logentry(value="-------------BEGIN ENTRY------------") >
 	    <cfset logentry(value="#arguments.exception#") >
@@ -82,8 +92,13 @@
 			    <cfdump var="#url#" label="URL">
 		    </cfoutput>
 	    </cfsavecontent>--->
-
+		<cfif StructKeyExists(Form, 'isAjax')>
+			<cfset logEntry(value='isajax')>
+		<cfheader statusCode=600 statustext="#msg#" >
+		<cfelse>
+			<cfset logEntry(value='no isajax')>
 	    <cflocation url="error.cfm">
+	    </cfif>
 
 	   <!---<cfmail to="arlette.slachmuylder@pcc.edu" from="arlette.slachmuylder@pcc.edu" subject="Error: #arguments.exception.message#" type="html">
 	        #errortext#

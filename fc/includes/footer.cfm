@@ -2,7 +2,7 @@
 
 <!-- start template footer -->
 </div> <!-- end small-12 -->
-<!--- </div> ---> <!-- end content -->
+ </div><!-- end content -->
 
 <!-- scripts -->
 <script src="<cfoutput>#pcc_source#</cfoutput>/js/vendor/jquery.js"></script>
@@ -11,11 +11,13 @@
 <script src="<cfoutput>#pcc_source#</cfoutput>/js/pcc.js"></script>
 <script type="text/javascript" src="<cfoutput>#pcc_source#</cfoutput>/js/vendor/datatables.min.js"></script>
 <script type="text/javascript" charset="utf8" src="<cfoutput>#pcc_source#</cfoutput>/js/vendor/jquery.blockUI.js"></script>
+<script src="<cfoutput>#pcc_source#</cfoutput>/js/vendor/jquery-ui.min.js"></script>
+
 
 <script>
 $(document).foundation();
 function handleAjaxError(jqXHR, exception, thrownError){
-		var msg = '';
+		/*var msg = '';
 		if (jqXHR.status === 0) {
 		    msg = 'Not connect.\n Verify Network.';
 		} else if (jqXHR.status == 404) {
@@ -29,9 +31,9 @@ function handleAjaxError(jqXHR, exception, thrownError){
 		} else if (exception === 'abort') {
 		    msg = 'Ajax request aborted.';
 		} else {
-		    msg = 'Uncaught Error.\n' + jqXHR.responseText;
-		}
-		//msg = encodeURIComponent(jqXHR.responseText);
+		    msg = 'Uncaught Error.\n' + jqXHR.statusText + ' ' + jqXHR.responseText;
+		}*/
+		msg = encodeURIComponent(jqXHR.statusText + ' ' + jqXHR.responseText);
 		//alert('Error with request:' + msg);
 		var url = 'Error.cfm';
 		var form = $('<form action="' + url + '" method="post">' +

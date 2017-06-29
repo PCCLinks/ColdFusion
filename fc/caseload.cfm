@@ -57,8 +57,7 @@ select {
 			<th>Name</th>
 			<th>ASAP</th>
 			<th>Status</th>
-			<th>Contract </th>
-			<th>PCCEmail </th>
+			<th><span style="font-size:x-large;font-weight:bold;color:red">*</th>
 			<th></th>
 		</tr>
 	</thead>
@@ -90,10 +89,12 @@ select {
 <!--- script referenced in include footer --->
 <cfsavecontent variable="pcc_scripts">
 <script>
-	var includeAllFilter = "include out-of-contract";
-	var excludeOutOfContract = "exclude out-of-contract";
-	var includeAllCoaches = "all coaches";
-	var myCaseload = "my caseload";
+	var txt_includeAllFilter = "include out-of-contract";
+	var txt_excludeOutOfContract = "exclude out-of-contract";
+	var txt_includeAllCoaches = "all coaches";
+	var txt_myCaseload = "my caseload";
+	var txt_flaggedOnly = "*";
+	var txt_clearFlagged = "clear *"
 
 	//column integers
 	var idx_lastContactDate = 0;
@@ -103,10 +104,12 @@ select {
 	var idx_stu_name = 4;
 	var idx_ASAP_status = 5;
 	var idx_statusinternal = 6;
-	var idx_pidm = 7;
-	var idx_in_contract = 8
-	var idx_pcc_email = 9;
-	var idx_maxterm = 10;
+	var idx_contactid = 7;
+	var idx_pidm = 8;
+	var idx_in_contract = 9
+	var idx_pcc_email = 10;
+	var idx_maxterm = 11;
+	var idx_flagged = 12;
 
 	$(document).ready(function() {
 		//intialize table
@@ -123,14 +126,22 @@ select {
 			lengthMenu: [[100, 50, -1], [100, 50, "All"]],
 			order: [[ idx_coach, "asc" ],[idx_cohort, "desc"] ],
 			columnDefs: [
-         		 {targets:idx_in_contract, visible:false},
-				 {targets:idx_pcc_email, visible:false},
-				 {targets:idx_maxterm, visible:false},
+         		 {targets:[idx_in_contract,idx_pcc_email,idx_maxterm,idx_flagged], visible:false},
+   				 {targets:idx_contactid,
+				 	sortable:false,
+				 	render: function ( data, type, row ) {
+				 				checked = "";
+				 				if(row[idx_flagged]==1){
+				 					checked = "checked";
+				 				}
+                  				return '<input class="flag-contact" id=' + data + ' type="checkbox" onclick="javascript:saveFlag(this)" value=' + row[idx_flagged] + ' ' + checked + ' >';
+             				}
+				 	},
 				 //editable link column is not sortable
 				 {targets:idx_pidm,
 				 	sortable:false,
 				 	render: function ( data, type, row ) {
-                  				return '<a href="javascript:goToDetail('+data+', ' + row[idx_maxterm] +')">Edit</a>';
+                  				return '<a href="javascript:goToDetail('+data+', ' + row[idx_maxterm] +', ' + row[idx_contactid] + ')">Edit</a>';
              				}
 				 	}
 				],
@@ -139,21 +150,28 @@ select {
             	//Copy Email Button
             	{
             	  extend: 'copy',
-            	  text: 'Copy Email',
+            	  text: 'copy email',
                   exportOptions: { columns: [idx_pcc_email] }
             	},
             	//Filter Button
             	{
-            	  text: includeAllFilter,
+            	  text: txt_includeAllFilter,
             	  action: function( e, dt, node, config ){
 					filterContract(dt, this);
             	  }
             	}
             	<cfoutput><cfif Session.userPosition EQ "Coach">
 				,
+            	//Flag Button
+            	{
+            	  text: txt_flaggedOnly,
+            	  action: function( e, dt, node, config ){
+            	  	filterFlagged(dt, this);
+            	  }
+            	},
             	//Coaches Button
             	{
-            	  text: includeAllCoaches,
+            	  text: txt_includeAllCoaches,
             	  action: function( e, dt, node, config ){
             	  	filterCoach(dt, this);
             	  }
@@ -172,8 +190,11 @@ select {
     				$(row).find('td:eq(idx_ASAP_status)').css('background-color', '#f9f96f');
             	}
          	},
-		}); //end intialize
+		}); //end initialize
 
+ 		$('#dt_table').find('td').click(function(){
+ 			saveFlag(this);
+ 		});
 
 		//var dt = $('#dt_table').DataTable();
 		//hide main filter
@@ -182,7 +203,7 @@ select {
 		// Setup - add a text input to each header cell
 		$('#dt_table thead th').each( function () {
 			var title = $(this).text();
-			if (title.length > 0) {
+			if (title.length > 1) {
 			$(this).html( '<input type="text" placeholder="'+title+'" id="'+title+'" />' );
 			}
 		} ); //end add filter
@@ -212,29 +233,51 @@ select {
 
 	} ); //end document ready
 
+   // save flag checkbox changes
+   function saveFlag(data){
+		$.blockUI({ message: 'Just a moment...' });
+		flagged = (data.checked ? 1 : 0);
+		$.ajax({
+			url: "fc.cfc?method=updateFlagContact",
+			type: "POST",
+			async: false,
+			data: { contactid: data.id, flagged:flagged },
+			error: function (jqXHR, exception) {
+		        handleAjaxError(jqXHR, exception);
+			}
+		});
+		$.unblockUI();
+	}
 	function filterContract(dt, button) {
-		filter =  button.text() == includeAllFilter ? "" : "Yes";
+		filter =  button.text() == txt_includeAllFilter ? "" : "Yes";
 		dt.column(idx_in_contract).search(filter).draw();
-		buttonText = button.text() == includeAllFilter ? excludeOutOfContract : includeAllFilter;
+		buttonText = button.text() == txt_includeAllFilter ? txt_excludeOutOfContract : txt_includeAllFilter;
+        button.text(buttonText);
+	}
+	function filterFlagged(dt, button) {
+		filter =  button.text() == txt_flaggedOnly ? "1" : "";
+		dt.column(idx_flagged).search(filter).draw();
+		buttonText = button.text() == txt_flaggedOnly ? txt_clearFlagged : txt_flaggedOnly;
         button.text(buttonText);
 	}
 	function filterCoach(dt, button){
 		<cfoutput>
 		var userDisplayName = "#Session.userDisplayName#";
 		</cfoutput>
-		filter =  button.text() == myCaseload ? userDisplayName : "";
+		filter =  button.text() == txt_myCaseload ? userDisplayName : "";
 		dt.column(idx_coach).search(filter).draw();
-        button.text(button.text() == myCaseload ? includeAllCoaches : myCaseload);
+        button.text(button.text() == txt_myCaseload ? txt_includeAllCoaches : txt_myCaseload);
         $('#Coach').val(filter);
     }
 
-	function goToDetail(pidm, maxterm){
-		var dt = $('#dt_table').DataTable();
-		var gList = dt.columns({search:'applied'}).data()[0];
+	function goToDetail(pidm, maxterm, contactid){
+		//var dt = $('#dt_table').DataTable();
+		//var gList = dt.columns({search:'applied'}).data()[0];
 		var url = 'student.cfm';
 		var form = $('<form action="' + url + '" method="post">' +
  				'<input type="text" name="pidm" value="' + pidm + '" />' +
  				'<input type="text" name="maxterm" value="' + maxterm + '" />' +
+ 				'<input type="text" name="contactid" value="' + contactid + '" />' +
  				'</form>');
 		$('body').append(form);
 		form.submit();

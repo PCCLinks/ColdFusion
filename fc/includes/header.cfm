@@ -30,6 +30,7 @@
     <link rel="stylesheet" href="<cfoutput>#pcc_source#</cfoutput>/css/foundation.min.css" />
     <link rel="stylesheet" href="<cfoutput>#pcc_source#</cfoutput>/css/app.css" />
 	<link rel="stylesheet" href="https://cdn.datatables.net/v/dt/dt-1.10.15/b-1.3.1/b-html5-1.3.1/kt-2.2.1/r-2.1.1/rg-1.0.0/datatables.min.css"/>
+	<link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/v/dt/dt-1.10.15/b-1.3.1/b-colvis-1.3.1/b-html5-1.3.1/b-print-1.3.1/cr-1.3.3/fc-3.2.2/fh-3.1.2/kt-2.2.1/r-2.1.1/rg-1.0.0/sc-1.4.2/se-1.2.2/datatables.min.css"/>
 	<cfoutput>#pcc_styles#</cfoutput>
 
 	<!-- jquery -->
@@ -77,7 +78,7 @@
 
     <!-- content area -->
     <div id="content" class="row" aria-label="Page content">
-   <!---   <div class="small-12 columns"> --->
+   <div class="small-12 columns">
 
 
 <!-- end header template -->

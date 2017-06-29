@@ -1,9 +1,30 @@
 <cfcomponent displayname="FC">
+<!------- NOTES -------
+Queries with bannerpcclinks datasource are views from the Banner system
+Banner views have an ATTS attribute that identify what program a student is in.  Since overtime, a student may be in more than one program
+all the banner queries need to force a distinct by PIDM
+--->
+
+	<cfobject name="mscbCFC" component="pcclinks.includes.multiSelectCheckbox">
 
 	<cffunction name="getTermByStudent" returntype="query" access="remote" >
 		<cfargument name="pidm" type="string" required="no" default="">
 		<cfquery datasource="bannerpcclinks" name="termByStudent" cachedWithin="#createTimeSpan( 0, 1, 0, 0 )#">
-			SELECT *
+			SELECT distinct PIDM
+				, TERM
+ 				, f_pcc_id(PIDM) STU_ID
+ 				, SAP_CAST INCOMING_SAP
+ 				, OUTGOING_SAP
+			     , SGBSTDN_CAMP_CODE  P_CAMPUS
+			     , STVCAMP_DESC  P_CAMPUS_DESC
+			     , SGBSTDN_DEGC_CODE_1 P_DEGREE
+			     , STVDEGC_DESC  P_DEGREE_DESC
+			     , SGBSTDN_MAJR_CODE_1 P_MAJOR
+			     , STVMAJR_DESC P_MAJOR_DESC
+			     , trunc(SHRTGPA_GPA,3) T_GPA
+			     , SHRTGPA_HOURS_ATTEMPTED T_ATTEMPTED
+			     , SHRTGPA_HOURS_EARNED T_EARNED
+			     , EFC
 			FROM swvlinks_term
 			WHERE 1=1
 			<cfif len(#arguments.id#) gt 0>
@@ -21,7 +42,7 @@
 		<!--- note that  for Oracle, select "*" did not work in this query
 		  unlike MySql --->
 		<cfquery datasource="bannerpcclinks" name="coursesByStudent" cachedWithin="#createTimeSpan( 0, 1, 0, 0 )#">
-			SELECT PIDM, STU_ID, TERM, CRN, SUBJ, CRSE, TITLE, CREDITS, GRADE, PASSED
+			SELECT distinct PIDM, STU_ID, TERM, CRN, SUBJ, CRSE, TITLE, CREDITS, GRADE, PASSED
 			, case when (TERM >= <cfqueryparam value="#firstYearBeginningTerm#">
 							and TERM <= <cfqueryparam value="#firstYearEndingTerm#"> )
 						then 1 else 0 end as inFirstYear
@@ -59,6 +80,7 @@
 				, SUM(BannerCourses.pointsForGPA)/SUM(BannerCourses.creditsForGPA) as firstYearGPA
 			FROM BannerCourses
 			WHERE inFirstYear = 1
+				and PIDM = <cfqueryparam value="#arguments.pidm#">
 			GROUP BY STU_ID
 			HAVING SUM(BannerCourses.creditsForGPA) > 0
 			UNION
@@ -67,6 +89,7 @@
 				, 0 as firstYearGPA
 			FROM BannerCourses
 			WHERE inFirstYear = 1
+				and PIDM = <cfqueryparam value="#arguments.pidm#">
 			GROUP BY STU_ID
 			HAVING SUM(BannerCourses.creditsForGPA) = 0
 			</cfquery>
@@ -77,7 +100,7 @@
 	<cffunction name="getMaxTermData" access="remote" returntype="query" >
 		<cfargument name="pidm" type="string" required="no" default="">
 		<cfquery name="MaxTermData" datasource="bannerpcclinks" cachedWithin="#createTimeSpan( 0, 1, 0, 0 )#">
-			SELECT swvlinks_term.STU_ID
+			SELECT distinct swvlinks_term.STU_ID
 				, TERM
 				, P_DEGREE
 				, EFC
@@ -101,14 +124,14 @@
 		<cfargument name="pidm" type="numeric" required="yes" >
 		<cfargument name="maxterm" type="string" required="yes">
 		<cfquery datasource="bannerpcclinks" name="maxRegistration" cachedWithin="#createTimeSpan( 0, 1, 0, 0 )#">
-			SELECT swvlinks_course.STU_ID
-				, swvlinks_course.TERM as maxRegistrationTerm
+			SELECT STU_ID
+				, TERM as maxRegistrationTerm
 				, sum(CREDITS) AS maxRegistrationCredits
-			FROM swvlinks_course
-			WHERE PIDM = <cfqueryparam  value="#arguments.pidm#">
-				and Term = <cfqueryparam  value="#arguments.maxterm#">
-			GROUP BY swvlinks_course.STU_ID
-				, swvlinks_course.TERM
+			FROM (select distinct STU_ID, TERM, CRN, CREDITS
+			      from swvlinks_course
+				  where PIDM = <cfqueryparam  value="#arguments.pidm#">
+						and Term = <cfqueryparam  value="#arguments.maxterm#">) data
+			GROUP BY STU_ID, TERM
 		</cfquery>
 		<cfreturn maxRegistration >
 	</cffunction>
@@ -123,13 +146,14 @@
 				, MAX(cg190Passed) as cg190Passed
 			FROM BannerCourses
 			WHERE PIDM = <cfqueryparam  value="#arguments.pidm#">
-			GROUP BY STU_ID
+			GROUP BY BannerCourses.STU_ID
 		</cfquery>
 		<cfreturn cgPassed>
 	</cffunction>
 
-	<cffunction name="updateCase" access="remote">
+	<cffunction name="updateCase" access="remote" returnformat="json" >
 		<cfargument name="data" type="struct">
+
 		<cfquery name="create" result = "r">
 			UPDATE futureConnect SET
 				preferredName = <cfqueryparam cfsqltype="cf_sql_varchar" value="#trim(arguments.data.preferredName)#">,
@@ -149,70 +173,45 @@
 				coach = <cfqueryparam cfsqltype="cf_sql_varchar" value="#trim(arguments.data.coach)#">,
 				cellPhone = <cfqueryparam cfsqltype="cf_sql_varchar" value="#trim(arguments.data.cellPhone)#">,
 				phone2 = <cfqueryparam cfsqltype="cf_sql_varchar" value="#trim(arguments.data.phone2)#">,
-				emailPersonal = <cfqueryparam cfsqltype="cf_sql_varchar" value="#trim(arguments.data.emailPersonal)#">
-
-
+				emailPersonal = <cfqueryparam cfsqltype="cf_sql_varchar" value="#trim(arguments.data.emailPersonal)#">,
+				flagged=<cfqueryparam value=#trim(arguments.data.flagged)#>
 			WHERE futureConnect.contactID =  <cfqueryparam cfsqltype="cf_sql_varchar" value="#trim(arguments.data.contactID)#">
 		  </cfquery>
 
 		<cfif len(trim(arguments.data.notes)) GT 0>
 			<cfset insertNote(contactID="#arguments.data.contactID#", noteText="#trim(arguments.data.notes)#")>
 		</cfif>
-		<cfset saveEnrichmentProgramData(data=arguments.data) >
+		<cfset saveEnrichmentProgramData(data=arguments.data, contactid=#trim(arguments.data.contactID)#) >
 		<cfset savehouseholdData(data=arguments.data) >
 		<cfset saveLivingSituationData(data=arguments.data) >
+		<cfheader statusCode=200 statustext="success" >
 	</cffunction>
 
 	<cffunction name="saveEnrichmentProgramData" access="private">
 		<cfargument name="data" required="true">
-		<cfset contactID = "#trim(arguments.data.contactid)#">
-		<cfset debug=false>
+		<cfargument name="contactID" required="true">
+		<cfset checkedIds = mscbCFC.getCheckedCollection(data=data, idFieldName="enrichmentProgramId")>
 		<cfquery name="existingEntries">
-			SELECT *
+			SELECT enrichmentProgramId Id
 			FROM enrichmentProgramContact
 			WHERE contactID = <cfqueryparam value="#contactID#">
 				AND tableName = 'futureConnect'
 		</cfquery>
-		<cfloop query="existingEntries">
-			<cfset exists=false>
-			<cfloop collection="#arguments.data#" item="key">
-				<cfif debug>key left,19:<cfdump var="#left(key,19)#"><br></cfif>
-				<cfif left(key,19) EQ "enrichmentProgramID">
-					<cfset checkedID = RIGHT(key,len(key)-19)>
-					<cfif debug>checkedid=<cfdump var="#checkedID#"><br></cfif>
-					<cfif debug>existingEntries=<cfdump var="#existingEntries.enrichmentProgramID#"><br></cfif>
-					<cfif existingEntries.enrichmentProgramID EQ checkedID>
-						<cfset exists=true>
-						<cfif debug>found<br></cfif>
-					</cfif> <!--- matches a value that is checked --->
-				</cfif> <!-- if enrichment field --->
-			</cfloop> <!--- form values --->
-			<!--- no longer checked, delete it --->
-			<cfif exists EQ false>
-				<cfif debug>delete entry:<cfdump var="#existingEntries.enrichmentProgramContactID#"></cfif>
-				<cfquery name="deleteEntry">
-					delete from enrichmentProgramContact
-					where enrichmentProgramContactID = <cfqueryparam value="#existingEntries.enrichmentProgramContactID#">
-				</cfquery>
-			</cfif>
-		</cfloop>
-		<cfloop collection="#arguments.data#" item="key">
-			<cfif left(key,19) EQ "enrichmentProgramID">
-				<cfset checkedID = RIGHT(key,len(key)-19)>
-				<cfset exists=false>
-				<cfloop query="existingEntries">
-					<cfif existingEntries.enrichmentProgramID EQ checkedID>
-						<cfset exists=true>
-					</cfif> <!--- matches a value that is checked --->
-				</cfloop> <!---existing entries --->
-				<cfif exists EQ false>
-					<cfquery name="insertEntry">
-						insert into enrichmentProgramContact(contactID, enrichmentProgramID, tableName)
-						values(#contactID#, #checkedID#, 'futureConnect')
-					</cfquery>
-				</cfif>
-			</cfif> <!-- if enrichment field --->
-		</cfloop> <!--- form values --->
+		<cfset idsToDelete = mscbCFC.getValuesToDelete(existingEntries, checkedIds)>
+		<cflog file="pcclinks_fc" text="idsToDelete:#idsToDelete#">
+		<cfquery name="deleteEntry">
+			DELETE FROM enrichmentProgramContact
+			WHERE enrichmentProgramID IN (<cfqueryparam value="#idsToDelete#" cfsqltype="CF_SQL_INTEGER" list="yes" >)
+				and contactid = <cfqueryparam value="#contactId#">
+		</cfquery>
+		<cfset idsToInsert = mscbCFC.getValuesToInsert(existingEntries, checkedIds)>
+		<cflog file="pcclinks_fc" text="idsToInsert:#idsToInsert#">
+		<cfquery name="insertEntry">
+			insert into enrichmentProgramContact(contactID, enrichmentProgramID, tableName)
+			select <cfqueryparam value=#contactID#>, enrichmentProgramID, 'futureConnect'
+			from enrichmentProgram
+			where enrichmentProgramID in (<cfqueryparam value="#idsToInsert#" cfsqltype="CF_SQL_INTEGER" list="yes">)
+		</cfquery>
 	</cffunction>
 
 	<cffunction name="savehouseholdData" access="private">
@@ -237,7 +236,7 @@
 						<cfset exists=true>
 						<cfif debug>found<br></cfif>
 					</cfif> <!--- matches a value that is checked --->
-				</cfif> <!-- if enrichment field --->
+				</cfif> <!--- if enrichment field --->
 			</cfloop> <!--- form values --->
 			<!--- no longer checked, delete it --->
 			<cfif exists EQ false>
@@ -263,7 +262,7 @@
 						values(#contactID#, #checkedID#, 'futureConnect')
 					</cfquery>
 				</cfif>
-			</cfif> <!-- if enrichment field --->
+			</cfif> <!--- if enrichment field --->
 		</cfloop> <!--- form values --->
 	</cffunction>
 
@@ -289,7 +288,7 @@
 						<cfset exists=true>
 						<cfif debug>found<br></cfif>
 					</cfif> <!--- matches a value that is checked --->
-				</cfif> <!-- if enrichment field --->
+				</cfif> <!--- if enrichment field --->
 			</cfloop> <!--- form values --->
 			<!--- no longer checked, delete it --->
 			<cfif exists EQ false>
@@ -315,17 +314,17 @@
 						values(#contactID#, #checkedID#, 'futureConnect')
 					</cfquery>
 				</cfif>
-			</cfif> <!-- if enrichment field --->
+			</cfif> <!--- if enrichment field --->
 		</cfloop> <!--- form values --->
 	</cffunction>
+
 
 	<cffunction name="insertNote" access="private">
 		<cfargument name="contactID" required="true">
 		<cfargument name="noteText" required="true">
 		<cfquery name="insert" >
 			INSERT INTO sidny.notes(tableName, contactID, noteText, noteDateAdded, noteAddedBy)
-			VALUES('futureConnect','#arguments.contactID#', '#arguments.noteText#', Now(), 'changeme')
-
+			VALUES('futureConnect','#arguments.contactID#', '#arguments.noteText#', Now(), '#session.username#')
 		</cfquery>
 	</cffunction>
 
@@ -463,6 +462,7 @@
 			, futureConnect_bannerPerson.PCC_EMAIL
 			, futureConnect_bannerPerson.emailPersonal
 			, futureConnect_bannerPerson.weeklyWorkHours
+			, futureConnect_bannerPerson.flagged
 
 			, ASAP_STATUS
 			, in_contract
@@ -485,8 +485,8 @@
 
 		<cfquery dbtype="query" name="qryData" >
 			select LastContactDate, Coach, Cohort, bannerGNumber
-				, stu_name, ASAP_status, statusinternal, pidm, in_contract
-				, pcc_email, maxterm
+				, stu_name, ASAP_status, statusinternal, contactID, pidm
+				, in_contract, pcc_email, maxterm, flagged
 			from caseloaddata
 		</cfquery>
 		<cfreturn qryData>
@@ -495,7 +495,7 @@
 	<cffunction name="getStudentTermMetrics" access="remote" returntype="query">
 		<cfargument name="pidm" type="numeric" required="yes" default="">
 		<cfquery datasource="bannerpcclinks" name="StudentTermMetrics">
-			SELECT STU_ID
+			SELECT distinct STU_ID
 				, TERM
 				, T_GPA
 				, T_EARNED
@@ -505,7 +505,6 @@
 			</cfquery>
 		<cfreturn StudentTermMetrics>
 	</cffunction>
-
 
 	<cffunction name="getNotes">
 		<cfargument name="contactID" required="yes">
@@ -569,6 +568,14 @@
 		<cfreturn livingSituation>
 	</cffunction>
 
-
+	<cffunction name="updateFlagContact" access="remote">
+		<cfargument name="contactid" required="true">
+		<cfargument name="flagged" type="numeric" required="true">
+		<cfquery>
+			UPDATE futureConnect
+			SET flagged = <cfqueryparam value="#arguments.flagged#">
+			WHERE contactid = <cfqueryparam value="#arguments.contactid#">
+		</cfquery>
+	</cffunction>
 
 </cfcomponent>

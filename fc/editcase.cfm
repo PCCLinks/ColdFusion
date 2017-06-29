@@ -1,7 +1,6 @@
 <!--- called by student.cfm
  pidm and cohort variable set by student.cfm
 --->
-
 <cfparam name="studentparam_pidm">
 <cfparam name="studentparam_cohort">
 <cflog file="pcclinks_fc" text="starting getFirstYearMetrics">
@@ -20,19 +19,6 @@
 	ORDER BY 1 ASC
 </cfquery>
 
-<cfquery name="list_gender">
-	SELECT distinct GenderName
-	FROM pcc_links.gender
-	ORDER BY 1 ASC
-</cfquery>
-
-<cfquery name="list_campus">
-	SELECT distinct CampusName
-	FROM pcc_links.campus
-	ORDER BY 1 ASC
-</cfquery>
-
-<div id="savemessage"></div>
 <!--- FORM ---->
 <form action="javascript:saveContent();" method="post" id="editForm" name="editForm">
 	<input name="method" type="hidden" value="update" />
@@ -140,17 +126,24 @@
 				</select>
 			</label>
 
-			<!--- Household Information --->
-			<cfinvoke component="fc" method="getHouseholdWithAssignments" contactID=#caseload_banner.contactID#  returnVariable="mscb_data">
-			<cfset mscb_fieldNameDescription = 'Household Information'>
+			<!-- Household Information checkboxes -->
+			<div id="householdInfo">
+			<!---<cfinvoke component="fc" method="getHouseholdWithAssignments" contactID=#caseload_banner.contactID#  returnVariable="mscb_data">--->
+			<cfset mscb_description = 'Household Information'>
 			<cfset mscb_fieldName = 'householdID'>
+			<cfset mscb_componentname = "fc">
+			<cfset mscb_methodName = "getHouseholdWithAssignments">
 			<cfinclude template="#pcc_source#/includes/multiSelectCheckboxes.cfm">
+			</div>
 
-			<!--- Living Situation --->
-			<cfinvoke component="fc" method="getLivingSituationWithAssignments" contactID=#caseload_banner.contactID#  returnVariable="mscb_data">
-			<cfset mscb_fieldNameDescription = 'Living Situation'>
+			<!-- Living Situation checkboxes -->
+			<div id="livingsituation">
+			<cfset mscb_description = 'Living Situation'>
 			<cfset mscb_fieldName = 'livingSituationID'>
+			<cfset mscb_componentname = "fc">
+			<cfset mscb_methodName = "getLivingSituationWithAssignments">
 			<cfinclude template="#pcc_source#/includes/multiSelectCheckboxes.cfm">
+			</div>
 
 			<!--- <label>Citizen Status -- REMOVE fix so it updates with selection
 				<select name='citizen_status' selected=#caseload_banner.citizen_status#>
@@ -203,9 +196,9 @@
 				</cfoutput>
 			</label>
 		</div>
-		<!--- END COLUMN 1 --->
+		<!-- END COLUMN 1 -->
 
-		<!--- COLUMN 2 --->
+		<!-- COLUMN 2 -->
 		<div class="large-4 columns">
 				<label>
 				Status Internal
@@ -338,7 +331,7 @@
 				</cfoutput>
 			</label>
 
-			<!--- Exit Reason --->
+			<!-- Exit Reason dropdown -->
 			<label>
 				Exit Reason
 				<select name="exitReason">
@@ -387,7 +380,8 @@
 					> Left without contact</option>
 				</select>
 			</label>
-			<!--- End Exit Reason --->
+			<!-- End Exit Reason -->
+
 		</div>
 		<!--- END COLUMN 2 --->
 
@@ -430,17 +424,33 @@
 				</cfoutput>
 			</label>
 
-			<cfinvoke component="fc" method="getEnrichmentProgramsWithAssignments" contactID=#caseload_banner.contactID#  returnVariable="mscb_data">
-			<cfset mscb_fieldNameDescription = 'Enrichment Programs'>
+			<!-- Enrichment Programs Checkboxes -->
+			<div id="enrichmentprograms">
+			<cfset mscb_description = 'Enrichment Programs'>
 			<cfset mscb_fieldName = 'enrichmentProgramID'>
+			<cfset mscb_componentname = "fc">
+			<cfset mscb_methodName = "getEnrichmentProgramsWithAssignments">
 			<cfinclude template="#pcc_source#/includes/multiSelectCheckboxes.cfm">
+			</div>
+			<!-- end enrichment programs -->
 
-			<cfinvoke component="fc" method="getNotes"  contactID = #caseload_banner.contactID# returnvariable="notesvar_data"></cfinvoke>
-			<label>Notes
-				<textarea name="notes" rows="10"></textarea>
-				<cfinclude template="#pcc_source#/includes/notes.cfm" />
+			<!-- Notes -->
+			<div id="notes">
+			<cfparam  name="tableName" default="futureConnect">
+			<cfparam  name="contactID" default="#Form.contactid#">
+			<cfinclude template="#pcc_source#/includes/notes.cfm" />
+			</div>
+			<!-- end div notes -->
+
+			<label>
+				Flag
+				<cfoutput>
+					<input type="checkbox" name="flag" value="#caseload_banner.flagged#"  <cfif caseload_banner.flagged EQ 1 >checked</cfif>/>
+				</cfoutput>
 			</label>
+
 			<input name="submit" value="Save" class="success button" type="submit" />
+			<div id="savemessage"></div>
 		</div>
 		<!---- END COLUMN 3 --->
 	</div> 	<!--- end row class --->
@@ -448,20 +458,55 @@
 <cfsavecontent variable="editcase_script">
 <script>
    function saveContent(){
+   		form = {};
+   		flagCheckBoxFound = false;
+   		flagFieldName = 'flagged';
+   		$.each($('form').serializeArray(), function(index, field) {
+   			if(field.name == flagFieldName){
+   				flagCheckBoxFound = true;
+   			}
+      		form[field.name] = field.value;
+      	});
+      	//checkboxes only show up when checked
+      	if(flagCheckBoxFound == false){
+      		form[flagFieldName] = 0;
+      	}
 		$.blockUI({ message: 'Saving...' });
 		 $.ajax({
             type: 'post',
-            url: 'saveCase.cfm',
-            data: $('form').serialize(),
-            success: function () {
+            url: 'fc.cfc?method=updateCase',
+            data: {data : JSON.stringify(form), isAjax:'yes'},
+            datatype:'json',
+            success: function (data, textStatus, jqXHR) {
+            	updateContent();
             	var d = new Date();
-              $('#savemessage').html('Last saved ' + d.getHours() + ':' + d.getMinutes() );
-            },
+				$('#savemessage').html('Last saved ' + addZero(d.getHours()) + ':' + addZero(d.getMinutes()) + ':' + addZero(d.getSeconds()));
+		    },
             error: function (xhr, textStatus, thrownError) {
 				        handleAjaxError(xhr, textStatus, thrownError);
 			}
           });
 		$.unblockUI();
+	}
+	function updateContent(){
+		//notes
+		url = "<cfoutput>#pcc_source#/includes/notes.cfm?contactid=#contactid#&tablename=#tablename#</cfoutput>";
+		$('#notes').load(url);
+		//household
+		url = "<cfoutput>#pcc_source#/includes/multiselectcheckboxes.cfm?contactid=#contactid#&mscb_componentname=pcclinks.fc.fc&mscb_methodname=getHouseholdWithAssignments&mscb_fieldName=householdID&mscb_description=Household%20Information</cfoutput>";
+		$('#householdInfo').load(url, function(){$(this).foundation();});
+		//living
+		url = "<cfoutput>#pcc_source#/includes/multiselectcheckboxes.cfm?contactid=#contactid#&mscb_componentname=pcclinks.fc.fc&mscb_methodname=getLivingSituationWithAssignments&mscb_fieldName=livingSituationID&mscb_description=Living%20Situation</cfoutput>";
+		$('#livingsituation').load(url, function(){$(this).foundation();});
+		//enrichment
+		url = "<cfoutput>#pcc_source#/includes/multiselectcheckboxes.cfm?contactid=#contactid#&mscb_componentname=pcclinks.fc.fc&mscb_methodname=getEnrichmentProgramsWithAssignments&mscb_fieldName=enrichmentProgramId&mscb_description=Enrichment%20Program</cfoutput>";
+		$('#enrichmentprograms').load(url, function(){$(this).foundation();});
+	}
+	function addZero($time) {
+	  if ($time < 10) {
+	    $time = "0" + $time;
+	  }
+	  return $time;
 	}
 </script>
 </cfsavecontent>

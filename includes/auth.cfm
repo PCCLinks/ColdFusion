@@ -2,11 +2,7 @@
 <cfparam name="url.ticket" default="">
 <cfparam name="username" default="">
 <cfparam name="url.action" default="">
-<cfif StructKeyExists(Session, "DebugCount")>
-	<cfset Session.DebugCount = Session.DebugCount+1>
-<cfelse>
-	<cfset Session.DebugCount = 1>
-</cfif>
+
 <cfif structKeyExists(url, "debug")>
 	<cfset Variables.debug = "#url.debug#">
 <cfelse>
@@ -26,6 +22,11 @@
  app_path = "https://" & "#CGI.SERVER_NAME#" & "#CGI.SCRIPT_NAME#";
  cas_url = cas_path & "login?" & "service=" & app_path;
 </cfscript>
+<cfif Variables.debug>
+	<cfdump var="#cas_path#"><br>
+	<cfdump var="#app_path#"><br>
+	<cfdump var="#cas_url#">
+</cfif>
 
 <!--- session init --->
 <cflock timeout="10" scope="session" type="readonly">
@@ -144,4 +145,3 @@
 		</cflock>
 	</cfif>
 </cfif> <!--- end if not localhost --->
-
