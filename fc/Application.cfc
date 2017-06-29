@@ -23,11 +23,6 @@
 		</cfscript>
 	</cffunction>
 
-	<cffunction name="onRequest" returnType="void">
-		<cfargument name="targetPage" type="String" required=true/>
-		<cfinclude template="#Arguments.targetPage#">
-	</cffunction>
-
 	<cffunction name="onError">
 	    <cfargument name="exception" >
 	    <cfargument name="thrownError" default="">
