@@ -24,7 +24,7 @@ all the banner queries need to force a distinct by PIDM
 			     , trunc(SHRTGPA_GPA,3) T_GPA
 			     , SHRTGPA_HOURS_ATTEMPTED T_ATTEMPTED
 			     , SHRTGPA_HOURS_EARNED T_EARNED
-			     , EFC
+			     , to_char(EFC, '$99,999') as EFC
 			FROM swvlinks_term
 			WHERE 1=1
 			<cfif len(#arguments.id#) gt 0>
@@ -103,7 +103,7 @@ all the banner queries need to force a distinct by PIDM
 			SELECT distinct swvlinks_term.STU_ID
 				, TERM
 				, P_DEGREE
-				, EFC
+				, to_char(EFC,'$99,999') as EFC
 				, coalesce(OUTGOING_SAP, INCOMING_SAP) AS ASAP_STATUS
 			FROM swvlinks_term
 				JOIN (
