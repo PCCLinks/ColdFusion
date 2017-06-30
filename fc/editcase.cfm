@@ -13,7 +13,7 @@
 <!---- Lookup Fields --->
 
 <cfquery name="list_coach">
-	SELECT distinct displayName as coachName
+	SELECT distinct displayName as coach
 	FROM applicationUser
 	WHERE position = 'coach'
 	ORDER BY 1 ASC
@@ -289,7 +289,7 @@
 		<!--- COLUMN 3 --->
 		<div class="large-4 columns">
 			<!-- Coach Select -->
-			<cfset values= ListToArray(ValueList(caseload_banner.coach))>
+			<cfset values= ListToArray(ValueList(list_coach.coach))>
 			<cfmodule template="#pcc_source#/includes/selectOption.cfm"
 				so_values="#values#"
 				so_selectedvalue="#caseload_banner.coach#"
