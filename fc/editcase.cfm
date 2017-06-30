@@ -43,28 +43,17 @@
 			</cfoutput>
 			</label>
 
-			<label>
-				Gender
-				<select name="gender">
-					<option value="Female"
-						<cfif "Female" eq caseload_banner.gender >
-							selected
-						</cfif>> Female
-					</option>
 
-					<option value="Male"
-						<cfif "Male" eq caseload_banner.gender >
-							selected
-						</cfif>> Male
-					</option>
+			<!-- Gender Select -->
+			<cfset values=["Female", "Male", "Non-binary"]>
+			<cfmodule template="#pcc_source#/includes/selectOption.cfm"
+				so_values="#values#"
+				so_selectedvalue="#caseload_banner.gender#"
+				so_label = "Gender"
+				so_selectname="gender"
+			>
+			<!-- end gender select -->
 
-					<option value="Non-binary"
-						<cfif "Non-binary" eq caseload_banner.gender >
-							selected
-						</cfif>> Non-binary
-					</option>
-				</select>
-			</label>
 			<label>
 				Race
 				<cfoutput>
@@ -77,72 +66,49 @@
 					<input type="text" name="HighSchool" readonly value="#caseload_banner.HighSchool#" />
 				</cfoutput>
 			</label>
-			<label>
-				Campus
-				<select name="campus">
-					<option value="Cascade"
-						<cfif "Cascade" eq caseload_banner.campus>
-							selected
-						</cfif>> Cascade
-					</option>
 
-					<option value="Southest"
-						<cfif "Southest" eq caseload_banner.campus>
-							selected
-						</cfif>> Southest
-					</option>
+			<!-- Campus Select -->
+			<cfset values=["Cascade", "Southeast", "Sylvania", "Rock Creek"]>
+			<cfmodule template="#pcc_source#/includes/selectOption.cfm"
+				so_values="#values#"
+				so_selectedvalue="#caseload_banner.campus#"
+				so_label = "Campus"
+				so_selectname="campus"
+			>
+			<!-- end campus select -->
 
-					<option value="Sylvania"
-						<cfif "Sylvania" eq caseload_banner.campus>
-							selected
-						</cfif>> Sylvania
-					</option>
-
-					<option value="Rock Creek"
-						<cfif "Rock Creek" eq caseload_banner.campus>
-							selected
-						</cfif>> Rock Creek
-					</option>
-
-				</select>
-			</label>
-
-			<label>
-				Parental status
-				<select name="parentalStatus">
-					<option value="Unknown"
-					<cfif "Unknown" eq caseload_banner.parentalStatus>
-						selected
-					</cfif>>Unknown
-					</option> <option value="Yes"
-					<cfif "Yes" eq caseload_banner.parentalStatus>
-						selected
-					</cfif>
-					>Yes </option> <option value="No"
-					<cfif "No" eq caseload_banner.parentalStatus>
-						selected
-					</cfif>
-					>No </option>
-				</select>
-			</label>
+			<!-- Parental status Select -->
+			<cfset values=["Unknown", "Yes", "No"]>
+			<cfmodule template="#pcc_source#/includes/selectOption.cfm"
+				so_values="#values#"
+				so_selectedvalue="#caseload_banner.parentalStatus#"
+				so_label = "Parental status"
+				so_selectname="parentalStatus"
+			>
+			<!-- end Parental status select -->
 
 			<!-- Household Information checkboxes -->
+			<!-- ajax jquery refreshed -->
 			<div id="householdInfo">
-			<!---<cfinvoke component="fc" method="getHouseholdWithAssignments" contactID=#caseload_banner.contactID#  returnVariable="mscb_data">--->
-			<cfset mscb_description = 'Household Information'>
-			<cfset mscb_fieldName = 'householdID'>
-			<cfset mscb_componentname = "fc">
-			<cfset mscb_methodName = "getHouseholdWithAssignments">
-			<cfinclude template="#pcc_source#/includes/multiSelectCheckboxes.cfm">
+			<cfmodule template="#pcc_source#/includes/multiSelectCheckboxes.cfm"
+				mscb_description = 'Household Information'
+				mscb_fieldName = 'householdID'
+				mscb_componentname = "fc"
+				mscb_methodName = "getHouseholdWithAssignments"
+				contactid = "#caseload_banner.contactID#"
+			>
 			</div>
 
 			<!-- Living Situation checkboxes -->
+			<!-- ajax jquery refreshes div -->
 			<div id="livingsituation">
-			<cfset mscb_description = 'Living Situation'>
-			<cfset mscb_fieldName = 'livingSituationID'>
-			<cfset mscb_componentname = "fc">
-			<cfset mscb_methodName = "getLivingSituationWithAssignments">
-			<cfinclude template="#pcc_source#/includes/multiSelectCheckboxes.cfm">
+			<cfmodule template="#pcc_source#/includes/multiSelectCheckboxes.cfm"
+				mscb_description = 'Living Situation'
+				mscb_fieldName = 'livingSituationID'
+				mscb_componentname = "fc"
+				mscb_methodName = "getLivingSituationWithAssignments"
+				contactid = "#caseload_banner.contactID#"
+			>
 			</div>
 
 			<!--- <label>Citizen Status -- REMOVE fix so it updates with selection
@@ -160,38 +126,17 @@
 					<input type="text" name="careerPlan" value="#caseload_banner.careerPlan#" />
 				</cfoutput>
 			</label>
-			<label>
-				Weekly Work Hours
 
-				<select name="weeklyWorkHours">
+			<!-- Weekly Work Hours Select -->
+			<cfset values=["none", "less than 20", "20 to 29","30 to 39","40 or more"]>
+			<cfmodule template="#pcc_source#/includes/selectOption.cfm"
+				so_values="#values#"
+				so_selectedvalue="#caseload_banner.weeklyWorkHours#"
+				so_label = "Weekly Work Hours"
+				so_selectname="weeklyWorkHours"
+			>
+			<!-- end Weekly Work Hours select -->
 
-					<option value = "none"
-					<cfif "none" eq caseload_banner.weeklyWorkHours>
-						selected
-					</cfif>
-					>none</option>
-
-					<option value = "less than 20"
-					<cfif "less than 20" eq caseload_banner.weeklyWorkHours>
-						selected
-					</cfif>
-					>less than 20</option>
-
-					<option value = "20 to 29"
-					<cfif "20 to 29" eq caseload_banner.weeklyWorkHours>
-						selected
-					</cfif>
-					>20 to 29</option> <option value = "30 to 39"
-					<cfif "30 to 39" eq caseload_banner.weeklyWorkHours>
-						selected
-					</cfif>
-					>30 to 39</option> <option value = "40 or more"
-					<cfif "40 or more" eq caseload_banner.weeklyWorkHours>
-						selected
-					</cfif>
-					>40 or more</option>
-				</select>
-			</label>
 			<label>
 				EFC
 				<cfoutput>
@@ -210,34 +155,16 @@
 
 		<!-- COLUMN 2 -->
 		<div class="large-4 columns">
-				<label>
-				Status Internal
-				<select name="statusInternal">
-					<option value="A"
-					<cfif "A" eq caseload_banner.statusInternal>
-						selected
-					</cfif>>A
-					</option>
 
-					<option value="B"
-					<cfif "B" eq caseload_banner.statusInternal>
-						selected
-					</cfif>
-					>B </option>
-
-					<option value="C"
-					<cfif "C" eq caseload_banner.statusInternal>
-						selected
-					</cfif>
-					>C </option>
-
-					<option value="X"
-					<cfif "X" eq caseload_banner.statusInternal>
-						selected
-					</cfif>
-					>X </option>
-				</select>
-			</label>
+			<!-- Status Internal Select -->
+			<cfset values=["A", "B", "C", "X"]>
+			<cfmodule template="#pcc_source#/includes/selectOption.cfm"
+				so_values="#values#"
+				so_selectedvalue="#caseload_banner.statusInternal#"
+				so_label = "Status Internal"
+				so_selectname="statusInternal"
+			>
+			<!-- end Status Internal select -->
 
 			<label>
 				ASAP
@@ -341,110 +268,20 @@
 				</cfoutput>
 			</label>
 
-			<!-- Exit Reason dropdown -->
-			<label>
-				Exit Reason
 
-				<select name="exitReason">
-
-					<option value="Academic frustration"
-					<cfif "Academic frustration" eq caseload_banner.exitReason>
-						selected
-					</cfif>>Academic frustration
-					</option>
-
-					<option value="ASAP Issue"
-					<cfif "ASAP Issue" eq caseload_banner.exitReason>
-						selected
-					</cfif>>ASAP Issue
-					</option>
-
-
-					<option value="Completed Certificate"
-					<cfif "Completed Certificate" eq caseload_banner.exitReason>
-						selected
-					</cfif>>Completed Certificate
-					</option>
-
-
-					<option value="Completed Degree"
-					<cfif "Completed Degree" eq caseload_banner.exitReason>
-						selected
-					</cfif>>Completed Degree
-					</option>
-
-					<option value="Completed Degree & Transfer"
-					<cfif "Completed Degree & Transfer" eq caseload_banner.exitReason>
-						selected
-					</cfif>>Completed Degree & Transfer
-					</option>
-
-					<option value="Entered the Military"
-					<cfif "Entered the Military" eq caseload_banner.exitReason>
-						selected
-					</cfif>>Entered the Military
-					</option>
-
-					<option value="Transferred"
-					<cfif "Transferred" eq caseload_banner.exitReason>
-						selected
-					</cfif>>Transferred
-					</option>
-
-
-
-					<option value="Housing insecurity / homeless"
-					<cfif "Housing insecurity / homeless" eq caseload_banner.exitReason>
-						selected
-					</cfif>>Housing insecurity / homeless
-					</option>
-
-					<option value="Incarcerated"
-					<cfif "Incarcerated" eq caseload_banner.exitReason>
-						selected
-					</cfif>>Incarcerated
-					</option>
-
-
-
-
-					<option value="Leaving school to work"
-					<cfif "Leaving school to work" eq caseload_banner.exitReason>
-						selected
-					</cfif>>Leaving school to work
-					</option>
-
-
-					<option value="Left without contact"
-					<cfif "Left without contact" eq caseload_banner.exitReason>
-						selected
-					</cfif>>Left without contact
-					</option>
-
-
-
-					<option value="Mental health barriers"
-					<cfif "Mental health barriers" eq caseload_banner.exitReason>
-						selected
-					</cfif>>Mental health barriers
-					</option>
-
-					<option value="Moving out of PCC district"
-					<cfif "Moving out of PCC district" eq caseload_banner.exitReason>
-						selected
-					</cfif>>Moving out of PCC district
-					</option>
-
-
-					<option value="Parenting responsibilities"
-					<cfif "Parenting responsibilities" eq caseload_banner.exitReason>
-						selected
-					</cfif>>Parenting responsibilities
-					</option>
-
-				</select>
-			</label>
-			<!-- End Exit Reason -->
+			<!-- Exit Reason Select -->
+			<cfset values=["Academic frustration", "ASAP Issue", "Completed Certificate","Completed Degree"
+							,"Completed Degree & Transfer","Entered the Military","Transferred"
+							,"Housing insecurity / homeless","Incarcerated","Leaving school to work"
+							,"Left without contact","Mental health barriers","Moving out of PCC district"
+							,"Parenting responsibilities"]>
+			<cfmodule template="#pcc_source#/includes/selectOption.cfm"
+				so_values="#values#"
+				so_selectedvalue="#caseload_banner.exitReason#"
+				so_label = "Exit Reason"
+				so_selectname="exitReason"
+			>
+			<!-- end Exit Reason select -->
 
 		</div>
 		<!--- END COLUMN 2 --->
@@ -489,12 +326,15 @@
 			</label>
 
 			<!-- Enrichment Programs Checkboxes -->
+			<!-- refreshed by jquery -->
 			<div id="enrichmentprograms">
-			<cfset mscb_description = 'Enrichment Programs'>
-			<cfset mscb_fieldName = 'enrichmentProgramID'>
-			<cfset mscb_componentname = "fc">
-			<cfset mscb_methodName = "getEnrichmentProgramsWithAssignments">
-			<cfinclude template="#pcc_source#/includes/multiSelectCheckboxes.cfm">
+			<cfmodule template="#pcc_source#/includes/multiSelectCheckboxes.cfm"
+				mscb_description = 'Enrichment Programs'
+				mscb_fieldName = 'enrichmentProgramID'
+				mscb_componentname = "fc"
+				mscb_methodName = "getEnrichmentProgramsWithAssignments"
+				contactid = "#caseload_banner.contactID#"
+			>
 			</div>
 			<!-- end enrichment programs -->
 
@@ -531,7 +371,7 @@
    			}
       		form[field.name] = field.value;
       	});
-      	//checkboxes only show up when checked
+      	//checkboxes only show up as posted values when checked
       	if(flagCheckBoxFound == false){
       		form[flagFieldName] = 0;
       	}

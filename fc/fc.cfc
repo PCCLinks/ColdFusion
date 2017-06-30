@@ -403,6 +403,7 @@ all the banner queries need to force a distinct by PIDM
 				LEFT JOIN (
 					select contactID, max(noteDateAdded) as lastContactDate
 					from notes
+					where noteAddedBy != 'system'
 					group by contactID) lastContact
 						on futureConnect.contactID = lastContact.contactID
 
@@ -514,7 +515,6 @@ all the banner queries need to force a distinct by PIDM
 		from notes
 		where tableName = <cfqueryparam value="#tablename#">
 			and contactID = <cfqueryparam value="#arguments.contactID#">
-
 		order by noteDateAdded desc
 	</cfquery>
 		<cfreturn comments>
@@ -552,7 +552,7 @@ all the banner queries need to force a distinct by PIDM
 		<cfreturn household>
 	</cffunction>
 
-	<cffunction name="getLivingSituationWithAssignments">
+	<cffunction name="getLivingSituationWithAssignments" access="remote">
 		<cfargument name="contactID" required="yes">
 		<cfset tableName="futureConnect">
 		<cfquery name="livingSituation">

@@ -15,14 +15,6 @@
         </CFLOCK>
     </cffunction>
 
-    <cffunction name="OnRequestStart">
-		<cfscript>
-			StructDelete(Session, "Exception");
-			StructDelete(Session, "ThrownError");
-			StructDelete(Session, "Error");
-		</cfscript>
-	</cffunction>
-
 	<cffunction name="onError">
 	    <cfargument name="exception" >
 	    <cfargument name="thrownError" default="">
@@ -69,7 +61,6 @@
 	    </cfif>
 	    <cfset logentry(value="-------------END ENTRY------------") >
 
-
 		<cfset Session.Exception = arguments.exception >
 		<cfset Session.ThrownError = arguments.thrownError>
 		<cfset Session.Error = "#msg#<br/>
@@ -88,11 +79,9 @@
 		    </cfoutput>
 	    </cfsavecontent>--->
 		<cfif StructKeyExists(Form, 'isAjax')>
-			<cfset logEntry(value='isajax')>
-		<cfheader statusCode=600 statustext="#msg#" >
+			<cfheader statusCode=600 statustext="#msg#" >
 		<cfelse>
-			<cfset logEntry(value='no isajax')>
-	    <cflocation url="error.cfm">
+	    	<cflocation url="error.cfm">
 	    </cfif>
 
 	   <!---<cfmail to="arlette.slachmuylder@pcc.edu" from="arlette.slachmuylder@pcc.edu" subject="Error: #arguments.exception.message#" type="html">

@@ -1,13 +1,26 @@
 <!--- expects to call a method that returns a query with two fields:
   id, description
   also expects that the table follows a naming convention where
-  the primarykey is [tablename]+id, i.e. householdid --->
+  the primarykey is [tablename]+id, i.e. householdid
 
-<cfparam name="contactid" default="url.contactid">
-<cfparam name="mscb_componentname" default="url.mscb_componentname">
-<cfparam name="mscb_methodname" default="url.mscb_methodname">
-<cfparam name="mscb_fieldName" default="url.mscb_fieldName">
-<cfparam name="mscb_Description" default="url.mscb_Description">
+  called either within server side code or by jquery, hence the url option
+
+--->
+
+
+<cfif  IsDefined("attributes")>
+	<cfparam name="mscb_componentname" default="#attributes.mscb_componentname#"><br />
+	<cfparam name="contactid" default="#attributes.contactid#">
+	<cfparam name="mscb_methodname" default="#attributes.mscb_methodname#">
+	<cfparam name="mscb_fieldName" default="#attributes.mscb_fieldName#">
+	<cfparam name="mscb_Description" default="#attributes.mscb_Description#">
+<cfelse>
+	<cfparam name="mscb_componentname" default="url.mscb_componentname">
+	<cfparam name="contactid" default="url.contactid">
+	<cfparam name="mscb_methodname" default="url.mscb_methodname">
+	<cfparam name="mscb_fieldName" default="url.mscb_fieldName">
+	<cfparam name="mscb_Description" default="url.mscb_Description">
+</cfif>
 
 <cfinvoke component="#mscb_componentname#" method="#mscb_methodname#" contactID=#contactID#  returnVariable="mscb_data">
 

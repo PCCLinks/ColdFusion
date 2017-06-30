@@ -22,6 +22,12 @@ input{
 select {
 	width:auto !important;
 }
+.dataTables_wrapper .dataTables_processing{
+	top: 70% !important;
+	height: 50px !important;
+	color: red;
+	background-color: lightGray;
+}
 </style>
 <!--- filter row
 <div class="row">
@@ -123,11 +129,16 @@ select {
 				        handleAjaxError(xhr, textStatus, thrownError);
 					}
 			},
+			language:{ processing: "Loading data..."},
 			lengthMenu: [[100, 50, -1], [100, 50, "All"]],
 			order: [[ idx_coach, "asc" ],[idx_cohort, "desc"] ],
 			columnDefs: [
          		 {targets:[idx_in_contract,idx_pcc_email,idx_maxterm,idx_flagged], visible:false},
-   				 {targets:idx_contactid,
+
+         		 <!--server code determines:-->
+				 <!--if user is a coach, show flag checkbox otherwise,  contactid column hidden-->
+         		 <cfif Session.userPosition EQ "Coach">
+				{targets:idx_contactid,
 				 	sortable:false,
 				 	render: function ( data, type, row ) {
 				 				checked = "";
@@ -137,6 +148,10 @@ select {
                   				return '<input class="flag-contact" id=' + data + ' type="checkbox" onclick="javascript:saveFlag(this)" value=' + row[idx_flagged] + ' ' + checked + ' >';
              				}
 				 	},
+				 <cfelse>
+				 {targets:[idx_contactid], visible:false},
+				 </cfif>
+
 				 //editable link column is not sortable
 				 {targets:idx_pidm,
 				 	sortable:false,
@@ -180,14 +195,19 @@ select {
             ],
             <!--- conditional coloring based on value--->
             rowCallback: function(row, data, index){
+            	color = '';
             	if(data[idx_ASAP_status] == "SU"){
-    				$(row).find('td:eq(idx_ASAP_status)').css('background-color', '#f78989');
+            		color = '#f78989';
             	}
             	if(data[idx_ASAP_status] == "AP"){
-    				$(row).find('td:eq(idx_ASAP_status)').css('background-color', '#eab24c');
+            		color = '#eab24c';
             	}
             	if(data[idx_ASAP_status] == "AW"){
-    				$(row).find('td:eq(idx_ASAP_status)').css('background-color', '#f9f96f');
+            		color = '#f9f96f';
+            	}
+            	if(color.length>0){
+            		//find the cell for idx_ASAP_status and set the background to the specified color
+    				$(row).find('td:eq(' + idx_ASAP_status + ')').css('background-color', '"' + color +'"' );
             	}
          	},
 		}); //end initialize
@@ -203,7 +223,7 @@ select {
 		// Setup - add a text input to each header cell
 		$('#dt_table thead th').each( function () {
 			var title = $(this).text();
-			if (title.length > 1) {
+			if (title.length > 0 && title != '*') {
 			$(this).html( '<input type="text" placeholder="'+title+'" id="'+title+'" />' );
 			}
 		} ); //end add filter
@@ -218,6 +238,10 @@ select {
 						.draw();
 				}
 			} );
+			//stop it from sorting when you click into the header
+			//$( 'input', this.header() ).on('click', function(e) {
+        	//	e.stopPropagation();
+    		//});
 		});// end search
 
 		//filter contract
@@ -234,14 +258,23 @@ select {
 	} ); //end document ready
 
    // save flag checkbox changes
-   function saveFlag(data){
+   function saveFlag(checkBox){
 		$.blockUI({ message: 'Just a moment...' });
-		flagged = (data.checked ? 1 : 0);
+		flagged = (checkBox.checked ? 1 : 0);
+
+		//set the underlying data in the flagged column for filtering
+		var table = $('#dt_table').DataTable();
+		row = checkBox.parentElement.parentElement;
+		var rowData = table.row(row).data();
+		rowData[idx_flagged] = flagged;
+		table.row(row).data(rowData).draw();
+
+		//save flag to record, id = contactid
 		$.ajax({
 			url: "fc.cfc?method=updateFlagContact",
 			type: "POST",
 			async: false,
-			data: { contactid: data.id, flagged:flagged },
+			data: { contactid: checkBox.id, flagged:flagged },
 			error: function (jqXHR, exception) {
 		        handleAjaxError(jqXHR, exception);
 			}

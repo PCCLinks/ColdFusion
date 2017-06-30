@@ -30,8 +30,8 @@
 
 <!--- session init --->
 <cflock timeout="10" scope="session" type="readonly">
- <cfparam name="session.username" default="">
- <cfparam name="session.authorized" default="0">
+ 	<cfparam name="session.username" default="">
+ 	<cfparam name="session.authorized" default="0">
 </cflock>
 
 
@@ -43,7 +43,7 @@
 <cfif url.action eq "logout">
 	 <!--- session reset --->
 	 <cflock scope="session" timeout="30" type="exclusive">
-	     <cfset session.username = "">
+	     <cfset StructClear(Session)>
 	     <cfset session.authorized = "0">
 	 </cflock>
 
@@ -129,8 +129,15 @@
 
 <!--- LOCALHOST --->
 <cfelse>
+<cfif url.action eq "logout">
+	 <!--- session reset --->
+	 <cflock scope="session" timeout="30" type="exclusive">
+	     <cfset StructClear(Session)>
+	     <cfset session.authorized = "0">
+	 </cflock>
+<cfelse>
 	<cfif not len(trim(session.username))>
-		<cfset username="william.paisley">
+		<cfset username="arlette.slachmuylder">
 		<cfquery name="qryUser" >
 			select *
 			from applicationUser
@@ -144,4 +151,5 @@
 			<cfset session.userPosition = "#qryUser.position#">
 		</cflock>
 	</cfif>
+</cfif> <!--- end if logout --->
 </cfif> <!--- end if not localhost --->
