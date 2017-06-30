@@ -345,7 +345,7 @@ all the banner queries need to force a distinct by PIDM
 		    , O_ATTEMPTED
 		    , ROUND(O_EARNED,2) AS O_EARNED
 		    , O_EARNED_CAT
-		    , GENDER
+		    , GENDER as GENDER_BANNER
 		    , BIRTHDATE
 		    , REP_RACE
 		    , ASIAN

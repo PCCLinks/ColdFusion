@@ -45,7 +45,7 @@
 
 
 			<!-- Gender Select -->
-			<cfset values=["Female", "Male", "Non-binary"]>
+			<cfset values=["Female", "Male", "Non-binary", "Choose not to say"]>
 			<cfmodule template="#pcc_source#/includes/selectOption.cfm"
 				so_values="#values#"
 				so_selectedvalue="#caseload_banner.gender#"
@@ -77,8 +77,9 @@
 			>
 			<!-- end campus select -->
 
+
 			<!-- Parental status Select -->
-			<cfset values=["Unknown", "Yes", "No"]>
+			<cfset values=["Yes", "No"]>
 			<cfmodule template="#pcc_source#/includes/selectOption.cfm"
 				so_values="#values#"
 				so_selectedvalue="#caseload_banner.parentalStatus#"
@@ -359,6 +360,15 @@
 </form>
 <cfsavecontent variable="editcase_script">
 <script>
+	//milliseconds - save every 5 minutes
+   var saveInterval = 1000*60*5;
+   var doSave = setInterval(saveContent, saveInterval);
+
+   //save before leaving
+   $(window).bind('beforeunload', function(){
+  		saveContent();
+	});
+
    function saveContent(){
    		form = {};
    		flagCheckBoxFound = false;

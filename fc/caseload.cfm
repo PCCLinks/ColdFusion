@@ -238,9 +238,9 @@ select {
 				}
 			} );
 			//stop it from sorting when you click into the header
-			//$( 'input', this.header() ).on('click', function(e) {
-        	//	e.stopPropagation();
-    		//});
+			$( 'input', this.header() ).on('click', function(e) {
+        		e.stopPropagation();
+    		});
 		});// end search
 
 		//filter contract
