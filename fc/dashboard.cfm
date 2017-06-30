@@ -51,32 +51,100 @@ function buildChart(type, labels, data, ctx, bgcolors, bcolors, ymax, title){
 } //function buildChart
 </script>
 
-<cfquery name="fcTotal">
-  SELECT COUNT(*) TotalNumberStudents
-   FROM futureConnect;
-</cfquery>
+<cfquery name="futureConnectStatus">
+	select case when CAST(right(cohort,1) as char(50)) = '1' then 'Portland'
+				when CAST(right(cohort,1) as char(50)) = '2' then 'Beaverton'
+				when CAST(right(cohort,1) as char(50)) = '3' then 'Hillsboro'
+				else 'State' end as fund_source
 
-<cfquery name="fcCampusCount">
-  SELECT campus
-	, COUNT(*) NumberStudents
-  FROM futureConnect
-  GROUP BY campus;
+	, CASE WHEN statusInternal = 'A' THEN 'ACTIVE'
+		WHEN statusInternal = 'B' THEN 'BREAK'
+		WHEN statusInternal = 'C' THEN 'COMPLETE'
+		WHEN statusInternal = 'X' THEN 'EXIT'
+		ELSE 'OTHER' END AS statusInternal
+	, count(*) as studentCounts
+	, (SELECT COUNT(*) FROM futureConnect WHERE (case when CAST(right(cohort,1) as char(50)) = '1' then 'Portland'
+				when CAST(right(cohort,1) as char(50)) = '2' then 'Beaverton'
+				when CAST(right(cohort,1) as char(50)) = '3' then 'Hillsboro'
+				else 'State' end) = (case when CAST(right(fc1.cohort,1) as char(50)) = '1' then 'Portland'
+				when CAST(right(fc1.cohort,1) as char(50)) = '2' then 'Beaverton'
+				when CAST(right(fc1.cohort,1) as char(50)) = '3' then 'Hillsboro'
+				else 'State' end)
+                ) as fundingSourceStudentCount
 
-
-</cfquery>
-
-<cfquery name="fcOutcome">
-  SELECT campus
-		, CASE WHEN statusInternal = 'A' THEN 'ACTIVE'
-			WHEN statusInternal = 'B' THEN 'BREAK'
-			WHEN statusInternal = 'C' THEN 'COMPLET'
-			WHEN statusInternal = 'X' THEN 'EXIT'
-			ELSE 'OTHER' END AS statusInternal
-	, ROUND(count(*) / (SELECT COUNT(*) FROM futureConnect WHERE campus = fc1.campus),2) Outcome
 	FROM futureConnect fc1
-	GROUP BY campus, statusInternal
+	GROUP BY fund_source, statusInternal
+</cfquery>
+
+<cfquery name="futureConnectCohort">
+	select case when CAST(right(cohort,1) as char(50)) = '1' then 'Portland'
+				when CAST(right(cohort,1) as char(50)) = '2' then 'Beaverton'
+				when CAST(right(cohort,1) as char(50)) = '3' then 'Hillsboro'
+				else 'State' end as fund_source
+
+	, CONVERT(LEFT(COHORT,4), unsigned integer) Cohort
+	, sum(case when statusInternal <> 'X' then 1 else 0 end) as nonExitCounts
+
+	, (SELECT COUNT(*) FROM futureConnect WHERE (case when CAST(right(cohort,1) as char(50)) = '1' then 'Portland'
+				when CAST(right(cohort,1) as char(50)) = '2' then 'Beaverton'
+				when CAST(right(cohort,1) as char(50)) = '3' then 'Hillsboro'
+				else 'State' end) = (case when CAST(right(fc1.cohort,1) as char(50)) = '1' then 'Portland'
+				when CAST(right(fc1.cohort,1) as char(50)) = '2' then 'Beaverton'
+				when CAST(right(fc1.cohort,1) as char(50)) = '3' then 'Hillsboro'
+				else 'State' end)
+
+                and
+
+				CONVERT(LEFT(COHORT,4), unsigned integer) = CONVERT(LEFT(fc1.COHORT,4), unsigned integer)
+
+                ) as fundingSourceStudentCount
+
+	FROM futureConnect fc1
+	GROUP BY fund_source, Cohort
+</cfquery>
+
+
+<cfquery dbtype="query" name="fcTotal" >
+  SELECT sum(studentCounts) as TotalNumberStudents
+   FROM futureConnectStatus;
+</cfquery>
+
+
+
+
+<cfquery dbtype="query" name="fcFundingSource">
+  SELECT fund_source
+	, sum(studentCounts) NumberStudents
+  FROM futureConnectStatus
+  GROUP BY fund_source;
+ </cfquery>
+
+
+<cfquery dbtype="query" name="fcOutcome">
+  SELECT fund_source
+	, statusInternal
+
+	, (SUM(studentCounts)/ MAX(fundingSourceStudentCount)) Outcome
+
+	FROM futureConnectStatus
+	GROUP BY fund_source, statusInternal
+
 	ORDER BY 1,2;
 </cfquery>
+
+
+
+<cfquery dbtype="query" name="fcOutcomeByCohort">
+  SELECT fund_source
+	, Cohort
+	, SUM(nonExitCounts)/ MAX(fundingSourceStudentCount) Outcome
+
+	FROM futureConnectCohort
+	GROUP BY fund_source, Cohort
+
+	ORDER BY 1,2;
+</cfquery>
+
 
 <!--- Main Title --->
 <cfoutput query="fcTotal">
@@ -90,39 +158,36 @@ function buildChart(type, labels, data, ctx, bgcolors, bcolors, ymax, title){
 </div>
 </cfoutput>
 
-<!--- Loop One Cell Per Campus --->
-<cfloop query="fcCampusCount">
+<!--- Loop One Cell Per fund source --->
+<cfloop query="fcFundingSource">
 	<cfoutput>
 		<div class="small-3 columns">
 			<!--- row count --->
 			<div class="row" style="text-align: center">
-				<span style="font-size:2.25rem;line-height:3rem;;font-weight:300;">#campus#</span><br/>
+				<span style="font-size:2.25rem;line-height:3rem;;font-weight:300;">#fund_source#</span><br/>
 				<span style="font-size:1.5rem;line-height:1.5rem;">#NumberStudents# students</span><br/>
 			</div> <!-- end row  count -->
 			<br class="clear">
 			<br class="clear">
 			<!--- row bar chart --->
 			<div class="row">
-				<cfquery name="fcOutcome">
-					SELECT CASE WHEN statusInternal = 'A' THEN 'ACTIVE'
-					        WHEN statusInternal = 'B' THEN 'BREAK'
-					        WHEN statusInternal = 'C' THEN 'COMPLETE'
-			    		    WHEN statusInternal = 'X' THEN 'EXIT'
-			        		ELSE 'OTHER' END AS Status
-						,ROUND(count(*) / (SELECT COUNT(*) FROM futureConnect WHERE campus = fc1.campus),2) Outcome
-				    FROM futureConnect fc1
-			    	WHERE campus = <cfqueryparam value="#campus#">
-			    	GROUP BY campus, statusInternal;
+
+				<cfquery dbtype="query" name="fcOutcomeBySource">
+					SELECT statusInternal
+						, Outcome
+				    FROM fcOutcome
+			    	WHERE fund_source = <cfqueryparam value="#fund_source#">;
+
 				</cfquery>
 				<!--- Create Unique Id Per Chart --->
-				<cfset graphId= '#campus#' & "barchart">
+				<cfset graphId= '#fund_source#' & "barchart">
 				<div id="wrapper" style="position: relative; height: 25vh">
 					<canvas id="#graphId#"></canvas>
 				</div>
 				<!--- Build chart with Status as labels, and Outcome as data --->
 				<script>
-					buildChart('bar',['#ValueList(fcOutcome.Status, "','")#']
-							,[#ValueList(fcOutcome.Outcome,",")#]
+					buildChart('bar',['#ValueList(fcOutcomeBySource.StatusInternal, "','")#']
+							,[#ValueList(fcOutcomeBySource.Outcome,",")#]
 							,#graphId#
 							, ['rgba(190, 190, 190, 1.0)',
 			                'rgba(190, 190, 190, 1.0)',
@@ -141,29 +206,32 @@ function buildChart(type, labels, data, ctx, bgcolors, bcolors, ymax, title){
 			<br class="clear">
 			<!--- row line chart --->
 			<div class="row">
-			<cfquery name="fcOutcomeTrend">
-				  	SELECT CONVERT(LEFT(COHORT,4), unsigned integer) Year, ROUND(COUNT(CASE WHEN statusInternal <> 'X' THEN bannerGNumber END) / COUNT(*),2)  NonExits
-					FROM futureConnect
-					WHERE campus = '#Campus#'
-					GROUP BY LEFT(COHORT,4)
+
+			<cfquery dbtype="query" name="fcOutcomeTrend">
+					SELECT Cohort
+						, Outcome
+				    FROM fcOutcomeByCohort
+			    	WHERE fund_source = <cfqueryparam value="#fund_source#">;
+
 			</cfquery>
+
 			<!--- Create Unique Id Per Chart --->
-			<cfset graphId= '#campus#' & "trendchart">
+			<cfset graphId= '#fund_source#' & "trendchart">
 			<div id="wrapper" style="position: relative; height: 25vh">
 				<canvas id="#graphId#"></canvas>
 			</div>
 			<!--- Build chart with Status as labels, and Outcome as data --->
 			<script>
-				buildChart('line',['#ValueList(fcOutcomeTrend.Year, "','")#']
-					,[#ValueList(fcOutcomeTrend.NonExits,",")#]
+				buildChart('line',['#ValueList(fcOutcomeTrend.Cohort, "','")#']
+					,[#ValueList(fcOutcomeTrend.Outcome,",")#]
 					,#graphId#
 					,'rgba(144, 103, 167, 1.0)'
 					,'lightgrey', 1.0, "Retention Trend");
 			</script>
 			</div> <!-- end row line chart-->
-		</div> <!-- end column for campus -->
-	</cfoutput> <!---- End Output of fcCampusCount --->
-</cfloop> <!--- End Loop fcCampusCount --->
+		</div> <!-- end column for fund source -->
+	</cfoutput> <!---- End Output of fcFundingSource --->
+</cfloop> <!--- End Loop fcFundingSource --->
 
 <!--- footer --->
 <cfinclude template="includes/footer.cfm" />
