@@ -162,20 +162,30 @@
 			</label>
 			<label>
 				Weekly Work Hours
+
 				<select name="weeklyWorkHours">
+
+					<option value = "none"
+					<cfif "none" eq caseload_banner.weeklyWorkHours>
+						selected
+					</cfif>
+					>none</option>
+
 					<option value = "less than 20"
 					<cfif "less than 20" eq caseload_banner.weeklyWorkHours>
 						selected
 					</cfif>
-					>less than 20</option> <option value = "20to29"
-					<cfif "20to29" eq caseload_banner.weeklyWorkHours>
+					>less than 20</option>
+
+					<option value = "20 to 29"
+					<cfif "20 to 29" eq caseload_banner.weeklyWorkHours>
 						selected
 					</cfif>
-					>20to29</option> <option value = "30to39"
-					<cfif "30to39" eq caseload_banner.weeklyWorkHours>
+					>20 to 29</option> <option value = "30 to 39"
+					<cfif "30 to 39" eq caseload_banner.weeklyWorkHours>
 						selected
 					</cfif>
-					>30to39</option> <option value = "40 or more"
+					>30 to 39</option> <option value = "40 or more"
 					<cfif "40 or more" eq caseload_banner.weeklyWorkHours>
 						selected
 					</cfif>
@@ -334,50 +344,104 @@
 			<!-- Exit Reason dropdown -->
 			<label>
 				Exit Reason
-				<select name="exitReason">
-					<option value="Housing insecurity / homeless"
-					<cfif "Housing insecurity / homeless" eq caseload_banner.exitReason>
-						selected
-					</cfif>
-					> Housing insecurity / homeless</option>
 
-					<option value="Mental health barriers"
-					<cfif "Mental health barriers" eq caseload_banner.exitReason>
-						selected
-					</cfif>> Mental health barriers
-					</option>
+				<select name="exitReason">
 
 					<option value="Academic frustration"
 					<cfif "Academic frustration" eq caseload_banner.exitReason>
 						selected
-					</cfif>> Academic frustration
-					</option>
-
-					<option value="Moving out of PCC district"
-					<cfif "Moving out of PCC district" eq caseload_banner.exitReason>
-						selected
-					</cfif>> Moving out of PCC district
+					</cfif>>Academic frustration
 					</option>
 
 					<option value="ASAP Issue"
 					<cfif "ASAP Issue" eq caseload_banner.exitReason>
 						selected
-					</cfif>> ASAP Issue
+					</cfif>>ASAP Issue
 					</option>
+
+
+					<option value="Completed Certificate"
+					<cfif "Completed Certificate" eq caseload_banner.exitReason>
+						selected
+					</cfif>>Completed Certificate
+					</option>
+
+
+					<option value="Completed Degree"
+					<cfif "Completed Degree" eq caseload_banner.exitReason>
+						selected
+					</cfif>>Completed Degree
+					</option>
+
+					<option value="Completed Degree & Transfer"
+					<cfif "Completed Degree & Transfer" eq caseload_banner.exitReason>
+						selected
+					</cfif>>Completed Degree & Transfer
+					</option>
+
+					<option value="Entered the Military"
+					<cfif "Entered the Military" eq caseload_banner.exitReason>
+						selected
+					</cfif>>Entered the Military
+					</option>
+
+					<option value="Transferred"
+					<cfif "Transferred" eq caseload_banner.exitReason>
+						selected
+					</cfif>>Transferred
+					</option>
+
+
+
+					<option value="Housing insecurity / homeless"
+					<cfif "Housing insecurity / homeless" eq caseload_banner.exitReason>
+						selected
+					</cfif>>Housing insecurity / homeless
+					</option>
+
+					<option value="Incarcerated"
+					<cfif "Incarcerated" eq caseload_banner.exitReason>
+						selected
+					</cfif>>Incarcerated
+					</option>
+
+
+
 
 					<option value="Leaving school to work"
 					<cfif "Leaving school to work" eq caseload_banner.exitReason>
 						selected
-					</cfif>
-					> Leaving school to work</option> <option value="Parenting responsibilities"
-					<cfif "Parenting responsibilities" eq caseload_banner.exitReason>
-						selected
-					</cfif>
-					> Parenting responsibilities</option> <option value="Left without contact"
+					</cfif>>Leaving school to work
+					</option>
+
+
+					<option value="Left without contact"
 					<cfif "Left without contact" eq caseload_banner.exitReason>
 						selected
-					</cfif>
-					> Left without contact</option>
+					</cfif>>Left without contact
+					</option>
+
+
+
+					<option value="Mental health barriers"
+					<cfif "Mental health barriers" eq caseload_banner.exitReason>
+						selected
+					</cfif>>Mental health barriers
+					</option>
+
+					<option value="Moving out of PCC district"
+					<cfif "Moving out of PCC district" eq caseload_banner.exitReason>
+						selected
+					</cfif>>Moving out of PCC district
+					</option>
+
+
+					<option value="Parenting responsibilities"
+					<cfif "Parenting responsibilities" eq caseload_banner.exitReason>
+						selected
+					</cfif>>Parenting responsibilities
+					</option>
+
 				</select>
 			</label>
 			<!-- End Exit Reason -->

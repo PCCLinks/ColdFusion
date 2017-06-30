@@ -341,9 +341,9 @@ all the banner queries need to force a distinct by PIDM
 		    , STU_NAME
 		    , STU_ZIP
 		    , STU_CITY
-		    , O_GPA
+		    , ROUND(O_GPA,2) AS O_GPA
 		    , O_ATTEMPTED
-		    , O_EARNED
+		    , ROUND(O_EARNED,2) AS O_EARNED
 		    , O_EARNED_CAT
 		    , GENDER
 		    , BIRTHDATE
