@@ -25,7 +25,6 @@ select {
 .dataTables_wrapper .dataTables_processing{
 	top: 70% !important;
 	height: 50px !important;
-	color: red;
 	background-color: lightGray;
 }
 </style>

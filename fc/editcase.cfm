@@ -288,18 +288,16 @@
 
 		<!--- COLUMN 3 --->
 		<div class="large-4 columns">
-			<label>
-				Coach
-				<select name="coach">
-					<cfoutput query="list_coach">
-						<option value="#CoachName#"
-						<cfif CoachName eq caseload_banner.coach>
-							selected
-						</cfif>
-						>#CoachName#</option>
-					</cfoutput>
-				</select>
-			</label>
+			<!-- Coach Select -->
+			<cfset values= ListToArray(ValueList(caseload_banner.coach))>
+			<cfmodule template="#pcc_source#/includes/selectOption.cfm"
+				so_values="#values#"
+				so_selectedvalue="#caseload_banner.coach#"
+				so_label = "Coach"
+				so_selectname="coach"
+			>
+			<!-- end Coach select -->
+
 			<label>
 				Cell Phone
 				<cfoutput>
