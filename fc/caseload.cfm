@@ -55,14 +55,14 @@ select {
 	<caption class="visually-hide">Future Connect Caseload</caption>
 	<thead>
 		<tr>
-			<th>Last Contact</th>
+			<th><span style="font-size:x-large;font-weight:bold;color:red">*</th>
 			<th>Coach</th>
 			<th>Cohort</th>
 			<th>G</th>
 			<th>Name</th>
 			<th>ASAP</th>
 			<th>Status</th>
-			<th><span style="font-size:x-large;font-weight:bold;color:red">*</th>
+			<th>Last Contact</th>
 			<th></th>
 		</tr>
 	</thead>
@@ -102,16 +102,18 @@ select {
 	var txt_clearFlagged = "clear *"
 
 	//column integers
-	var idx_lastContactDate = 0;
+	//note contactid is the column used for flagged, column flagged is hidden
+	var idx_contactid = 0;
 	var idx_coach = 1;
 	var idx_cohort = 2;
 	var idx_bannerGNumber = 3;
 	var idx_stu_name = 4;
 	var idx_ASAP_status = 5;
 	var idx_statusinternal = 6;
-	var idx_contactid = 7;
+	var idx_lastContactDate = 7;
+	//these are all hidden
 	var idx_pidm = 8;
-	var idx_in_contract = 9
+	var idx_in_contract = 9;
 	var idx_pcc_email = 10;
 	var idx_maxterm = 11;
 	var idx_flagged = 12;
@@ -307,9 +309,9 @@ select {
 		//var gList = dt.columns({search:'applied'}).data()[0];
 		var url = 'student.cfm';
 		var form = $('<form action="' + url + '" method="post">' +
- 				'<input type="text" name="pidm" value="' + pidm + '" />' +
- 				'<input type="text" name="maxterm" value="' + maxterm + '" />' +
- 				'<input type="text" name="contactid" value="' + contactid + '" />' +
+ 				'<input type="hidden" name="pidm" value="' + pidm + '" />' +
+ 				'<input type="hidden" name="maxterm" value="' + maxterm + '" />' +
+ 				'<input type="hidden" name="contactid" value="' + contactid + '" />' +
  				'</form>');
 		$('body').append(form);
 		form.submit();

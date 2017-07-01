@@ -348,7 +348,7 @@
 			<label>
 				Flag
 				<cfoutput>
-					<input type="checkbox" name="flag" value="#caseload_banner.flagged#"  <cfif caseload_banner.flagged EQ 1 >checked</cfif>/>
+					<input type="checkbox" name="flagged" value="#caseload_banner.flagged#"  <cfif caseload_banner.flagged EQ 1 >checked</cfif>/>
 				</cfoutput>
 			</label>
 
@@ -365,24 +365,32 @@
    var doSave = setInterval(saveContent, saveInterval);
 
    //save before leaving
-   $(window).bind('beforeunload', function(){
-  		saveContent();
-	});
+   //$(window).bind('beforeunload', function(){
+  	//	saveContent();
+	//});
 
    function saveContent(){
    		form = {};
    		flagCheckBoxFound = false;
    		flagFieldName = 'flagged';
+   		//build a form object of all items on page
+   		//used to send a generic collection to the cfc update method
    		$.each($('form').serializeArray(), function(index, field) {
    			if(field.name == flagFieldName){
    				flagCheckBoxFound = true;
+   				//we know it is a checked value - field won't have that value in it
+   				form[field.name] = 1;
+   			}else{
+      			form[field.name] = field.value;
    			}
-      		form[field.name] = field.value;
       	});
       	//checkboxes only show up as posted values when checked
+      	//if it was not found, add the unchecked value now
       	if(flagCheckBoxFound == false){
       		form[flagFieldName] = 0;
       	}
+
+   		//form[flagFieldName] = isFlagged;
 		$.blockUI({ message: 'Saving...' });
 		 $.ajax({
             type: 'post',
@@ -395,7 +403,7 @@
 				$('#savemessage').html('Last saved ' + addZero(d.getHours()) + ':' + addZero(d.getMinutes()) + ':' + addZero(d.getSeconds()));
 		    },
             error: function (xhr, textStatus, thrownError) {
-				        handleAjaxError(xhr, textStatus, thrownError);
+				 handleAjaxError(xhr, textStatus, thrownError);
 			}
           });
 		$.unblockUI();

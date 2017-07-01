@@ -328,7 +328,7 @@ all the banner queries need to force a distinct by PIDM
 		</cfquery>
 	</cffunction>
 
-		<cffunction name="getCaseload" access="remote" returntype="query" returnformat="json" >
+	<cffunction name="getCaseload" access="remote" returntype="query" returnformat="json" >
 		<cfargument name="pidm" type="string" default="">
 		<cfargument name="in_contract" type="string" default="No">
 
@@ -490,8 +490,8 @@ all the banner queries need to force a distinct by PIDM
 		<cfset caseloaddata = getCaseload()>
 
 		<cfquery dbtype="query" name="qryData" >
-			select LastContactDate, Coach, Cohort, bannerGNumber
-				, stu_name, ASAP_status, statusinternal, contactID, pidm
+			select contactID, Coach, Cohort, bannerGNumber
+				, stu_name, ASAP_status, statusinternal, LastContactDate, pidm
 				, in_contract, pcc_email, maxterm, flagged
 			from caseloaddata
 		</cfquery>
