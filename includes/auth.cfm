@@ -137,7 +137,7 @@
 	 </cflock>
 <cfelse>
 	<cfif not len(trim(session.username))>
-		<cfset username="arlette.slachmuylder">
+		<cfset username="kelly.love">
 		<cfquery name="qryUser" >
 			select *
 			from applicationUser

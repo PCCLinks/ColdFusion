@@ -67,15 +67,15 @@
 				</cfoutput>
 			</label>
 
-			<!-- Campus Select -->
+			<!--- Campus Select
 			<cfset values=["Cascade", "Southeast", "Sylvania", "Rock Creek"]>
 			<cfmodule template="#pcc_source#/includes/selectOption.cfm"
 				so_values="#values#"
 				so_selectedvalue="#caseload_banner.campus#"
 				so_label = "Campus"
 				so_selectname="campus"
-			>
-			<!-- end campus select -->
+
+	 end campus select --->
 
 
 			<!-- Parental status Select -->

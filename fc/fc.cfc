@@ -158,7 +158,7 @@ all the banner queries need to force a distinct by PIDM
 			UPDATE futureConnect SET
 				preferredName = <cfqueryparam cfsqltype="cf_sql_varchar" value="#trim(arguments.data.preferredName)#">,
 				gender = <cfqueryparam cfsqltype="cf_sql_varchar" value="#trim(arguments.data.gender)#">,
-				campus = <cfqueryparam cfsqltype="cf_sql_varchar" value="#trim(arguments.data.campus)#">,
+<!--->				campus = <cfqueryparam cfsqltype="cf_sql_varchar" value="#trim(arguments.data.campus)#">, --->
 				parentalStatus = <cfqueryparam cfsqltype="cf_sql_varchar" value="#trim(arguments.data.parentalStatus)#">,
 <!---
 				Household = <cfqueryparam cfsqltype="cf_sql_varchar" value="#trim(arguments.data.household_information)#">,
@@ -328,7 +328,7 @@ all the banner queries need to force a distinct by PIDM
 		</cfquery>
 	</cffunction>
 
-	<cffunction name="getCaseload" access="remote" returntype="query" returnformat="json" >
+		<cffunction name="getCaseload" access="remote" returntype="query" returnformat="json" >
 		<cfargument name="pidm" type="string" default="">
 		<cfargument name="in_contract" type="string" default="No">
 
@@ -339,8 +339,6 @@ all the banner queries need to force a distinct by PIDM
 			SELECT distinct PIDM
 			, STU_ID
 		    , STU_NAME
-		    , STU_ZIP
-		    , STU_CITY
 		    , ROUND(O_GPA,2) AS O_GPA
 		    , O_ATTEMPTED
 		    , ROUND(O_EARNED,2) AS O_EARNED
@@ -348,18 +346,9 @@ all the banner queries need to force a distinct by PIDM
 		    , GENDER as GENDER_BANNER
 		    , BIRTHDATE
 		    , REP_RACE
-		    , ASIAN
-		    , NATIVE
-		    , BLACK
-		    , HISPANIC
-		    , ISLANDER
-		    , WHITE
-		    , HS_CODE
 		    , HS_NAME
 		    , HS_CITY
 		    , HS_STATE
-		    , HS_GRAD_DATE
-		    , HS_DPLM
 		    , TE_MATH
 		    , TE_READ
 		    , TE_WRITE
@@ -377,8 +366,29 @@ all the banner queries need to force a distinct by PIDM
 		<!--- SIDNY Future Connect Data ---->
 		<!---------------------------------->
 		<cfquery name="fcTbl" >
-			SELECT futureConnect.*
-			, futureConnectApplication.*
+			SELECT futureConnect.BannerGNumber
+			, futureConnect.preferredName
+			, futureConnect.contactID
+			, futureConnect.cohort
+			, futureConnect.statusInternal
+			, futureConnect.exitReason
+			, futureConnect.gender
+			, futureConnect.coach
+			, futureConnect.cellPhone
+			, futureConnect.phone2
+			, futureConnect.emailPersonal
+			, futureConnect.parentalStatus
+			, futureConnect.weeklyWorkHours
+			, futureConnect.flagged
+			, futureConnect.CreatedBy
+			, futureConnect.DateCreated
+			, futureConnect.LastUpdatedBy
+			, futureConnect.DateLastUpdated
+			, futureConnect.CareerPlan
+			, futureConnectApplication.HighSchool
+			, futureConnectApplication.parent1EarnedBachelors
+			, futureConnectApplication.parent2EarnedBachelors
+
 			, Date_Format(lastContact.lastContactDate,'%m/%d/%Y') lastContactDate
 			, case when CAST(right(cohort,1) as char(50)) = '1' then 'Portland'
 				when CAST(right(cohort,1) as char(50)) = '2' then 'Beaverton'
@@ -392,7 +402,6 @@ all the banner queries need to force a distinct by PIDM
 				and CURDATE() >= STR_TO_DATE(CONCAT(9, '/',1,'/',(convert(CAST(left(cohort,4) as char(50)), unsigned integer)+2) ),'%m/%d/%YY')
 				then 'No'
 				else 'Yes' end as in_contract
-
 
 			,  convert(Concat(CAST(left(cohort,4) as char(50)),'04'), unsigned integer) as cohortFirstFall
 			,  convert(Concat(CAST((left(cohort,4)+1) as char(50)),'04'), unsigned integer) as cohortSecondFall
@@ -419,7 +428,6 @@ all the banner queries need to force a distinct by PIDM
 		<cfquery dbtype="query" name="futureConnect_bannerPerson" >
 			SELECT fcTbl.*
 				, BannerPopulation.*
-			<!--- coalesce the incoming and outgoing asap from the term extract --->
 			FROM fcTbl, BannerPopulation
 			WHERE fcTbl.bannerGNumber = BannerPopulation.STU_ID
 		</cfquery>
@@ -442,14 +450,9 @@ all the banner queries need to force a distinct by PIDM
 			, futureConnect_bannerPerson.REP_RACE
 			, futureConnect_bannerPerson.HighSchool
 			, futureConnect_bannerPerson.parentalStatus
-			, futureConnect_bannerPerson.Household
-			, futureConnect_bannerPerson.LivingSituation
 			, futureConnect_bannerPerson.careerPlan
-			, maxTermData.EFC
-			, maxTermData.TERM as MaxTerm
 			, futureConnect_bannerPerson.RE_HOLD
 			, futureConnect_bannerPerson.cohort
-			, futureConnect_bannerPerson.campus
 			, futureConnect_bannerPerson.coach
 			, futureConnect_bannerPerson.statusInternal
 			, futureConnect_bannerPerson.O_EARNED
@@ -464,12 +467,13 @@ all the banner queries need to force a distinct by PIDM
 			, futureConnect_bannerPerson.emailPersonal
 			, futureConnect_bannerPerson.weeklyWorkHours
 			, futureConnect_bannerPerson.flagged
+			, futureConnect_bannerPerson.in_contract
 
-			, ASAP_STATUS
-			, in_contract
-		    , RE_HOLD
-		    , P_DEGREE
-		    , lastContactDate
+		    , futureConnect_bannerPerson.lastContactDate
+		    , maxTermData.P_DEGREE
+		    , maxTermData.EFC
+			, maxTermData.TERM as MaxTerm
+			, maxTermData.ASAP_STATUS
 
 			FROM futureConnect_bannerPerson, maxTermData
 			WHERE maxTermData.STU_ID = futureConnect_bannerPerson.STU_ID
@@ -481,6 +485,7 @@ all the banner queries need to force a distinct by PIDM
 
 		<cfreturn caseload_banner>
 	</cffunction>
+
 	<cffunction name="getCaseloadList" access="remote" returnType="query" returnformat="json">
 		<cfset caseloaddata = getCaseload()>
 
