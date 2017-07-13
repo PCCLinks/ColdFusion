@@ -1,13 +1,11 @@
-<!--- called by student.cfm
+<!--- called by student.cfm as a cfinclude
  pidm and cohort variable set by student.cfm
 --->
 <cfparam name="studentparam_pidm">
 <cfparam name="studentparam_cohort">
-<cflog file="pcclinks_fc" text="starting getFirstYearMetrics">
+
 <cfinvoke component="fc" method="getFirstYearMetrics" pidm="#studentparam_pidm#" cohort="#studentparam_cohort#" returnvariable="firstYearMetrics"></cfinvoke>
-<cflog file="pcclinks_fc" text="starting getCGPassed">
 <cfinvoke component="fc" method="getCGPassed" pidm="#studentparam_pidm#" cohort="#studentparam_cohort#" returnvariable="cgPassed"></cfinvoke>
-<cflog file="pcclinks_fc" text="finished getCGPassed">
 
 
 <!---- Lookup Fields --->
@@ -340,7 +338,7 @@
 			<!-- Notes -->
 			<div id="notes">
 			<cfparam  name="tableName" default="futureConnect">
-			<cfparam  name="contactID" default="#Form.contactid#">
+			<cfparam  name="contactID" default="#caseload_banner.contactID#">
 			<cfinclude template="#pcc_source#/includes/notes.cfm" />
 			</div>
 			<!-- end div notes -->
@@ -365,9 +363,9 @@
    var doSave = setInterval(saveContent, saveInterval);
 
    //save before leaving
-   //$(window).bind('beforeunload', function(){
-  	//	saveContent();
-	//});
+   $(window).bind('beforeunload', function(){
+  		saveContent();
+	});
 
    function saveContent(){
    		form = {};
@@ -390,6 +388,7 @@
       		form[flagFieldName] = 0;
       	}
 
+
    		//form[flagFieldName] = isFlagged;
 		$.blockUI({ message: 'Saving...' });
 		 $.ajax({
@@ -406,10 +405,13 @@
 				 handleAjaxError(xhr, textStatus, thrownError);
 			}
           });
+
+
 		$.unblockUI();
 	}
 	function updateContent(){
 		//notes
+		//url = "<cfoutput>#pcc_source#/includes/notes.cfm?contactid=#contactid#&tablename=#tablename#</cfoutput>";
 		url = "<cfoutput>#pcc_source#/includes/notes.cfm?contactid=#contactid#&tablename=#tablename#</cfoutput>";
 		$('#notes').load(url);
 		//household

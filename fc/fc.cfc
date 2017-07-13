@@ -8,8 +8,9 @@ all the banner queries need to force a distinct by PIDM
 	<cfobject name="mscbCFC" component="pcclinks.includes.multiSelectCheckbox">
 
 	<cffunction name="getTermByStudent" returntype="query" access="remote" >
-		<cfargument name="pidm" type="string" required="no" default="">
+		<cfargument name="bannerGNumber" type="string" required="no" default="">
 		<cfquery datasource="bannerpcclinks" name="termByStudent" cachedWithin="#createTimeSpan( 0, 1, 0, 0 )#">
+			<!--- currently term view works better with GNumber than PIDM in prod --->
 			SELECT distinct PIDM
 				, TERM
  				, f_pcc_id(PIDM) STU_ID
@@ -28,7 +29,7 @@ all the banner queries need to force a distinct by PIDM
 			FROM swvlinks_term
 			WHERE 1=1
 			<cfif len(#arguments.id#) gt 0>
-				and PIDM = <cfqueryparam  value="#arguments.pidm#">
+				and STU_ID = <cfqueryparam  value="#arguments.bannerGNumber#">
 			</cfif>
 		</cfquery>
 		<cfreturn termByStudent>
@@ -98,8 +99,35 @@ all the banner queries need to force a distinct by PIDM
 	</cffunction>
 
 	<cffunction name="getMaxTermData" access="remote" returntype="query" >
-		<cfargument name="pidm" type="string" required="no" default="">
-		<cfquery name="MaxTermData" datasource="bannerpcclinks" cachedWithin="#createTimeSpan( 0, 1, 0, 0 )#">
+		<cfargument name="bannerGNumber" type="string" required="no" default="">
+		<!--- Banner Prod is having performance issues unless it is done that way - might be able to change back in the future --->
+		<cfquery name="maxData" datasource="bannerpcclinks" cachedWithin="#createTimeSpan( 0, 1, 0, 0 )#">
+			SELECT STU_ID, MAX(TERM) AS maxTerm
+			FROM swvlinks_term
+			<cfif len(#arguments.bannerGNumber#) gt 0>
+			WHERE STU_ID = <cfqueryparam  value="#arguments.bannerGNumber#">
+			</cfif>
+			GROUP BY STU_ID
+		</cfquery>
+		<cfquery name="termData" datasource="bannerpcclinks" cachedWithin="#createTimeSpan( 0, 1, 0, 0 )#">
+			SELECT distinct swvlinks_term.STU_ID
+				, TERM
+				, P_DEGREE
+				, to_char(EFC,'$99,999') as EFC
+				, coalesce(OUTGOING_SAP, INCOMING_SAP) AS ASAP_STATUS
+			FROM swvlinks_term
+		</cfquery>
+		<cfquery name="MaxTermData" dbType="query" cachedWithin="#createTimeSpan( 0, 1, 0, 0 )#">
+			SELECT termData.STU_ID
+				, termData.TERM
+				, termData.P_DEGREE
+				, termData.EFC
+				, termData.ASAP_STATUS
+			FROM termData, maxData
+			WHERE termData.STU_ID = maxData.STU_ID
+				and termData.TERM = maxData.maxTerm
+		</cfquery>
+		<!---<cfquery name="MaxTermData" datasource="bannerpcclinks" cachedWithin="#createTimeSpan( 0, 1, 0, 0 )#">
 			SELECT distinct swvlinks_term.STU_ID
 				, TERM
 				, P_DEGREE
@@ -110,14 +138,14 @@ all the banner queries need to force a distinct by PIDM
 					SELECT STU_ID, MAX(TERM) AS maxTerm
 					FROM swvlinks_term
 					WHERE 1=1
-					<cfif len(#arguments.pidm#) gt 0>
-						and PIDM = <cfqueryparam  value="#arguments.pidm#">
+					<cfif len(#arguments.bannerGNumber#) gt 0>
+						and STU_ID = <cfqueryparam  value="#arguments.bannerGNumber#">
 					</cfif>
 					GROUP BY STU_ID
 					) maxs
 						ON swvlinks_term.STU_ID = maxs.STU_ID
 							and swvlinks_term.TERM = maxs.maxTerm
-		</cfquery>
+		</cfquery>--->
 		<cfreturn MaxTermData>
 	</cffunction>
 	<cffunction name="getMaxRegistration" access="remote" returntype="query" >
@@ -150,33 +178,56 @@ all the banner queries need to force a distinct by PIDM
 		</cfquery>
 		<cfreturn cgPassed>
 	</cffunction>
-
 	<cffunction name="updateCase" access="remote" returnformat="json" >
 		<cfargument name="data" type="struct">
 
-		<cfquery name="create" result = "r">
-			UPDATE futureConnect SET
-				preferredName = <cfqueryparam cfsqltype="cf_sql_varchar" value="#trim(arguments.data.preferredName)#">,
-				gender = <cfqueryparam cfsqltype="cf_sql_varchar" value="#trim(arguments.data.gender)#">,
-<!--->				campus = <cfqueryparam cfsqltype="cf_sql_varchar" value="#trim(arguments.data.campus)#">, --->
-				parentalStatus = <cfqueryparam cfsqltype="cf_sql_varchar" value="#trim(arguments.data.parentalStatus)#">,
-<!---
-				Household = <cfqueryparam cfsqltype="cf_sql_varchar" value="#trim(arguments.data.household_information)#">,
-				LivingSituation = <cfqueryparam cfsqltype="cf_sql_varchar" value="#trim(arguments.data.living_situation)#">,
-				<!---citizen_status = <cfqueryparam cfsqltype="cf_sql_varchar" value="#trim(arguments.data.citizen_status)#">, --->
---->
-				careerPlan = <cfqueryparam cfsqltype="cf_sql_varchar" value="#trim(arguments.data.careerPlan)#">,
+		<cfset doUpdate = true>
+		<!--- Check to see if any data has changed --->
+		<!--- if we have an object for comparison --->
+		<cfif StructKeyExists(session, "fcTbl")>
+			<cfset fcTbl = QueryGetRow(session.fcTbl,1)>
+			<!--- if it is for the same contact going to be updated --->
+			<cfif fcTbl.contactid EQ arguments.data.contactid>
+				<!--- have what is needed to do a compare, start with it set to false --->
+				<cfset doUpdate = false>
+				<cfloop collection=#arguments.data# item="key">
+					<cfif StructKeyExists(fcTbl, key)>
+						<!--- see if difference in data exists --->
+						<cfif #arguments.data[key]# NEQ #fcTbl[key]#>
+							<cfset doUpdate = true>
+						</cfif>
+					</cfif>
+				</cfloop>
+			</cfif>
+		</cfif>
 
-				weeklyWorkHours = <cfqueryparam cfsqltype="cf_sql_varchar" value="#trim(arguments.data.weeklyWorkHours)#">,
-				statusInternal = <cfqueryparam cfsqltype="cf_sql_varchar" value="#trim(arguments.data.statusInternal)#">,
-				exitReason = <cfqueryparam cfsqltype="cf_sql_varchar" value="#trim(arguments.data.exitReason)#">,
-				coach = <cfqueryparam cfsqltype="cf_sql_varchar" value="#trim(arguments.data.coach)#">,
-				cellPhone = <cfqueryparam cfsqltype="cf_sql_varchar" value="#trim(arguments.data.cellPhone)#">,
-				phone2 = <cfqueryparam cfsqltype="cf_sql_varchar" value="#trim(arguments.data.phone2)#">,
-				emailPersonal = <cfqueryparam cfsqltype="cf_sql_varchar" value="#trim(arguments.data.emailPersonal)#">,
-				flagged=<cfqueryparam value=#trim(arguments.data.flagged)#>
-			WHERE futureConnect.contactID =  <cfqueryparam cfsqltype="cf_sql_varchar" value="#trim(arguments.data.contactID)#">
-		  </cfquery>
+		<cfif doUpdate>
+			<cfquery name="create" >
+				UPDATE futureConnect SET
+					preferredName = <cfqueryparam cfsqltype="cf_sql_varchar" value="#trim(arguments.data.preferredName)#">,
+					gender = <cfqueryparam cfsqltype="cf_sql_varchar" value="#trim(arguments.data.gender)#">,
+	<!--->				campus = <cfqueryparam cfsqltype="cf_sql_varchar" value="#trim(arguments.data.campus)#">, --->
+					parentalStatus = <cfqueryparam cfsqltype="cf_sql_varchar" value="#trim(arguments.data.parentalStatus)#">,
+	<!---
+					Household = <cfqueryparam cfsqltype="cf_sql_varchar" value="#trim(arguments.data.household_information)#">,
+					LivingSituation = <cfqueryparam cfsqltype="cf_sql_varchar" value="#trim(arguments.data.living_situation)#">,
+					<!---citizen_status = <cfqueryparam cfsqltype="cf_sql_varchar" value="#trim(arguments.data.citizen_status)#">, --->
+	--->
+					careerPlan = <cfqueryparam cfsqltype="cf_sql_varchar" value="#trim(arguments.data.careerPlan)#">,
+
+					weeklyWorkHours = <cfqueryparam cfsqltype="cf_sql_varchar" value="#trim(arguments.data.weeklyWorkHours)#">,
+					statusInternal = <cfqueryparam cfsqltype="cf_sql_varchar" value="#trim(arguments.data.statusInternal)#">,
+					exitReason = <cfqueryparam cfsqltype="cf_sql_varchar" value="#trim(arguments.data.exitReason)#">,
+					coach = <cfqueryparam cfsqltype="cf_sql_varchar" value="#trim(arguments.data.coach)#">,
+					cellPhone = <cfqueryparam cfsqltype="cf_sql_varchar" value="#trim(arguments.data.cellPhone)#">,
+					phone2 = <cfqueryparam cfsqltype="cf_sql_varchar" value="#trim(arguments.data.phone2)#">,
+					emailPersonal = <cfqueryparam cfsqltype="cf_sql_varchar" value="#trim(arguments.data.emailPersonal)#">,
+					flagged=<cfqueryparam value=#trim(arguments.data.flagged)#>,
+					LastUpdatedBy=<cfqueryparam value=#Session.username#>,
+					DateLastUpdated=current_timestamp
+				WHERE futureConnect.contactID =  <cfqueryparam cfsqltype="cf_sql_varchar" value="#trim(arguments.data.contactID)#">
+			  </cfquery>
+		</cfif>
 
 		<cfif len(trim(arguments.data.notes)) GT 0>
 			<cfset insertNote(contactID="#arguments.data.contactID#", noteText="#trim(arguments.data.notes)#")>
@@ -422,6 +473,12 @@ all the banner queries need to force a distinct by PIDM
 			</cfif>
 		</cfquery>
 
+
+		<!--- if getting a single person, store future connect data in session to use when comparing on update --->
+		<cfif len(arguments.pidm) gt 0>
+			<cfset Session.fcTbl = fcTbl>
+		</cfif>
+
 		<!---  end SIDNY Future Connect Data --->
 
 		<!------ Merge SIDNY and Banner Person and Term ----->
@@ -432,8 +489,8 @@ all the banner queries need to force a distinct by PIDM
 			WHERE fcTbl.bannerGNumber = BannerPopulation.STU_ID
 		</cfquery>
 
-		<cfif len(arguments.pidm) gt 0>
-			<cfset maxTermData = getMaxTermData(pidm=#arguments.pidm#)>
+		<cfif len(#arguments.pidm#) gt 0>
+			<cfset maxTermData = getMaxTermData(bannerGNumber=#BannerPopulation.stu_id#)>
 		<cfelse>
 			<cfset maxTermData = getMaxTermData()>
 		</cfif>
@@ -483,7 +540,7 @@ all the banner queries need to force a distinct by PIDM
 			</cfif>
 		</cfquery>
 
-		<cfreturn caseload_banner>
+		<cfreturn caseload_banner>--->
 	</cffunction>
 
 	<cffunction name="getCaseloadList" access="remote" returnType="query" returnformat="json">
@@ -499,14 +556,14 @@ all the banner queries need to force a distinct by PIDM
 	</cffunction>
 
 	<cffunction name="getStudentTermMetrics" access="remote" returntype="query">
-		<cfargument name="pidm" type="numeric" required="yes" default="">
+		<cfargument name="bannerGNumber" required="yes" default="">
 		<cfquery datasource="bannerpcclinks" name="StudentTermMetrics">
 			SELECT distinct STU_ID
 				, TERM
 				, T_GPA
 				, T_EARNED
 			FROM swvlinks_term
-			WHERE pidm = <cfqueryparam  value="#arguments.pidm#">
+			WHERE STU_ID = <cfqueryparam  value="#arguments.bannerGNumber#">
 			ORDER BY TERM ASC
 			</cfquery>
 		<cfreturn StudentTermMetrics>

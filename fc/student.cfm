@@ -1,20 +1,20 @@
-<cfif not StructKeyExists(FORM, "pidm")>
-	<cfthrow message = "Student.cfm expecting PIDM in Form posting">
-</cfif>
-<cfif not StructKeyExists(FORM, "maxterm")>
-	<cfthrow message = "Student.cfm expecting MaxTerm in Form posting">
-</cfif>
-
-<cfparam name="studentparam_pidm" default="#form.pidm#">
-<cflog file="pcclinks_fc" text="starting getCaseload">
-<cfinvoke component="fc" method="getCaseload" pidm="#studentparam_pidm#" returnvariable="caseload_banner"></cfinvoke>
-<cflog file="pcclinks_fc" text="starting getMaxReg">
-<cfparam name="studentparam_cohort" default="#caseload_banner.cohort#" >
-<cfparam name="studentparam_maxterm" default="#form.maxterm#">
-<cfinvoke component="fc" method="getMaxRegistration" pidm ="#studentparam_pidm#" maxterm="#studentparam_maxterm#" returnvariable="maxRegistration"></cfinvoke>
-<cflog file="pcclinks_fc" text="finished getMaxRegistration">
 <!--- header --->
 <cfinclude template="includes/header.cfm" />
+
+<cfif not StructKeyExists(Session, "pidm")>
+	<cflocation url="caseload.cfm">
+</cfif>
+<cfif not StructKeyExists(Session, "maxterm")>
+	<cflocation url="caseload.cfm">
+</cfif>
+<cfparam name="studentparam_pidm" default="#session.pidm#">
+<cfparam name="studentparam_maxterm" default="#session.maxterm#">
+
+<cfinvoke component="fc" method="getCaseload" pidm="#studentparam_pidm#" returnvariable="caseload_banner"></cfinvoke>
+<cfparam name="studentparam_cohort" default="#caseload_banner.cohort#" >
+<cfparam name="studentparam_bannerGNumber" default="#caseload_banner.bannerGNumber#">
+
+<cfinvoke component="fc" method="getMaxRegistration" pidm ="#studentparam_pidm#" maxterm="#studentparam_maxterm#" returnvariable="maxRegistration"></cfinvoke>
 
 <!--- main content --->
 <ul class="tabs" data-tabs id="student-tabs">

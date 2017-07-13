@@ -121,6 +121,7 @@ select {
 	$(document).ready(function() {
 		//intialize table
 		$.fn.dataTable.ext.errMode = 'throw';
+
 		dt = $('#dt_table').DataTable( {
 			processing:true,
 			ajax:{
@@ -163,6 +164,7 @@ select {
 				],
 			dom: '<"top"iB>rt<"bottom"flp>',
 			buttons: [
+
             	//Copy Email Button
             	{
             	  extend: 'copy',
@@ -197,6 +199,7 @@ select {
             <!--- conditional coloring based on value--->
             rowCallback: function(row, data, index){
             	color = '';
+				idx_td_ASAP = $('#ASAP').parent().index();
             	if(data[idx_ASAP_status] == "SU"){
             		color = '#f78989';
             	}
@@ -208,7 +211,7 @@ select {
             	}
             	if(color.length>0){
             		//find the cell for idx_ASAP_status and set the background to the specified color
-    				$(row).find('td:eq(' + idx_ASAP_status + ')').css('background-color', '"' + color +'"' );
+    				$(row).find('td:eq(' + idx_td_ASAP + ')').css('background-color', '"' + color +'"' );
             	}
          	},
 		}); //end initialize
@@ -305,16 +308,13 @@ select {
     }
 
 	function goToDetail(pidm, maxterm, contactid){
-		//var dt = $('#dt_table').DataTable();
-		//var gList = dt.columns({search:'applied'}).data()[0];
-		var url = 'student.cfm';
-		var form = $('<form action="' + url + '" method="post">' +
- 				'<input type="hidden" name="pidm" value="' + pidm + '" />' +
- 				'<input type="hidden" name="maxterm" value="' + maxterm + '" />' +
- 				'<input type="hidden" name="contactid" value="' + contactid + '" />' +
- 				'</form>');
-		$('body').append(form);
-		form.submit();
+		sessionStorage.setItem('pidm', pidm);
+		sessionStorage.setItem('maxterm', maxterm);
+		//sessionStorage.setItem('contactid', contactid);
+		var data = $.param({data:encodeURIComponent(JSON.stringify(sessionStorage))});
+  		$.post("SaveSession.cfm", data, function(){
+  			window.location	='student.cfm';
+  		});
 	}
 
 </script>

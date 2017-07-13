@@ -1,12 +1,12 @@
-<!--- called by student.cfm --->
-<cfparam name="studentparam_pidm">
-<cfparam name="studentparam_cohort">
-<cflog file="pcclinks_fc" text="starting getStudentTermMetrics">
-<cfinvoke component="fc" method="getStudentTermMetrics" pidm="#studentparam_pidm#" returnvariable="studentTermMetrics"></cfinvoke>
-<cflog file="pcclinks_fc" text="starting getCoursesByStudent">
-<cfinvoke component="fc" method="getCoursesByStudent" pidm="#studentparam_pidm#" cohort="#studentparam_cohort#" returnvariable="coursesByStudent"></cfinvoke>
-<cflog file="pcclinks_fc" text="finished getCoursesByStudent">
+<!--- called by student.cfm as a cfinclude
+ pidm and cohort variable set by student.cfm --->
 
+<cfparam name="studentparam_pidm">
+<cfparam name="studentparam_bannerGNumber">
+<cfparam name="studentparam_cohort">
+
+<cfinvoke component="fc" method="getStudentTermMetrics" bannerGNumber="#studentparam_bannerGNumber#" returnvariable="studentTermMetrics"></cfinvoke>
+<cfinvoke component="fc" method="getCoursesByStudent" pidm="#studentparam_pidm#" cohort="#studentparam_cohort#" returnvariable="coursesByStudent"></cfinvoke>
 
 <style>
 	.top-bar img { height: 75px; position:relative; width: 150px; background:#e6e6e6; }
