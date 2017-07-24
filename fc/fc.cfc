@@ -547,8 +547,8 @@ all the banner queries need to force a distinct by PIDM
 		<cfset caseloaddata = getCaseload()>
 
 		<cfquery dbtype="query" name="qryData" >
-			select contactID, Coach, Cohort, bannerGNumber
-				, stu_name, ASAP_status, statusinternal, LastContactDate, pidm
+			select contactID, stu_name, bannerGNumber, Cohort
+				, ASAP_status, statusinternal, Coach, LastContactDate, pidm
 				, in_contract, pcc_email, maxterm, flagged
 			from caseloaddata
 		</cfquery>
