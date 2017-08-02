@@ -130,105 +130,54 @@
 	<script type="text/javascript" charset="utf8" src="js/jquery.blockUI.js"></script>
 	<script>
 		$(document).ready(function() {
-			getData();
+			$.fn.dataTable.ext.errMode = 'throw';
+			setUpTableData();
 			$('#program').change(function(){
 				sessionStorage.setItem("program",$('#program').val());
 				saveSessionToServer();
-				getData();
+				$('#dt_table').DataTable().ajax.reload();
 			});
 			$('#schooldistrict').change(function(){
 				sessionStorage.setItem("schooldistrict",$('#schooldistrict').val());
 				saveSessionToServer();
-				getData();
+				$('#dt_table').DataTable().ajax.reload();
 			});
 		});
 		function saveSessionToServer(){
 			var data = $.param({data:encodeURIComponent(JSON.stringify(sessionStorage))});
   			$.post("SaveSession.cfm", data);
 		}
-		function getData(){
-			var cols = $('#headerRow th');
-			var colnames = [];
-			$.each(cols, function() {
-				colnames.push(this.id);
-			});
-			$.ajax({
-				url: "programbilling.cfc?method=selectprogramstudentlist",
-					dataType: "json",
-					type: "POST",
-					async: false,
-					data: { term: '<cfoutput>#termValue#</cfoutput>', program: $('#program').val(), schooldistrict: $('#schooldistrict').val(), columns: JSON.stringify(colnames)},
-					success: function(data) {
-						setUpTable(data);
-					},
-					error: function (jqXHR, exception) {
-				        var msg = '';
-				        if (jqXHR.status === 0) {
-				            msg = 'Not connect.\n Verify Network.';
-				        } else if (jqXHR.status == 404) {
-				            msg = 'Requested page not found. [404]';
-				        } else if (jqXHR.status == 500) {
-				            msg = 'Internal Server Error [500].';
-				        } else if (exception === 'parsererror') {
-				            msg = 'Requested JSON parse failed.';
-				        } else if (exception === 'timeout') {
-				            msg = 'Time out error.';
-				        } else if (exception === 'abort') {
-				            msg = 'Ajax request aborted.';
-				        } else {
-				            msg = 'Uncaught Error.\n' + jqXHR.responseText;
-				        }
-				        alert(msg);
-					}
+
+		function setUpTable(){
+			$('#dt_table').DataTable({
+				processing:true,
+				ajax:{
+					url:"programbilling.cfc?method=selectprogramstudentlist",
+					data: { term: '<cfoutput>#termValue#</cfoutput>', program: $('#program').val(), schooldistrict: $('#schooldistrict').val()},
+					dataSrc:'DATA',
+					error: function (xhr, textStatus, thrownError) {
+					        handleAjaxError(xhr, textStatus, thrownError);
+						}
+				},
+				language:{ processing: "Loading data..."},
+				bSortClasses: false
 			});
 		}
 
-		function setUpTable(data){
-			$('#dt_table').dataTable({
-				destroy: true,
-				bSortClasses: false,
-				<cfoutput query="terms">
-				columnDefs:[
-	                {	targets: 7,
-	                	render: function ( data, type, row ) {
-                  				return '<a href="javascript:goToDetailPage(\'' + row[0] + '\', ' + #term1# + ');" >' + row[7] + '</a>';
-             					}
-         					},
-         			<cfif #termValue# GTE #term2#>
-         			{	targets: 8,
-	                	render: function ( data, type, row ) {
-                  				return '<a href="javascript:goToDetailPage(\'' + row[0] + '\', ' + #term2# + ');" >' + row[8] + '</a>';
-             					}
-         					},
-         			</cfif>
-         			<cfif #termValue# GTE #term3#>
-         			{	targets: 9,
-	                	render: function ( data, type, row ) {
-                  				return '<a href="javascript:goToDetailPage(\'' + row[0] + '\', ' + #term3# + ');" >' + row[9] + '</a>';
-             					}
-         					},
-         			</cfif>
-         			<cfif #termValue# GTE #term4#>
-         			{	targets: 10,
-	                	render: function ( data, type, row ) {
-                  				return '<a href="javascript:goToDetailPage(\'' + row[0] + '\', ' + #term4# + ');" >' + row[10] + '</a>';
-             					}
-         					},
-         			</cfif>
-				</cfoutput>
-         				],
-				data: data.DATA
-			});
-		}
 
-		function goToDetailPage(bannerGNumber, term){
-			var dt = $('#dt_table').DataTable();
-			var list = dt.columns({search:'applied'}).data()[0];
-			sessionStorage.setItem("bannerGNumber", bannerGNumber);
-			sessionStorage.setItem("selectedTerm", term);
-			saveSessionToServer();
-			window.location('StudentBillingDetail.cfm');
-		}
+	function goToDetail(pidm, maxterm, contactid){
+		sessionStorage.setItem("bannerGNumber", bannerGNumber);
+		sessionStorage.setItem("selectedTerm", term);
+		saveSessionToServer();
+		var url = 'StudentBillingDetail.cfm';
+		var form = $('<form action="' + url + '" method="post">' +
+ 				'<input type="hidden" name="bannerGNumber" value="' + bannerGNumber + '" />' +
+ 				'<input type="hidden" name="selectedTerm" value="' + selectedTerm + '" />' +
+  				'</form>');
+		$('body').append(form);
+		form.submit();
+	}
+
 	</script>
 </footer>
 </html>
