@@ -45,6 +45,7 @@
 	 <cflock scope="session" timeout="30" type="exclusive">
 	     <cfset StructClear(Session)>
 	     <cfset session.authorized = "0">
+	     <cfset sessionInvalidate() >
 	 </cflock>
 
 	 <cfset cas_url = cas_path & "logout">
