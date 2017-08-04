@@ -66,6 +66,7 @@ select {
 			<th>ASAP</th>
 			<th>Status</th>
 			<th>Coach</th>
+			<th>Max Reg Term</th>
 			<th>Last Contact</th>
 			<th></th>
 		</tr>
@@ -79,8 +80,8 @@ select {
 <!--- script referenced in include footer --->
 <cfsavecontent variable="pcc_scripts">
 <script>
-	var txt_includeAllFilter = "include out-of-contract";
-	var txt_excludeOutOfContract = "exclude out-of-contract";
+	var txt_includeAllFilter = "show archives";
+	var txt_excludeArchive = "exclude archives";
 	var txt_includeAllCoaches = "all coaches";
 	var txt_myCaseload = "my caseload";
 	var txt_flaggedOnly = "*";
@@ -95,12 +96,12 @@ select {
 	var idx_ASAP_status = 4;
 	var idx_statusinternal = 5;
 	var idx_coach = 6;
-	var idx_lastContactDate = 7;
+	var idx_maxterm = 7;
+	var idx_lastContactDate = 8;
 	//these are all hidden
-	var idx_pidm = 8;
-	var idx_in_contract = 9;
-	var idx_pcc_email = 10;
-	var idx_maxterm = 11;
+	var idx_pidm = 9;
+	var idx_in_contract = 10;
+	var idx_pcc_email = 11;
 	var idx_flagged = 12;
 
 	$(document).ready(function() {
@@ -120,7 +121,7 @@ select {
 			lengthMenu: [[100, 50, -1], [100, 50, "All"]],
 			order: [[ idx_coach, "asc" ],[idx_cohort, "desc"] ],
 			columnDefs: [
-         		 {targets:[idx_in_contract,idx_pcc_email,idx_maxterm,idx_flagged], visible:false},
+         		 {targets:[idx_in_contract,idx_pcc_email,idx_flagged], visible:false},
 
          		 <!--server code determines:-->
 				 <!--if user is a coach, show flag checkbox otherwise,  contactid column hidden-->
@@ -143,7 +144,11 @@ select {
 				 {targets:idx_pidm,
 				 	sortable:false,
 				 	render: function ( data, type, row ) {
-                  				return '<a href="javascript:goToDetail('+data+', ' + row[idx_maxterm] +', ' + row[idx_contactid] + ')">Edit</a>';
+				 				var term = row[idx_maxterm];
+				 				if(!term){
+				 					term=0;
+				 				}
+                  				return '<a href="javascript:goToDetail('+data+', ' + term +', ' + row[idx_contactid] + ')">Edit</a>';
              				}
 				 	}
 				],
@@ -273,7 +278,7 @@ select {
 	function filterContract(dt, button) {
 		filter =  button.text() == txt_includeAllFilter ? "" : "Yes";
 		dt.column(idx_in_contract).search(filter).draw();
-		buttonText = button.text() == txt_includeAllFilter ? txt_excludeOutOfContract : txt_includeAllFilter;
+		buttonText = button.text() == txt_includeAllFilter ? txt_excludeArchive : txt_includeAllFilter;
         button.text(buttonText);
 	}
 	function filterFlagged(dt, button) {

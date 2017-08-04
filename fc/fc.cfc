@@ -98,8 +98,9 @@ all the banner queries need to force a distinct by PIDM
 		<cfreturn firstYearMetrics>
 	</cffunction>
 
-	<cffunction name="getMaxTermData" access="remote" returntype="query" >
+	<cffunction name="getMaxTermData" returntype="query" >
 		<cfargument name="bannerGNumber" type="string" required="no" default="">
+		<cfargument name="bannerPop" type="query" required="yes" default="">
 		<!--- Banner Prod is having performance issues unless it is done that way - might be able to change back in the future --->
 		<cfquery name="maxData" datasource="bannerpcclinks" cachedWithin="#createTimeSpan( 0, 1, 0, 0 )#">
 			SELECT STU_ID, MAX(TERM) AS maxTerm
@@ -116,8 +117,12 @@ all the banner queries need to force a distinct by PIDM
 				, to_char(EFC,'$99,999') as EFC
 				, coalesce(OUTGOING_SAP, INCOMING_SAP) AS ASAP_STATUS
 			FROM swvlinks_term
+			<cfif len(#arguments.bannerGNumber#) gt 0>
+			WHERE STU_ID = <cfqueryparam  value="#arguments.bannerGNumber#">
+				AND TERM = <cfqueryparam value="#maxData.maxTerm#">
+			</cfif>
 		</cfquery>
-		<cfquery name="MaxTermData" dbType="query" cachedWithin="#createTimeSpan( 0, 1, 0, 0 )#">
+		<cfquery name="MaxTermDataUnion" dbType="query" cachedWithin="#createTimeSpan( 0, 1, 0, 0 )#">
 			SELECT termData.STU_ID
 				, termData.TERM
 				, termData.P_DEGREE
@@ -126,6 +131,22 @@ all the banner queries need to force a distinct by PIDM
 			FROM termData, maxData
 			WHERE termData.STU_ID = maxData.STU_ID
 				and termData.TERM = maxData.maxTerm
+			UNION
+			SELECT STU_ID
+				, ''
+				, ''
+				, ''
+				, ''
+			FROM bannerPop
+		</cfquery>
+		<cfquery name="MaxTermData" dbType="query" cachedWithin="#createTimeSpan( 0, 1, 0, 0 )#">
+			SELECT STU_ID
+				, MAX(TERM) Term
+				, MAX(P_DEGREE) P_DEGREE
+				, MAX(EFC) EFC
+				, MAX(ASAP_STATUS) ASAP_STATUS
+			FROM MaxTermDataUnion
+			GROUP BY STU_ID
 		</cfquery>
 		<!---<cfquery name="MaxTermData" datasource="bannerpcclinks" cachedWithin="#createTimeSpan( 0, 1, 0, 0 )#">
 			SELECT distinct swvlinks_term.STU_ID
@@ -436,6 +457,7 @@ all the banner queries need to force a distinct by PIDM
 			, futureConnect.LastUpdatedBy
 			, futureConnect.DateLastUpdated
 			, futureConnect.CareerPlan
+			, futureConnect.FundedBy
 			, futureConnectApplication.HighSchool
 			, futureConnectApplication.parent1EarnedBachelors
 			, futureConnectApplication.parent2EarnedBachelors
@@ -452,6 +474,7 @@ all the banner queries need to force a distinct by PIDM
 				when CAST(right(cohort,1) as char(50)) > '1'
 				and CURDATE() >= STR_TO_DATE(CONCAT(9, '/',1,'/',(convert(CAST(left(cohort,4) as char(50)), unsigned integer)+2) ),'%m/%d/%YY')
 				then 'No'
+				when statusInternal like 'X%' then 'No'
 				else 'Yes' end as in_contract
 
 			,  convert(Concat(CAST(left(cohort,4) as char(50)),'04'), unsigned integer) as cohortFirstFall
@@ -490,9 +513,9 @@ all the banner queries need to force a distinct by PIDM
 		</cfquery>
 
 		<cfif len(#arguments.pidm#) gt 0>
-			<cfset maxTermData = getMaxTermData(bannerGNumber=#BannerPopulation.stu_id#)>
+			<cfset maxTermData = getMaxTermData(bannerGNumber=#BannerPopulation.stu_id#, bannerPop = #BannerPopulation#)>
 		<cfelse>
-			<cfset maxTermData = getMaxTermData()>
+			<cfset maxTermData = getMaxTermData(bannerPop = #BannerPopulation#)>
 		</cfif>
 
 		<!--- merge in maxTermData --->
@@ -525,6 +548,7 @@ all the banner queries need to force a distinct by PIDM
 			, futureConnect_bannerPerson.weeklyWorkHours
 			, futureConnect_bannerPerson.flagged
 			, futureConnect_bannerPerson.in_contract
+			, futureConnect_bannerPerson.FundedBy
 
 		    , futureConnect_bannerPerson.lastContactDate
 		    , maxTermData.P_DEGREE
@@ -548,8 +572,8 @@ all the banner queries need to force a distinct by PIDM
 
 		<cfquery dbtype="query" name="qryData" >
 			select contactID, stu_name, bannerGNumber, Cohort
-				, ASAP_status, statusinternal, Coach, LastContactDate, pidm
-				, in_contract, pcc_email, maxterm, flagged
+				, ASAP_status, statusinternal, Coach, maxterm, LastContactDate, pidm
+				, in_contract, pcc_email, flagged
 			from caseloaddata
 		</cfquery>
 		<cfreturn qryData>
