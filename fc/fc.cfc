@@ -268,19 +268,24 @@ all the banner queries need to force a distinct by PIDM
 			FROM enrichmentProgramContact
 			WHERE contactID = <cfqueryparam value="#contactID#">
 				AND tableName = 'futureConnect'
+			ORDER BY enrichmentProgramId
 		</cfquery>
 		<cfset idsToDelete = mscbCFC.getValuesToDelete(existingEntries, checkedIds)>
+		<cflog file="pcclinks_fc" text="idsToDelete:contactID:#arguments.contactID#">
 		<cflog file="pcclinks_fc" text="idsToDelete:#idsToDelete#">
 		<cfquery name="deleteEntry">
-			DELETE FROM enrichmentProgramContact
+			UPDATE enrichmentProgramContact
+			SET activeFlag = 0,
+				lastUpdatedBy = <cfqueryparam value=#Session.username#>,
+				dateLastUpdated = current_timestamp
 			WHERE enrichmentProgramID IN (<cfqueryparam value="#idsToDelete#" cfsqltype="CF_SQL_INTEGER" list="yes" >)
 				and contactid = <cfqueryparam value="#contactId#">
 		</cfquery>
 		<cfset idsToInsert = mscbCFC.getValuesToInsert(existingEntries, checkedIds)>
 		<cflog file="pcclinks_fc" text="idsToInsert:#idsToInsert#">
 		<cfquery name="insertEntry">
-			insert into enrichmentProgramContact(contactID, enrichmentProgramID, tableName)
-			select <cfqueryparam value=#contactID#>, enrichmentProgramID, 'futureConnect'
+			insert into enrichmentProgramContact(contactID, enrichmentProgramID, tableName, createdBy, dateCreated, lastUpdatedBy, dateLastUpdated)
+			select <cfqueryparam value=#contactID#>, enrichmentProgramID, 'futureConnect', <cfqueryparam value=#Session.username#>, current_timestamp, <cfqueryparam value=#Session.username#>, current_timestamp
 			from enrichmentProgram
 			where enrichmentProgramID in (<cfqueryparam value="#idsToInsert#" cfsqltype="CF_SQL_INTEGER" list="yes">)
 		</cfquery>
@@ -618,6 +623,7 @@ all the banner queries need to force a distinct by PIDM
 				on ep.enrichmentProgramID = epc.enrichmentProgramID
 					and tableName = <cfqueryparam value="#tablename#">
 					and epc.contactID = <cfqueryparam value="#arguments.contactID#">
+		where epc.activeFlag = 1
 	</cfquery>
 		<cfreturn programs>
 	</cffunction>

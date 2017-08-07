@@ -117,7 +117,7 @@ select {
 				        handleAjaxError(xhr, textStatus, thrownError);
 					}
 			},
-			language:{ processing: "Loading data..."},
+			language:{ processing: "<img src='<cfoutput>#pcc_source#</cfoutput>/images/ajax-loader.gif' height=35 width=35 style='opacity:0.5;'>&nbsp;&nbsp;Loading data..."},
 			lengthMenu: [[100, 50, -1], [100, 50, "All"]],
 			order: [[ idx_coach, "asc" ],[idx_cohort, "desc"] ],
 			columnDefs: [

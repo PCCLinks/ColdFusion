@@ -395,7 +395,7 @@
 
 
    		//form[flagFieldName] = isFlagged;
-		$.blockUI({ message: 'Saving...' });
+		//$.blockUI({ message: 'Saving...' });
 		 $.ajax({
             type: 'post',
             url: 'fc.cfc?method=updateCase',
@@ -412,7 +412,7 @@
           });
 
 
-		$.unblockUI();
+		//$.unblockUI();
 	}
 	function updateContent(){
 		//notes
