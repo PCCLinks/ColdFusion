@@ -56,37 +56,17 @@ select {
 	<thead>
 		<tr>
 			<th><span style="font-size:x-large;font-weight:bold;color:red">*</th>
-			<th>Coach</th>
-			<th>Cohort</th>
-			<th>G</th>
 			<th>Name</th>
+			<th>G</th>
+			<th>Cohort</th>
 			<th>ASAP</th>
 			<th>Status</th>
+			<th>Coach</th>
 			<th>Last Contact</th>
 			<th></th>
 		</tr>
 	</thead>
 	<tbody>
-	<!---<cfloop query="qryData">
-    	<tr>
-      		<td>#DateFormat(qryData.LASTCONTACTDATE,'m/d/y')#</td>
-      		<td>#qryData.COACH#</td>
-      		<td>#qryData.COHORT#</td>
-      		<td>#qryData.STU_ID#</td>
-      		<td>#qryData.STU_NAME#</td>
-      		<!--- conditional coloring based on value--->
-      		<td
-      			<cfif ASAP_STATUS eq "SU"> style = "background-color: ##f78989;"
-				<cfelseif ASAP_STATUS eq "AP"> style = "background-color: ##eab24c;"
-				<cfelseif ASAP_STATUS eq "AW"> style = "background-color: ##f9f96f;"
-				</cfif>
-			>#qryData.ASAP_STATUS#</td>
-      		<td>#qryData.STATUSINTERNAL#</td>
-      		<td>#qryData.IN_CONTRACT#</td>
-      		<td>#qryData.PCC_EMAIL#</td>
-      		<td>#qryData.EditLink#</td>
-      	</tr>
-    </cfloop>--->
 	</tbody>
 </table>
 </cfoutput>
@@ -104,12 +84,12 @@ select {
 	//column integers
 	//note contactid is the column used for flagged, column flagged is hidden
 	var idx_contactid = 0;
-	var idx_coach = 1;
-	var idx_cohort = 2;
-	var idx_bannerGNumber = 3;
-	var idx_stu_name = 4;
-	var idx_ASAP_status = 5;
-	var idx_statusinternal = 6;
+	var idx_stu_name = 1;
+	var idx_bannerGNumber = 2;
+	var idx_cohort = 3;
+	var idx_ASAP_status = 4;
+	var idx_statusinternal = 5;
+	var idx_coach = 6;
 	var idx_lastContactDate = 7;
 	//these are all hidden
 	var idx_pidm = 8;
