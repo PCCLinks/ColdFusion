@@ -55,6 +55,7 @@ select {
 	<caption class="visually-hide">Future Connect Caseload</caption>
 	<thead>
 		<tr>
+			<!--- note this order should match the order in the query in fc.getCaseloadList --->
 			<th><span style="font-size:x-large;font-weight:bold;color:red">*</th>
 			<th>Name</th>
 			<th>G</th>
@@ -62,11 +63,15 @@ select {
 			<th>ASAP</th>
 			<th>Status</th>
 			<th>Coach</th>
+			<th>Coach</th>
+			<th>Max Reg Term</th>
 			<th>Last Contact</th>
 			<th></th>
 		</tr>
 	</thead>
 	<tbody>
+
+		<!--- handled by ajax query in datatable definition --->
 	</tbody>
 </table>
 </cfoutput>
@@ -74,8 +79,8 @@ select {
 <!--- script referenced in include footer --->
 <cfsavecontent variable="pcc_scripts">
 <script>
-	var txt_includeAllFilter = "include out-of-contract";
-	var txt_excludeOutOfContract = "exclude out-of-contract";
+	var txt_includeAllFilter = "show archives";
+	var txt_excludeArchive = "exclude archives";
 	var txt_includeAllCoaches = "all coaches";
 	var txt_myCaseload = "my caseload";
 	var txt_flaggedOnly = "*";
@@ -91,11 +96,18 @@ select {
 	var idx_statusinternal = 5;
 	var idx_coach = 6;
 	var idx_lastContactDate = 7;
+	var idx_stu_name = 1;
+	var idx_bannerGNumber = 2;
+	var idx_cohort = 3;
+	var idx_ASAP_status = 4;
+	var idx_statusinternal = 5;
+	var idx_coach = 6;
+	var idx_maxterm = 7;
+	var idx_lastContactDate = 8;
 	//these are all hidden
-	var idx_pidm = 8;
-	var idx_in_contract = 9;
-	var idx_pcc_email = 10;
-	var idx_maxterm = 11;
+	var idx_pidm = 9;
+	var idx_in_contract = 10;
+	var idx_pcc_email = 11;
 	var idx_flagged = 12;
 
 	$(document).ready(function() {
@@ -111,11 +123,11 @@ select {
 				        handleAjaxError(xhr, textStatus, thrownError);
 					}
 			},
-			language:{ processing: "Loading data..."},
+			language:{ processing: "<img src='<cfoutput>#pcc_source#</cfoutput>/images/ajax-loader.gif' height=35 width=35 style='opacity:0.5;'>&nbsp;&nbsp;Loading data..."},
 			lengthMenu: [[100, 50, -1], [100, 50, "All"]],
 			order: [[ idx_coach, "asc" ],[idx_cohort, "desc"] ],
 			columnDefs: [
-         		 {targets:[idx_in_contract,idx_pcc_email,idx_maxterm,idx_flagged], visible:false},
+         		 {targets:[idx_in_contract,idx_pcc_email,idx_flagged], visible:false},
 
          		 <!--server code determines:-->
 				 <!--if user is a coach, show flag checkbox otherwise,  contactid column hidden-->
@@ -268,7 +280,7 @@ select {
 	function filterContract(dt, button) {
 		filter =  button.text() == txt_includeAllFilter ? "" : "Yes";
 		dt.column(idx_in_contract).search(filter).draw();
-		buttonText = button.text() == txt_includeAllFilter ? txt_excludeOutOfContract : txt_includeAllFilter;
+		buttonText = button.text() == txt_includeAllFilter ? txt_excludeArchive : txt_includeAllFilter;
         button.text(buttonText);
 	}
 	function filterFlagged(dt, button) {

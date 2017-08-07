@@ -1,7 +1,7 @@
 <cfparam name="tableName" default="url.tableName">
 <cfparam name="contactID" default="url.contactID">
 
-<cfquery name="comments">
+<cfquery name="comments" datasource="pcclinks">
 	select *
 	from notes
 	where tableName = <cfqueryparam value="#tableName#">

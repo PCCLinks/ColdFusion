@@ -37,7 +37,7 @@
 	<cffunction name="getTerms" access="remote">
 		<cfquery name="data" datasource="pcclinks">
 			select *
-			from pcc_links.BannerCalendar
+			from bannerCalendar
 			order by term
 		</cfquery>
 		<cfreturn data>
@@ -47,68 +47,109 @@
 		<cfargument name="displayField">
 		<cfquery name="data" datasource="pcclinks" result="r">
 			select *
-			from pcc_links.BannerCalendar
+			from bannerCalendar
 			where term = <cfqueryparam value="#arguments.term#">
 		</cfquery>
 		<cfset r=data[#arguments.displayField#] />
 		<cfif arguments.displayField CONTAINS "Date"> <cfset r = dateFormat(r, 'mm/dd/yyyy') /></cfif>
 		<cfreturn r>
 	</cffunction>
+	<cffunction name="getCurrentYearTerms" access="remote" >
+		<cfquery name="data" >
+			select c.*
+			from bannerCalendar c
+				join bannerCalendar c1 on c.ProgramYear = c1.ProgramYear
+			where c1.Term = (select max(Term) from billingStudent)
+		</cfquery>
+		<cfreturn data>
+	</cffunction>
 	<cffunction name="getprograms" access="remote">
 		<cfquery name="data" datasource="pcclinks">
 			select programName
-			from sidny.keyProgram
-			where programName <> 'ytc'
+			from keyProgram
+			where programName in ('gtc','ytc')
 			union
 			select statusText
-			from sidny.keyStatus
+			from keyStatus
 			where statusText like 'ytc%'
 		</cfquery>
 		<cfreturn data>
 	</cffunction>
-		<cffunction name="getschools" access="remote">
+	<cffunction name="getschools" access="remote">
 		<cfquery name="data" datasource="pcclinks">
 			select *
-			from sidny.keySchoolDistrict
+			from keySchoolDistrict
 		</cfquery>
 		<cfreturn data>
 	</cffunction>
-<cffunction name="getLastTermBilled" access="remote">
-	<cfquery datasource="pcclinks" name="data">
-		SELECT ProgramQuarter, ProgramYear, maxTerm.Term MaxTerm
-		FROM pcc_links.BannerCalendar c
-			JOIN (SELECT MAX(Term) Term
-				FROM pcc_links.BillingStudent) maxTerm ON c.Term = maxTerm.Term
-	</cfquery>
-	<cfreturn data>
-</cffunction>
-<cffunction name="getNextTermToBill" access="remote">
-	<cfquery datasource="pcclinks" name="data">
-		SELECT *
-		FROM pcc_links.BannerCalendar
-		WHERE Term = (SELECT MIN(Term) Term
-		FROM pcc_links.BannerCalendar c
-		WHERE Term > (SELECT MAX(Term) Term
-				FROM pcc_links.BillingStudent))
-	</cfquery>
-	<cfreturn data>
-</cffunction>
-<cffunction name="getProgramYearTerms" access="remote">
-	<cfargument name="term" required="true">
-	<cfquery datasource="pcclinks" name="data">
-		SELECT CurrentTerm
+	<cffunction name="getLastTermBilled" access="remote">
+		<cfquery datasource="pcclinks" name="data">
+			SELECT ProgramQuarter, ProgramYear, maxTerm.Term MaxTerm
+			FROM bannerCalendar c
+				JOIN (SELECT MAX(Term) Term
+					FROM billingStudent) maxTerm ON c.Term = maxTerm.Term
+		</cfquery>
+		<cfreturn data>
+	</cffunction>
+	<cffunction name="getNextTermToBill" access="remote">
+		<cfquery datasource="pcclinks" name="data">
+			SELECT *
+			FROM bannerCalendar
+			WHERE Term = (SELECT MIN(Term) Term
+			FROM bannerCalendar c
+			WHERE Term > (SELECT MAX(Term) Term
+					FROM billingStudent))
+		</cfquery>
+		<cfreturn data>
+	</cffunction>
+	<cffunction name="getProgramYearTerms" access="remote">
+	<cfargument name="term" default="">
+	<cfif len(arguments.term) EQ 0>
+		<cfquery name="maxTerm">
+			SELECT max(Term) term
+			FROM billingStudent
+		</cfquery>
+		<cfset arguments.term = maxTerm.Term>
+	</cfif>
+	<cfquery name="data">
+		SELECT CurrentTerm, c.ProgramYear
 			,MAX(CASE ProgramQuarter WHEN 1 THEN Term ELSE NULL END) Term1
 			,MAX(CASE ProgramQuarter WHEN 2 THEN Term ELSE NULL END) Term2
 			,MAX(CASE ProgramQuarter WHEN 3 THEN Term ELSE NULL END) Term3
 			,MAX(CASE ProgramQuarter WHEN 4 THEN Term ELSE NULL END) Term4
-		FROM pcc_links.BannerCalendar c
+		FROM bannerCalendar c
 			JOIN (SELECT Term CurrentTerm, ProgramQuarter CurrentQuarter, ProgramYear
-					FROM pcc_links.BannerCalendar
+					FROM bannerCalendar
 					WHERE Term = <cfqueryparam value="#arguments.term#">) current
 				ON c.ProgramYear = current.ProgramYear
-		GROUP BY CurrentTerm
+		GROUP BY CurrentTerm, c.ProgramYear
 	</cfquery>
 	<cfreturn data>
 </cffunction>
+<cffunction name="getMaxTerm" access="remote" returntype="string">
+	<cfquery name="maxTermQuery">
+		SELECT MAX(Term) Term
+		FROM billingStudent
+	</cfquery>
+	<cfreturn maxTermQuery.Term>
+</cffunction>
+<cffunction name="getProgramYear" access="remote" returntype="string">
+	<cfargument name="term" required="true">
+	<cfquery name="programYearQuery">
+		SELECT ProgramYear
+		FROM bannerCalendar
+		WHERE term = <cfqueryparam value="#arguments.term#">
+	</cfquery>
+	<cfreturn programYearQuery.ProgramYear>
+</cffunction>
+<cffunction  name="getCoursesForTerm" access="remote">
+	<cfargument name="term" required="true">
+	<cfquery name="data" datasource="bannerpcclinks">
+		select distinct crn, subj, crse, title
+		from swvlinks_course
+		where term = <cfqueryparam value="#arguments.term#">
+	</cfquery>
+</cffunction>
+		sele
 
 </cfcomponent>

@@ -41,6 +41,11 @@
 			</cfoutput>
 			</label>
 
+			<label> Funding Source
+			<cfoutput>
+				<input type="text" name="fundedby" readonly value="#caseload_banner.fundedby#" />
+			</cfoutput>
+			</label>
 
 			<!-- Gender Select -->
 			<cfset values=["Female", "Male", "Non-binary", "Choose not to say"]>
@@ -390,7 +395,7 @@
 
 
    		//form[flagFieldName] = isFlagged;
-		$.blockUI({ message: 'Saving...' });
+		//$.blockUI({ message: 'Saving...' });
 		 $.ajax({
             type: 'post',
             url: 'fc.cfc?method=updateCase',
@@ -407,7 +412,7 @@
           });
 
 
-		$.unblockUI();
+		//$.unblockUI();
 	}
 	function updateContent(){
 		//notes

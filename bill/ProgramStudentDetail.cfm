@@ -1,69 +1,133 @@
 <cfinclude template="includes/header.cfm" />
 
+<!--- Set Page Variables --->
 <cfset Variables.BannerGNumber = #Session.bannerGNumber#>
 <cfset Variables.Term = #Session.term#>
-<cfset Variables.Program = #Session.Program#>
-<!---debug code
-<cfdump var="#Variables.BannerGNumber#">
-<cfdump var="#Variables.Term#">
---->
-<cfinvoke component="ProgramBilling" method="yearlybilling"  returnvariable="qryStudent">
+<!---<cfset Variables.Program = #Session.Program#>--->
+<cfset Variables.BillingStatus = "">
+<cfparam name="showNext" default=true>
+<cfif IsDefined("session.showNext")>
+	<cfset showNext = session.showNext>
+</cfif>
+
+
+<!--- Get Page Header Data --->
+<!--- Current Status --->
+<cfinvoke component="ProgramBilling" method="getProgramStudent"  returnvariable="qryStudent">
 	<cfinvokeargument name="bannerGNumber" value="#Variables.BannerGNumber#">
 	<cfinvokeargument name="term" value="#Variables.Term#">
 </cfinvoke>
+<!--- Previous Statuses for Year --->
+<cfinvoke component="ProgramBilling" method="getOtherBilling"  returnvariable="qryOtherBilling">
+	<cfinvokeargument name="contactid" value="#qryStudent.contactid#">
+	<cfinvokeargument name="term" value="#Variables.Term#">
+</cfinvoke>
+
+<!--- Set Billing Student Variables --->
+<cfset Variables.BillingStudentID = qryStudent.billingStudentID>
+<cfset Variables.BillingStudentProgram = qryStudent.Program>
+
+<!--- Get Classes to Bill --->
 <cfinvoke component="ProgramBilling" method="selectBillingEntries"  returnvariable="qryEntries">
 	<cfinvokeargument name="bannerGNumber" value="#Variables.BannerGNumber#">
 	<cfinvokeargument name="term" value="#Variables.Term#">
 </cfinvoke>
-<cfset args = {"gnumber"= Variables.bannerGNumber, "term" = Variables.Term, "subj" = ""}>
+<!--- Get Past Courses --->
+<cfset args = {"pidm"= qryStudent.pidm, "term" = Variables.Term, "subj" = ""}>
 <cfinvoke component="ProgramBilling" method="selectBannerClasses"  returnvariable="qryPastClasses">
-	<cfinvokeargument name="row" value="#args#">
+	<cfinvokeargument name="pidm" value="#qryStudent.pidm#">
+	<cfinvokeargument name="term" value="#Variables.Term#">
+	<cfinvokeargument name="contactId" value="#qryStudent.contactId#">
 </cfinvoke>
-<!--- debug code <cfdump var="#qryStudent#"> --->
+<cfinvoke component="LookUp" method="getPrograms" returnvariable="programs"></cfinvoke>
 
-<!----------------------------- Data from qryStudent ------------------------------------------------>
+
+<!----------------------------- Data from qryStudent Current Status------------------------------------------------>
 <cfoutput query="qryStudent">
 	<cfset Variables.BillingStatus = #BillingStatus#>
 	<div class=<cfif #BillingStatus# EQ 'COMPLETE'>"callout alert"<cfelse>"callout primary"</cfif> >
+		<cfif showNext>
 		<div class="row">
 			<!-- previous button -->
-			<div class="small-1 columns"><input id="prevStudent" name="prevStudent" type="button" class="button" value="<<"></div>
-			<!-- header data -->
-			<div class="small-10 columns">
-				<div class="row">
-					<div class="small-2 columns"><b>G</b></div>
-					<div class="small-2 columns"><b>Name</b></div>
-					<div class="small-1 columns"><b>Program</b></div>
-					<div class="small-2 columns"><b>Enrolled Date</b></div>
-					<div class="small-2 columns"><b>Exit Date </b></div>
-					<div class="small-1 columns"><b>Billing Date</b></div>
-					<div class="small-2 columns"><b>Review with Coach</b></div>
-				</div>
-				<div class="row">
-					<div class="small-2 columns">#bannerGNumber#</div>
-					<div class="small-2 columns">#FIRSTNAME# #LASTNAME#</div>
-					<div class="small-1 columns">#PROGRAM#</div>
-					<div class="small-2 columns">#DateFormat(ENROLLEDDATE,"m/d/yy")#</div>
-					<div class="small-2 columns"><cfif LEN(#EXITDATE#) EQ 0>None<cfelse>#DateFormat(EXITDATE,"m/d/yy")#</cfif></div>
-					<div class="small-1 columns"><cfif LEN(#BillingDate#) EQ 0>N/A<cfelse>#DateFormat(BillingDate,"m/d/yy")#</cfif></div>
-					<div class="small-2 columns">
-						<input type="checkbox"  >
-					</div>
-				</div>
-			</div> <!-- end header data -->
-			<!-- next button -->
+			<div class="small-11 columns"><input id="prevStudent" name="prevStudent" type="button" class="button" value="<<"></div>
 			<div class="small-1 columns"><input id="nextStudent" name="nextStudent" type="button" class="button" value=">>"></div>
-		</div> <!-- end row -->
-	</div>
+		</div>
+		</cfif>
+		<div class="row">
+			<div class="small-1 columns"><b>G</b></div>
+			<div class="small-2 columns"><b>Name</b></div>
+			<div class="small-2 columns"><b>Program</b></div>
+			<div class="small-1 columns"><b>Enrolled Date</b></div>
+			<div class="small-1 columns"><b>Exit Date </b></div>
+			<div class="small-1 columns"><b>Term</b></div>
+			<div class="small-1 columns"><b>School</b></div>
+			<div class="small-1 columns"><b>Status</b></div>
+			<div class="small-2 columns"><b>Review with Coach</b></div>
+		</div>
+		<div class="row">
+			<div class="small-1 columns">#bannerGNumber#</div>
+			<div class="small-2 columns">#FIRSTNAME# #LASTNAME#</div>
+			<div class="small-2 columns">
+				<cfif #billingstatus# EQ 'COMPLETE'>
+					#program#
+				<cfelse>
+				<select name="program" id="program">
+					<cfloop query="programs">
+						<option value="#programName#" <cfif #qryStudent.program# EQ #programName#> selected </cfif> > #programName# </option>
+					</cfloop>
+				</select>
+				</cfif>
+			</div>
+			<div class="small-1 columns">#DateFormat(ENROLLEDDATE,"m/d/yy")#</div>
+			<div class="small-1 columns"><cfif LEN(#EXITDATE#) EQ 0>None<cfelse>#DateFormat(EXITDATE,"m/d/yy")#</cfif></div>
+			<div class="small-1 columns">#term#</div>
+			<div class="small-1 columns">#schooldistrict#</div>
+			<div class="small-1 columns">#billingstatus#</div>
+			<div class="small-2 columns">
+				<input type="checkbox"  >
+			</div>
+		</div>
+		<div class="row">
+			<div class="small-12 columns" style="color:red">
+				#ErrorMessage#
+			</div>
+		</div>
+	</div> <!-- end header data -->
 </cfoutput>
 <!------------------------ End Data from qryStudent -------------------------------------------->
+
+
+<!----------------------------- Data from qryOtherBilling Previous Year Status Status------------------------------------------------>
+<cfoutput query="qryOtherBilling">
+	<div class=<cfif #BillingStatus# EQ 'COMPLETE'>"callout alert"<cfelse>"callout primary"</cfif> >
+		<div class="row">
+			<div class="small-2 columns"><b>Program</b></div>
+			<div class="small-1 columns"><b>Enrolled Date</b></div>
+			<div class="small-2 columns"><b>Exit Date </b></div>
+			<div class="small-1 columns"><b>Term</b></div>
+			<div class="small-1 columns"><b>School</b></div>
+			<div class="small-1 columns"><b>Status</b></div>
+			<div class="small-3 columns"></div>
+		</div>
+		<div class="row">
+			<div class="small-2 columns">#program#</div>
+			<div class="small-1 columns">#DateFormat(ENROLLEDDATE,"m/d/yy")#</div>
+			<div class="small-2 columns"><cfif LEN(#EXITDATE#) EQ 0>None<cfelse>#DateFormat(EXITDATE,"m/d/yy")#</cfif></div>
+			<div class="small-1 columns">#term#</div>
+			<div class="small-1 columns">#schooldistrict#</div>
+			<div class="small-1 columns">#billingstatus#</div>
+			<div class="small-3 columns" style="color:red">#ErrorMessage#</div>
+		</div>
+	</div> <!-- end header data -->
+</cfoutput>
+<!------------------------ End Data from qryOtherBilling -------------------------------------------->
 
 
 <div class="row">
 	<!---------------------------------------------------------------------------->
 	<!--- Billed Classes -------------------------------------------------------->
 	<!---------------------------------------------------------------------------->
-	<div class="small-5 columns">
+	<div class="small-4 columns">
 		<b>Billed Classes</b>
 		<table id="dt_billed" name="dt" class="unstriped hover compact" cellspacing="0" width="100%">
 			<thead>
@@ -88,31 +152,33 @@
 		            <td>#Title#</td>
 					<td><cfif LEN(#TakenPreviousTerm#) EQ 0 OR #TakenPreviousTerm# EQ 0>No<cfelse><span style="color:red">#TakenPreviousTerm#</span></cfif></td>
 		            <td>#NumberFormat(CourseValue,"0")#</td>
-		            <td><input type="checkbox" id="IncludeFlag" <cfif #IncludeFlag# EQ 1>checked</cfif>></td>
+		            <td><input type="checkbox" id="IncludeFlag"  <cfif #IncludeFlag# EQ 1>checked</cfif>></td>
 				</tr>
 				</cfoutput>
 			</tbody>
 		</table>
 		<div class="callout">
-			<b>Billing Reviewed:</b> <input type="checkbox" <cfif #Variables.BillingStatus# EQ "Complete">checked</cfif> >
+			<b>Billing Reviewed:</b> <input type="checkbox" name="billingReviewed" id="billingReviewed" <cfif Variables.BillingStatus EQ "Complete" and Variables.term EQ qryStudent.Term>checked</cfif> >
 		</div>
 	</div>
 	<div class="small-1 columns"></div>
 	<!---------------------------------------------------------------------------->
 	<!--- Past Classes -------------------------------------------------------->
 	<!---------------------------------------------------------------------------->
-	<div class="small-6 columns">
+	<div class="small-7 columns">
 	<b>Past Classes</b>
 	<legend>These are the prior classes taken by the student in the selected current class subject area.  Classes that were given a "W" are in red.</legend>
 	<table name="dt_classes" id="dt_classes" class="unstriped compact" cellspacing="0" width="100%">
 			<thead>
 	    	<tr>
-				<th id="Term">Term</th>
-	            <th id="CRSE">CRSE</th>
-	            <th id="SUBJ">SUBJ</th>
-	            <th id="Title">Title</th>
-				<th id="IncludeFlag">CR</th>
-				<th id="CourseValue">Grade</th>
+				<th>Term</th>
+	            <th>CRSE</th>
+	            <th>SUBJ</th>
+	            <th>Title</th>
+				<th>CR</th>
+				<th>Grade</th>
+				<th>Taken Prev.</th>
+				<th>Incl.</th>
 	       </tr>
 	     </thead>
 	     <tbody>
@@ -124,6 +190,8 @@
 	            <td>#Title#</td>
 	            <td>#Credits#</td>
 	            <td>#Grade#</td>
+	            <td>#TakenPreviousTerm#</td>
+	            <td><input type="checkbox" id="IncludeFlag" readonly <cfif #IncludeFlag# EQ 1>checked</cfif>></td>
 			</tr>
 			</cfoutput>
 		</tbody>
@@ -134,88 +202,116 @@
 
 <cfsavecontent variable="pcc_scripts">
 <script>
-$(document).ready(function() {
-	//setup for billing table
-    $('#dt_billed').DataTable({
-    	searching:false,
-    	paging:false,
-    	info:false,
-    	ordering: false,
-    	language: {
-      		emptyTable: "No classes for term: <cfoutput>#Variables.Term#</cfoutput> "
-    	}
-    });
+	$(document).ready(function() {
+		//setup for billing table
+	    $('#dt_billed').DataTable({
+	    	searching:false,
+	    	paging:false,
+	    	info:false,
+	    	ordering: false,
+	    	language: {
+	      		emptyTable: "No classes for term: <cfoutput>#Variables.Term#</cfoutput> "
+	    	}
+	    });
 
-    // grouping for the classes table
-	$('#dt_classes').DataTable({
-		searching: false,
-		paging: false,
-		info: false,
-		columns:[{data:'Term'},{data:'CRSE'},{data:'SUBJ'},{data:'Title'},{data:'Credits'},{data:'Grade'}],
-		orderFixed:([0, 'desc']),
-    	rowGroup: {
-    		dataSrc: 'Term'
-    	}
-    });
+	    // grouping for the classes table
+		$('#dt_classes').DataTable({
+			searching: false,
+			paging: false,
+			info: false,
+			columns:[{data:'Term'},{data:'CRSE'},{data:'SUBJ'},{data:'Title'},{data:'Credits'},{data:'Grade'},{data:'TakenPreviousTerm'},{data:'IncludeFlag'}],
+			orderFixed:([0, 'desc']),
+	    	rowGroup: {
+	    		dataSrc: 'Term'
+	    	}
+	    });
 
-   // save include checkbox changes
-   $('#dt_billed').find('td').click(function(){
-		cb = $(this).find('input:checkbox');
- 		dt = $('#dt_billed').DataTable();
-		var tableRow  = dt.row(this).data();
+	   // save program dropdown changes
+	   $('#program').change(function(){
+			var program = $(this).val();
+			var billingStudentId = <cfoutput>#Variables.BillingStudentID#</cfoutput>;
+			$.blockUI({ message: 'Just a moment...' });
+			$.ajax({
+				url: "programbilling.cfc?method=updatestudentbillingprogram",
+				type: "POST",
+				async: false,
+				data: { billingstudentid: billingStudentId, program: program },
+				error: function (jqXHR, exception) {
+			        handleAjaxError(jqXHR, exception);
+				}
+			});
+			$.unblockUI();
+		}); //end save checkbox changes
 
-		var billingStudentItemId = tableRow[0];
-		var includeFlag = (cb[0].checked ? 1 : 0);
-		$.blockUI({ message: 'Just a moment...' });
-		$.ajax({
-			url: "programbilling.cfc?method=updatestudentbillingiteminclude",
-			type: "POST",
-			async: false,
-			data: { billingstudentitemid: billingStudentItemId, includeflag:includeFlag },
-			error: function (jqXHR, exception) {
-		        handleAjaxError(jqXHR, exception);
-			}
+	   // save billing reviewed checkbox changes
+	   $('#billingReviewed').click(function(){
+			var checked = $(this)[0].checked;
+			var billingStudentId = <cfoutput>#Variables.BillingStudentID#</cfoutput>;
+			$.blockUI({ message: 'Just a moment...' });
+			$.ajax({
+				url: "programbilling.cfc?method=updatestudentbillingstatus",
+				type: "POST",
+				async: false,
+				data: { billingstudentid: billingStudentId, billingReviewed: checked },
+				error: function (jqXHR, exception) {
+			        handleAjaxError(jqXHR, exception);
+				}
+			});
+			$.unblockUI();
+		}); //end save checkbox changes
+
+
+	   // save include checkbox changes
+	   $('#dt_billed').find('td').click(function(){
+			cb = $(this).find('input:checkbox');
+	 		dt = $('#dt_billed').DataTable();
+			var tableRow  = dt.row(this).data();
+
+			var billingStudentItemId = tableRow[0];
+			var includeFlag = (cb[0].checked ? 1 : 0);
+			$.blockUI({ message: 'Just a moment...' });
+			$.ajax({
+				url: "programbilling.cfc?method=updatestudentbillingiteminclude",
+				type: "POST",
+				async: false,
+				data: { billingstudentitemid: billingStudentItemId, includeflag:includeFlag },
+				error: function (jqXHR, exception) {
+			        handleAjaxError(jqXHR, exception);
+				}
+			});
+			$.unblockUI();
+		}); //end save checkbox changes
+
+		$('#nextStudent').button().click(function (){
+			gnumber = setNextGNumber(1);
+			goToDetailPage(gnumber);
 		});
-		$.unblockUI();
-	}); //end save checkbox changes
 
-	$('#nextStudent').button().click(function (){
-		setNextGNumber(1);
-		goToDetailPage();
-	});
-
-	$('#prevStudent').button().click(function (){
-		setNextGNumber(0);
-		goToDetailPage();
+		$('#prevStudent').button().click(function (){
+			gnumber = setNextGNumber(0);
+			goToDetailPage(gnumber);
+		});
 	});
 
 	function setNextGNumber(isGetNext){
 		var next = isGetNext;
 		var prev = isGetNext ? 0 : 1;
+		var gNumber = "";
 		$.ajax({
-			url: "programbilling.cfc?method=setNextGNumberInSession",
+			url: "programbilling.cfc?method=getNextGNumberInSession",
 			type: "POST",
 			async: false,
-			data: { getNext: next, getPrev: prev},
+			dataType:"json",
+			data: { getNext: next, getPrev: prev, bannerGNumber: '<cfoutput>#Variables.bannerGNumber#</cfoutput>'},
 			error: function (jqXHR, exception) {
 		        handleAjaxError(jqXHR, exception);
+			},
+			success: function(data){
+				gNumber = data;
 			}
 		});
+		return gNumber;
 	}
-
-	function goToDetailPage(bannerGNumber){
-			var dt = $('#dt_table').DataTable();
-			var gList = dt.columns({search:'applied'}).data()[0];
-			var url = 'saveSession.cfm';
-			var form = $('<form action="' + url + '" method="post">' +
-  				'<input type="text" name="location" value="ProgramStudentDetail.cfm"/>' +
-  				'</form>');
-			$('body').append(form);
-			form.submit();
-		}
-
-});
-
 
  </script>
 </cfsavecontent>

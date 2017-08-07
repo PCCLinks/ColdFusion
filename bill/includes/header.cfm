@@ -1,4 +1,4 @@
-<!---<cfdump var=#Session#> --->
+<!---<cfdump var=#Session#>--->
 
 <!doctype html>
 <html class="no-js" lang="en">
@@ -12,7 +12,7 @@
 <cfparam name="pcc_menu" default='' />
 <!--- end CF Parameters --->
 
-<cfset pcc_title 	= 'PCC Links' /> 	<!--- Page title & h3 --->
+<cfset pcc_title = 'PCC Links' /> 	<!--- Page title & h3 --->
 <cfsavecontent variable="pcc_menu">	 <!--- List items for menu --->
 	 <li><a href="index.cfm">Home</a></li>
 	 <li><a href="SetUpBilling.cfm">Generate</a></li>
@@ -31,13 +31,23 @@
     <!-- styles -->
     <link rel="stylesheet" href="<cfoutput>#pcc_source#</cfoutput>/css/foundation.min.css" />
     <link rel="stylesheet" href="<cfoutput>#pcc_source#</cfoutput>/css/app.css" />
-	<link rel="stylesheet" href="https://cdn.datatables.net/v/dt/dt-1.10.15/b-1.3.1/b-html5-1.3.1/kt-2.2.1/r-2.1.1/rg-1.0.0/datatables.min.css"/>
+	<link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/v/dt/jszip-3.1.3/pdfmake-0.1.27/dt-1.10.15/b-1.3.1/b-colvis-1.3.1/b-html5-1.3.1/b-print-1.3.1/cr-1.3.3/fc-3.2.2/fh-3.1.2/r-2.1.1/rg-1.0.0/sc-1.4.2/se-1.2.2/datatables.min.css"/>
+
+	<link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/1.10.15/css/jquery.dataTables.min.css"/>
+	<link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/buttons/1.3.1/css/buttons.dataTables.min.css"/>
 	<cfoutput>#pcc_styles#</cfoutput>
 
 	<!-- jquery -->
 	<script src="<cfoutput>#pcc_source#</cfoutput>/js/vendor/jquery.js"></script>
 	<script src="<cfoutput>#pcc_source#</cfoutput>/js/vendor/Chart.bundle.min.js"></script>
- </head>
+	<script type="text/javascript" src="https://cdn.datatables.net/v/dt/jszip-3.1.3/pdfmake-0.1.27/dt-1.10.15/b-1.3.1/b-colvis-1.3.1/b-html5-1.3.1/b-print-1.3.1/cr-1.3.3/fc-3.2.2/fh-3.1.2/r-2.1.1/rg-1.0.0/sc-1.4.2/se-1.2.2/datatables.min.js"></script>
+
+
+
+<!---	<script type="text/javascript" src="https://code.jquery.com/jquery-1.12.4.js"></script>
+	<script type="text/javascript" src="https://cdn.datatables.net/1.10.15/js/jquery.dataTables.min.js"></script>
+	<script type="text/javascript" src="https://cdn.datatables.net/buttons/1.3.1/js/dataTables.buttons.min.js"></script>
+	<script type="text/javascript" src="https://cdn.datatables.net/buttons/1.3.1/js/buttons.print.min.js"></script>--->
 <!-- End HEAD -->
 
 <!-- BODY -->

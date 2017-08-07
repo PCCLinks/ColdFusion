@@ -17,33 +17,21 @@
 <script>
 $(document).foundation();
 function handleAjaxError(jqXHR, exception, thrownError){
-		/*var msg = '';
-		if (jqXHR.status === 0) {
-		    msg = 'Not connect.\n Verify Network.';
-		} else if (jqXHR.status == 404) {
-		    msg = 'Requested page not found. [404]';
-		} else if (jqXHR.status == 500) {
-		    msg = 'Internal Server Error [500].';
-		} else if (exception === 'parsererror') {
-		    msg = 'Requested JSON parse failed.';
-		} else if (exception === 'timeout') {
-		    msg = 'Time out error.';
-		} else if (exception === 'abort') {
-		    msg = 'Ajax request aborted.';
-		} else {
-		    msg = 'Uncaught Error.\n' + jqXHR.statusText + ' ' + jqXHR.responseText;
-		}*/
 		msg = encodeURIComponent(jqXHR.statusText + ' ' + jqXHR.responseText);
+		data = {error: msg, exception: exception, throwError: thrownError, errorType: 'ajax'};
+		$.post("Error.cfm", data, function(){
+		  		window.location	='Error.cfm';
+		  	});
 		//alert('Error with request:' + msg);
-		var url = 'Error.cfm';
-		var form = $('<form action="' + url + '" method="post">' +
+		/*var url = 'Error.cfm';
+		var errorForm = $('<form name="errorForm" id="errorForm" action="' + url + '" method="post">' +
 			'<input type="text" name="Error" value="' + msg + '" />' +
 			'<input type="text" name="exception" value="' + exception + '" />' +
 			'<input type="text" name="thrownError" value="' + thrownError + '" />' +
 			'<input type="text" name="ErrorType" value="ajax" />' +
 			'</form>');
-		$('body').append(form);
-		form.submit();
+		$('body').append(errorForm);
+		errorForm.submit();*/
 	}
 
 </script>

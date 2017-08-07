@@ -1,4 +1,21 @@
 <cfcomponent displayname="multiSelectCheckbox" accessors="true" output="false" persistent="false">
+	<!---><cffunction name="isChanged" returntype="boolean">
+		<cfargument name="checkedOnForm" type="array">
+		<cfargument name="checkedinDatabase" type="query">
+		<cfset changed="false">
+		<cfloop query="checkedinDatabase">
+			<cfset exists=false>
+			<cfset id = existingIds.Id>
+			<cfloop array="#arguments.checkedOnForm#" item="checkedID">
+				<cfif id EQ checkedID>
+					<cfset exists=true>
+					<cfbreak>
+				</cfif> <!--- matches a value that is checked --->
+			</cfloop> <!--- checked id values --->
+			<cfif not exists>
+				<cfset idsToDelete = ListAppend(idsToDelete, id)>
+			</cfif>
+		</cfloop>--->
 	<cffunction name="getCheckedCollection" access="public">
 	<!--- data is a collection of all fields in the form.
 	  The values related to a multi-select checkbox is a collection of
