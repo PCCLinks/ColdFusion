@@ -488,6 +488,7 @@ all the banner queries need to force a distinct by PIDM
 			FROM futureConnect
 				LEFT JOIN futureConnectApplication
 					on futureConnect.bannerGNumber = futureConnectApplication.StudentID
+						and futureConnectApplication.activeFlag = 1
 				LEFT JOIN (
 					select contactID, max(noteDateAdded) as lastContactDate
 					from notes
