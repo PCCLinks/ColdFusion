@@ -488,6 +488,7 @@ all the banner queries need to force a distinct by PIDM
 			FROM futureConnect
 				LEFT JOIN futureConnectApplication
 					on futureConnect.bannerGNumber = futureConnectApplication.StudentID
+						and futureConnectApplication.activeFlag = 1
 				LEFT JOIN (
 					select contactID, max(noteDateAdded) as lastContactDate
 					from notes
@@ -579,7 +580,10 @@ all the banner queries need to force a distinct by PIDM
 			select contactID, stu_name, bannerGNumber, Cohort
 				, ASAP_status, statusinternal, Coach, LastContactDate, pidm
 				, in_contract, pcc_email, maxterm, flagged
+<<<<<<< HEAD
 
+=======
+>>>>>>> refs/remotes/origin/master
 			from caseloaddata
 		</cfquery>
 		<cfreturn qryData>
