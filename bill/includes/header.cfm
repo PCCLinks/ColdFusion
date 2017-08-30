@@ -14,11 +14,26 @@
 
 <cfset pcc_title = 'PCC Links' /> 	<!--- Page title & h3 --->
 <cfsavecontent variable="pcc_menu">	 <!--- List items for menu --->
-	 <li><a href="index.cfm">Home</a></li>
-	 <li><a href="SetUpBilling.cfm">Generate</a></li>
-	 <li><a href="ProgramStudent.cfm">Submit Billing</a></li>
-	 <li><a href="Reconcile.cfm">Reconcile Previous Billing</a></li>
-	 <li><a href="BillingSummary.cfm">Reports</a></li>
+	<ul class="dropdown menu" data-dropdown-menu>
+		 <li><a href="index.cfm">Home</a></li>
+		 <li><a>Term Billing</a>
+			<ul class="menu">
+				<li><a href="SetUpBilling.cfm?type=Term">Set Up Billing</a></li>
+				<li><a href="BillingSummary.cfm?type=Term">Reporting</a></li>
+			</ul>
+		</li>
+		 <li><a>Attendance Billing</a>
+			<ul class="menu">
+				<li><a href="SetUpBilling.cfm?type=Attendance">Set Up Billing</a></li>
+		 		<li><a href="AttendanceSummary.cfm">Enter Attendance</a></li>
+		 		<li><a href="AddClass.cfm">Add Class</a></li>
+		 		<li><a href="AddScenario.cfm">Scenarios</a></li>
+				<li><a href="BillingSummary.cfm?type=Attendance">Reporting</a></li>
+			</ul>
+		</li>
+		<li><a href="ProgramStudent.cfm">Review Billing</a></li>
+		 <!---<li><a href="Reconcile.cfm">Reconcile Previous Billing</a></li>--->
+	</ul>
 </cfsavecontent>
 
 <!-- HEAD -->

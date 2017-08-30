@@ -17,6 +17,11 @@
 	<cfinvokeargument name="bannerGNumber" value="#Variables.BannerGNumber#">
 	<cfinvokeargument name="term" value="#Variables.Term#">
 </cfinvoke>
+<cfset Variables.programType = "term">
+<cfif qryStudent.program CONTAINS "attendance" >
+	<cfset Variables.programType = "attendance">
+</cfif>
+
 <!--- Previous Statuses for Year --->
 <cfinvoke component="ProgramBilling" method="getOtherBilling"  returnvariable="qryOtherBilling">
 	<cfinvokeargument name="contactid" value="#qryStudent.contactid#">
@@ -55,8 +60,8 @@
 		</cfif>
 		<div class="row">
 			<div class="small-1 columns"><b>G</b></div>
-			<div class="small-2 columns"><b>Name</b></div>
-			<div class="small-2 columns"><b>Program</b></div>
+			<div class="small-1 columns"><b>Name</b></div>
+			<div class="small-3 columns"><b>Program</b></div>
 			<div class="small-1 columns"><b>Enrolled Date</b></div>
 			<div class="small-1 columns"><b>Exit Date </b></div>
 			<div class="small-1 columns"><b>Term</b></div>
@@ -66,8 +71,8 @@
 		</div>
 		<div class="row">
 			<div class="small-1 columns">#bannerGNumber#</div>
-			<div class="small-2 columns">#FIRSTNAME# #LASTNAME#</div>
-			<div class="small-2 columns">
+			<div class="small-1 columns">#FIRSTNAME# #LASTNAME#</div>
+			<div class="small-3 columns">
 				<cfif #billingstatus# EQ 'COMPLETE'>
 					#program#
 				<cfelse>
@@ -138,7 +143,7 @@
 		            <th id="SUBJ">SUBJ</th>
 		            <th id="Title">Title</th>
 					<td id="TakenPreviousTerm">Taken Prev.</td>
-					<th id="CourseValue">CR</th>
+					<th id="CourseValue"><cfif Variables.programType EQ "attendance">Attend.<cfelse>CR</cfif></th>
 					<th id="IncludeFlag">Incl.</th>
 		       </tr>
 		     </thead>
@@ -151,7 +156,12 @@
 		            <td>#SUBJ#</td>
 		            <td>#Title#</td>
 					<td><cfif LEN(#TakenPreviousTerm#) EQ 0 OR #TakenPreviousTerm# EQ 0>No<cfelse><span style="color:red">#TakenPreviousTerm#</span></cfif></td>
-		            <td>#NumberFormat(CourseValue,"0")#</td>
+		            <td><cfif programType EQ "attendance">
+		            		<a href="javascript:getAttendanceGrid(#CRN#)" >#NumberFormat(CourseValue,"0.0000")#</a>
+		            	<cfelse>
+		            		#NumberFormat(CourseValue,"0")#
+		            	</cfif>
+					</td>
 		            <td><input type="checkbox" id="IncludeFlag"  <cfif #IncludeFlag# EQ 1>checked</cfif>></td>
 				</tr>
 				</cfoutput>
@@ -262,10 +272,12 @@
 
 
 	   // save include checkbox changes
-	   $('#dt_billed').find('td').click(function(){
-			cb = $(this).find('input:checkbox');
+	   //$('#dt_billed').find('td').click(function(){
+	   	$('#dt_billed').find('input:checkbox').click(function(){
+			//cb = $(this).find('input:checkbox');
+			cb = $(this);
 	 		dt = $('#dt_billed').DataTable();
-			var tableRow  = dt.row(this).data();
+			var tableRow  = dt.row(this.parentNode).data();
 
 			var billingStudentItemId = tableRow[0];
 			var includeFlag = (cb[0].checked ? 1 : 0);
@@ -311,6 +323,16 @@
 			}
 		});
 		return gNumber;
+	}
+
+	function getAttendanceGrid(crn){
+		<cfoutput>sessionStorage.setItem("term", #Variables.term#);</cfoutput>
+		sessionStorage.setItem("CRN", crn);
+		var data = $.param({data:encodeURIComponent(JSON.stringify(sessionStorage))});
+  		$.post("SaveSession.cfm", data, function(){
+  			window.open('AttendanceGrid.cfm');
+  			//window.location = 'AttendanceGrid.cfm';
+  		});
 	}
 
  </script>

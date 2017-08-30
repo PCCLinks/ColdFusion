@@ -1,13 +1,9 @@
 <cfinclude template="includes/header.cfm" />
 
-<cfset Variables.CRN = "27513">
-<cfset Variables.Term = "201702">
-<cfset Variables.BillingDate = "2017-04-01 00:00:00">
 
-<cfinvoke component="SetUpBilling" method="setUpBillingClassAttendanceForMonth"  returnvariable="data">
-	<cfinvokeargument name="term" value="#Form.Term#">
-	<cfinvokeargument name="crn" value="#Form.CRN#">
-	<cfinvokeargument name="billingdate" value="#Form.BillingDate#">
+<cfinvoke component="ProgramBilling" method="getClassAttendanceGrid"  returnvariable="data">
+	<cfinvokeargument name="term" value="#Session.Term#">
+	<cfinvokeargument name="crn" value="#Session.CRN#">
 </cfinvoke>
 
 
@@ -20,9 +16,9 @@
 </cfinvoke>
 --->
 <cfquery name="buckets" dbtype="query">
-	select billingDate
+	select billingStartDate
 	from data
-	group by billingDate
+	group by billingStartDate
 </cfquery>
 
 <cfquery name="heading" dbtype="query">
@@ -33,14 +29,14 @@
 
 
 <div class="callout primary">
-<cfoutput>Term: #Variables.Term#&nbsp;Class:#heading.subj#-#heading.crse#&nbsp;#heading.title#&nbsp;(#Variables.crn#)</cfoutput>
+<cfoutput>Term: #Session.Term#&nbsp;Class:#heading.subj#-#heading.crse#&nbsp;#heading.title#&nbsp;(#Session.crn#)</cfoutput>
 </div>
 <table name="dt_table">
 	<thead>
 		<tr>
 			<th>Name</th>
 			<cfoutput query="buckets">
-			<th><a href="javascript:goToDetail('#BillingDate#');">#BillingDate#</a></th>
+			<th><a href="javascript:goToDetail('#Session.billingStartDate#');">#Session.billingStartDate#</a></th>
 			</cfoutput>
 		</tr>
 	</thead>
@@ -62,11 +58,11 @@
 </table>
 <cfsavecontent variable="pcc_scripts">
 <script>
-		function goToDetail(billingDate){
+		function goToDetail(billingStartDate){
 			<cfoutput>
-			sessionStorage.setItem("billingDate", billingDate);
-			sessionStorage.setItem('crn', '#Variables.crn#');
-			sessionStorage.setItem('term', '#Variables.term#');
+			sessionStorage.setItem("billingStartDate", billingStartDate);
+			sessionStorage.setItem('crn', '#Session.crn#');
+			sessionStorage.setItem('term', '#Session.term#');
 			</cfoutput>
 			var data = $.param({data:encodeURIComponent(JSON.stringify(sessionStorage))});
   			$.post("SaveSession.cfm", data, function(){

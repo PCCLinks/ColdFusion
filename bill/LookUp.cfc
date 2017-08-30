@@ -72,6 +72,8 @@
 			select statusText
 			from keyStatus
 			where statusText like 'ytc%'
+			union
+			select 'YtC Attendance Unverified'
 		</cfquery>
 		<cfreturn data>
 	</cffunction>
@@ -126,30 +128,35 @@
 	</cfquery>
 	<cfreturn data>
 </cffunction>
-<cffunction name="getMaxTerm" access="remote" returntype="string">
-	<cfquery name="maxTermQuery">
-		SELECT MAX(Term) Term
-		FROM billingStudent
-	</cfquery>
-	<cfreturn maxTermQuery.Term>
-</cffunction>
-<cffunction name="getProgramYear" access="remote" returntype="string">
-	<cfargument name="term" required="true">
-	<cfquery name="programYearQuery">
-		SELECT ProgramYear
-		FROM bannerCalendar
-		WHERE term = <cfqueryparam value="#arguments.term#">
-	</cfquery>
-	<cfreturn programYearQuery.ProgramYear>
-</cffunction>
-<cffunction  name="getCoursesForTerm" access="remote">
-	<cfargument name="term" required="true">
-	<cfquery name="data" datasource="bannerpcclinks">
-		select distinct crn, subj, crse, title
-		from swvlinks_course
-		where term = <cfqueryparam value="#arguments.term#">
-	</cfquery>
-</cffunction>
-		sele
+	<cffunction name="getMaxTerm" access="remote" returntype="string">
+		<cfquery name="maxTermQuery">
+			SELECT MAX(Term) Term
+			FROM billingStudent
+		</cfquery>
+		<cfreturn maxTermQuery.Term>
+	</cffunction>
+	<cffunction name="getProgramYear" access="remote" returntype="string">
+		<cfargument name="term" required="true">
+		<cfquery name="programYearQuery">
+			SELECT ProgramYear
+			FROM bannerCalendar
+			WHERE term = <cfqueryparam value="#arguments.term#">
+		</cfquery>
+		<cfreturn programYearQuery.ProgramYear>
+	</cffunction>
+	<cffunction  name="getCoursesForTerm" access="remote">
+		<cfargument name="term" required="true">
+		<cfquery name="data" datasource="bannerpcclinks">
+			select distinct crn, subj, crse, title
+			from swvlinks_course
+			where term = <cfqueryparam value="#arguments.term#">
+		</cfquery>
+	</cffunction>
+	<cffunction  name="getScenarios" access="remote">
+		<cfquery name="data" >
+				SELECT * FROM sidny.billingScenario;
+		</cfquery>
+		<cfreturn data>
+	</cffunction>
 
 </cfcomponent>

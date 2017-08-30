@@ -2,6 +2,7 @@
 <cfinvoke component="LookUp" method = "getProgramYearTerms" returnvariable="terms"></cfinvoke>
 <cfinvoke component="ProgramBilling" method="groupBySchoolDistrictAndProgram"  returnvariable="qryData">
 	<cfinvokeargument name="term" value="#terms.CurrentTerm#">
+	<cfinvokeargument name="billingType" value="#url.type#">
 </cfinvoke>
 <cfinvoke component="LookUp" method="getPrograms" returnvariable="programs"></cfinvoke>
 <cfinvoke component="LookUp" method="getSchools" returnvariable="schools"></cfinvoke>
@@ -102,8 +103,11 @@
 		sessionStorage.setItem('program', program);
 		sessionStorage.setItem('term', <cfoutput>#terms.CurrentTerm#</cfoutput>);
 		var data = $.param({data:encodeURIComponent(JSON.stringify(sessionStorage))});
+		var url = 'BillingReport.cfm';
+		if(program = 'YtC Attendance')
+			url = 'AttendanceReport.cfm'
   		$.post("SaveSession.cfm", data, function(){
-	  		window.location='BillingReport.cfm'
+	  		window.location=url;
   		});
 	}
 
