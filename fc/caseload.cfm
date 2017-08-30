@@ -96,18 +96,12 @@ select {
 	var idx_statusinternal = 5;
 	var idx_coach = 6;
 	var idx_lastContactDate = 7;
-	var idx_stu_name = 1;
-	var idx_bannerGNumber = 2;
-	var idx_cohort = 3;
-	var idx_ASAP_status = 4;
-	var idx_statusinternal = 5;
-	var idx_coach = 6;
-	var idx_maxterm = 7;
-	var idx_lastContactDate = 8;
 	//these are all hidden
-	var idx_pidm = 9;
-	var idx_in_contract = 10;
-	var idx_pcc_email = 11;
+	var idx_pidm = 8;
+	var idx_in_contract = 9;
+	var idx_pcc_email = 10;
+	var idx_maxterm = 11;
+
 	var idx_flagged = 12;
 
 	$(document).ready(function() {

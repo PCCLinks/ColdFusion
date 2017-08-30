@@ -51,6 +51,8 @@ function buildChart(type, labels, data, ctx, bgcolors, bcolors, ymax, title){
 } //function buildChart
 </script>
 
+
+<!---
 <cfquery name="futureConnectStatus">
 	select case when CAST(right(cohort,1) as char(50)) = '1' then 'Portland'
 				when CAST(right(cohort,1) as char(50)) = '2' then 'Beaverton'
@@ -144,7 +146,20 @@ function buildChart(type, labels, data, ctx, bgcolors, bcolors, ymax, title){
 
 	ORDER BY 1,2;
 </cfquery>
+--->
 
+<cfquery name="fcTotal" >
+  SELECT count(*) as TotalNumberStudents
+   FROM futureConnect;
+</cfquery>
+
+<cfquery  name="fcFundingSource">
+  SELECT fundedBy
+  , count(*) as NumberStudents
+  FROM futureConnect
+  WHERE FundedBy IN ('City of Portland','City of Beaverton', 'City of Hillsboro', 'State')
+  GROUP BY fundedBy
+ </cfquery>
 
 <!--- Main Title --->
 <cfoutput query="fcTotal">
@@ -158,36 +173,47 @@ function buildChart(type, labels, data, ctx, bgcolors, bcolors, ymax, title){
 </div>
 </cfoutput>
 
+
+
 <!--- Loop One Cell Per fund source --->
 <cfloop query="fcFundingSource">
 	<cfoutput>
 		<div class="small-3 columns">
 			<!--- row count --->
 			<div class="row" style="text-align: center">
-				<span style="font-size:2.25rem;line-height:3rem;;font-weight:300;">#fund_source#</span><br/>
-				<span style="font-size:1.5rem;line-height:1.5rem;">#NumberStudents# students</span><br/>
+				<span style="font-size:2.25rem;line-height:3rem;;font-weight:300;">#fcFundingSource.fundedBy#</span><br/>
+				<span style="font-size:1.5rem;line-height:1.5rem;">#fcFundingSource.NumberStudents# students</span><br/>
 			</div> <!-- end row  count -->
 			<br class="clear">
 			<br class="clear">
 			<!--- row bar chart --->
 			<div class="row">
 
-				<cfquery dbtype="query" name="fcOutcomeBySource">
-					SELECT statusInternal
-						, Outcome
-				    FROM fcOutcome
-			    	WHERE fund_source = <cfqueryparam value="#fund_source#">;
-
+				<cfquery name="fcOutcomeBySource" >
+			   	select fc1.FundedBy
+				, CASE WHEN statusInternal = 'A' THEN 'ACTIVE'
+					WHEN statusInternal = 'B' THEN 'BREAK'
+					WHEN statusInternal = 'C' THEN 'COMPLETE'
+					WHEN statusInternal = 'X' THEN 'EXIT'
+					ELSE 'OTHER' END AS statusInternal
+			    ,count(*)/(select count(*) from futureConnect fc2 where fc2.fundedBy = fc1.FundedBy) outcomeByFund
+				FROM futureConnect fc1
+			    WHERE fundedBy = <cfqueryparam value="#fcFundingSource.fundedBy#">
+				GROUP BY FundedBy, CASE WHEN statusInternal = 'A' THEN 'ACTIVE'
+					WHEN statusInternal = 'B' THEN 'BREAK'
+					WHEN statusInternal = 'C' THEN 'COMPLETE'
+					WHEN statusInternal = 'X' THEN 'EXIT'
+					ELSE 'OTHER' END
 				</cfquery>
 				<!--- Create Unique Id Per Chart --->
-				<cfset graphId= '#fund_source#' & "barchart">
+				<cfset graphId= '#replace(fcFundingSource.fundedBy,' ','','all')#' & "barchart">
 				<div id="wrapper" style="position: relative; height: 25vh">
 					<canvas id="#graphId#"></canvas>
 				</div>
 				<!--- Build chart with Status as labels, and Outcome as data --->
 				<script>
 					buildChart('bar',['#ValueList(fcOutcomeBySource.StatusInternal, "','")#']
-							,[#ValueList(fcOutcomeBySource.Outcome,",")#]
+							,[#ValueList(fcOutcomeBySource.outcomeByFund,",")#]
 							,#graphId#
 							, ['rgba(190, 190, 190, 1.0)',
 			                'rgba(190, 190, 190, 1.0)',
@@ -207,23 +233,25 @@ function buildChart(type, labels, data, ctx, bgcolors, bcolors, ymax, title){
 			<!--- row line chart --->
 			<div class="row">
 
-			<cfquery dbtype="query" name="fcOutcomeTrend">
-					SELECT Cohort
-						, Outcome
-				    FROM fcOutcomeByCohort
-			    	WHERE fund_source = <cfqueryparam value="#fund_source#">;
+			<cfquery name="fcOutcomeTrend">
+			   	select fc1.FundedBy
+			    , Cohort
+				, sum(case when statusInternal <> 'X' then 1 else 0 end) / count(*) as nonExits
+				FROM futureConnect fc1
+				WHERE fundedBy = <cfqueryparam value="#fcFundingSource.fundedBy#">
+				group by fundedBy, Cohort;
 
 			</cfquery>
 
 			<!--- Create Unique Id Per Chart --->
-			<cfset graphId= '#fund_source#' & "trendchart">
+			<cfset graphId= '#replace(fcFundingSource.fundedBy,' ','','all')#' & "trendchart">
 			<div id="wrapper" style="position: relative; height: 25vh">
 				<canvas id="#graphId#"></canvas>
 			</div>
 			<!--- Build chart with Status as labels, and Outcome as data --->
 			<script>
 				buildChart('line',['#ValueList(fcOutcomeTrend.Cohort, "','")#']
-					,[#ValueList(fcOutcomeTrend.Outcome,",")#]
+					,[#ValueList(fcOutcomeTrend.nonExits,",")#]
 					,#graphId#
 					,'rgba(144, 103, 167, 1.0)'
 					,'lightgrey', 1.0, "Retention Trend");
@@ -232,6 +260,7 @@ function buildChart(type, labels, data, ctx, bgcolors, bcolors, ymax, title){
 		</div> <!-- end column for fund source -->
 	</cfoutput> <!---- End Output of fcFundingSource --->
 </cfloop> <!--- End Loop fcFundingSource --->
+
 
 <!--- footer --->
 <cfinclude template="includes/footer.cfm" />
