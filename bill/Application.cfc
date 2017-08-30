@@ -15,7 +15,7 @@
         </CFLOCK>
     </cffunction>
 
-	<!---<cffunction name="onError">
+	<cffunction name="onError">
 	    <cfargument name="exception" >
 	    <cfargument name="thrownError" default="">
 	    <cfargument name="eventname" type="string" >
@@ -94,7 +94,7 @@
 			<br>SCRIPT NAME<cfdump var="#CGI.SCRIPT_NAME#"><br>
 			<cfdump var="#errortext#">
 		</cfif>--->
-	</cffunction>--->
+	</cffunction>
 	<cffunction name="logEntry">
 		<cfargument name="label" default="">
 		<cfargument name="value" required=true>

@@ -3,7 +3,10 @@
 		<cfinclude template="includes/header.cfm">
 	</cfif>
 </cfif>--->
+
 <cfinclude template="includes/header.cfm">
+
+
 <cfset error = "Undefined">
 <cfif StructKeyExists(Session, "Error")>
 	<cfset error = Session.Error>
