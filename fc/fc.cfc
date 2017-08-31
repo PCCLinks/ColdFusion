@@ -1,4 +1,5 @@
 <cfcomponent displayname="FC">
+	<cfset logFileName = "pcclinks_fc_#DateFormat(Now(),'yyyymmdd_hhmmss')#" >
 <!------- NOTES -------
 Queries with bannerpcclinks datasource are views from the Banner system
 Banner views have an ATTS attribute that identify what program a student is in.  Since overtime, a student may be in more than one program
@@ -42,7 +43,7 @@ all the banner queries need to force a distinct by PIDM
 		<cfset firstYearEndingTerm = (VAL(LEFT(arguments.cohort,4))+1) & '03' >
 		<!--- note that  for Oracle, select "*" did not work in this query
 		  unlike MySql --->
-		<cfquery datasource="bannerpcclinks" name="coursesByStudent" cachedWithin="#createTimeSpan( 0, 1, 0, 0 )#">
+		<cfquery datasource="bannerpcclinks" name="coursesByStudent" cachedWithin="#createTimeSpan( 0, 1, 0, 0 )#" >
 			SELECT distinct PIDM, STU_ID, TERM, CRN, SUBJ, CRSE, TITLE, CREDITS, GRADE, PASSED
 			, case when (TERM >= <cfqueryparam value="#firstYearBeginningTerm#">
 							and TERM <= <cfqueryparam value="#firstYearEndingTerm#"> )
@@ -78,31 +79,30 @@ all the banner queries need to force a distinct by PIDM
 		<cfquery dbtype="query" name="firstYearMetrics" cachedWithin="#createTimeSpan( 0, 1, 0, 0 )#">
 			SELECT BannerCourses.STU_ID
 				, SUM(BannerCourses.passedCredits) AS firstYearCredits
-				, SUM(BannerCourses.pointsForGPA)/SUM(BannerCourses.creditsForGPA) as firstYearGPA
+				, CAST(SUM(BannerCourses.pointsForGPA)/SUM(BannerCourses.creditsForGPA) as varchar) as firstYearGPA
 			FROM BannerCourses
 			WHERE inFirstYear = 1
 				and PIDM = <cfqueryparam value="#arguments.pidm#">
 			GROUP BY STU_ID
 			HAVING SUM(BannerCourses.creditsForGPA) > 0
-			UNION
+			<!---UNION
 			SELECT BannerCourses.STU_ID
 				, 0 AS firstYearCredits
-				, 0 as firstYearGPA
+				,'' as firstYearGPA
 			FROM BannerCourses
 			WHERE inFirstYear = 1
 				and PIDM = <cfqueryparam value="#arguments.pidm#">
 			GROUP BY STU_ID
-			HAVING SUM(BannerCourses.creditsForGPA) = 0
+			HAVING SUM(BannerCourses.creditsForGPA) = 0--->
 			</cfquery>
-		<cf>
 		<cfreturn firstYearMetrics>
 	</cffunction>
-
 	<cffunction name="getMaxTermData" returntype="query" >
 		<cfargument name="bannerGNumber" type="string" required="no" default="">
 		<cfargument name="bannerPop" type="query" required="yes" default="">
+		<cfset logEntry(value="starting getMaxTermData")>
 		<!--- Banner Prod is having performance issues unless it is done that way - might be able to change back in the future --->
-		<cfquery name="maxData" datasource="bannerpcclinks" cachedWithin="#createTimeSpan( 0, 1, 0, 0 )#">
+		<!---<cfquery name="maxData" datasource="bannerpcclinks" cachedWithin="#createTimeSpan( 0, 1, 0, 0 )#">
 			SELECT STU_ID, MAX(TERM) AS maxTerm
 			FROM swvlinks_term
 			<cfif len(#arguments.bannerGNumber#) gt 0>
@@ -110,6 +110,7 @@ all the banner queries need to force a distinct by PIDM
 			</cfif>
 			GROUP BY STU_ID
 		</cfquery>
+		<cfset logEntry(value="finished maxData")>
 		<cfquery name="termData" datasource="bannerpcclinks" cachedWithin="#createTimeSpan( 0, 1, 0, 0 )#">
 			SELECT distinct swvlinks_term.STU_ID
 				, TERM
@@ -121,8 +122,34 @@ all the banner queries need to force a distinct by PIDM
 			WHERE STU_ID = <cfqueryparam  value="#arguments.bannerGNumber#">
 				AND TERM = <cfqueryparam value="#maxData.maxTerm#">
 			</cfif>
+		</cfquery>--->
+		<cfquery name="termData" datasource="bannerpcclinks" cachedWithin="#createTimeSpan( 0, 1, 0, 0 )#">
+		   SELECT distinct swvlinks_term.STU_ID
+				, TERM
+				, P_DEGREE
+				, to_char(EFC,'$99,999') as EFC
+				, coalesce(OUTGOING_SAP, INCOMING_SAP) AS ASAP_STATUS
+                ,rank() over (partition by stu_id order by term desc) as rnk
+			FROM swvlinks_term
 		</cfquery>
+		<cfset logEntry(value="finished termData")>
 		<cfquery name="MaxTermDataUnion" dbType="query" cachedWithin="#createTimeSpan( 0, 1, 0, 0 )#">
+			SELECT termData.STU_ID
+				, termData.TERM
+				, termData.P_DEGREE
+				, termData.EFC
+				, termData.ASAP_STATUS
+			FROM termData
+			WHERE rnk = 1
+			UNION
+			SELECT STU_ID
+				, ''
+				, ''
+				, ''
+				, ''
+			FROM bannerPop
+		</cfquery>
+		<!---<cfquery name="MaxTermDataUnion" dbType="query" cachedWithin="#createTimeSpan( 0, 1, 0, 0 )#">
 			SELECT termData.STU_ID
 				, termData.TERM
 				, termData.P_DEGREE
@@ -138,7 +165,8 @@ all the banner queries need to force a distinct by PIDM
 				, ''
 				, ''
 			FROM bannerPop
-		</cfquery>
+		</cfquery>--->
+		<cfset logEntry(value="finished MaxTermDataUnion")>
 		<cfquery name="MaxTermData" dbType="query" cachedWithin="#createTimeSpan( 0, 1, 0, 0 )#">
 			SELECT STU_ID
 				, MAX(TERM) Term
@@ -148,6 +176,7 @@ all the banner queries need to force a distinct by PIDM
 			FROM MaxTermDataUnion
 			GROUP BY STU_ID
 		</cfquery>
+		<cfset logEntry(value="finished MaxTermData")>
 		<!---<cfquery name="MaxTermData" datasource="bannerpcclinks" cachedWithin="#createTimeSpan( 0, 1, 0, 0 )#">
 			SELECT distinct swvlinks_term.STU_ID
 				, TERM
@@ -412,6 +441,7 @@ all the banner queries need to force a distinct by PIDM
 		<!---------------------------------->
 		<!------- Banner Person Data ------->
 		<!---------------------------------->
+		<cfset logEntry(value="starting getCaseload")>
 		<cfquery datasource="bannerpcclinks" name="BannerPopulation" cachedWithin="#createTimeSpan( 0, 1, 0, 0 )#">
 			SELECT distinct PIDM
 			, STU_ID
@@ -437,6 +467,7 @@ all the banner queries need to force a distinct by PIDM
 				and PIDM = <cfqueryparam  value="#arguments.pidm#">
 			</cfif>
 		</cfquery>
+		<cfset logEntry(value="finished BannerPopulation")>
 		<!---- end Banner Person Data ---->
 
 		<!---------------------------------->
@@ -495,13 +526,12 @@ all the banner queries need to force a distinct by PIDM
 					where noteAddedBy != 'system'
 					group by contactID) lastContact
 						on futureConnect.contactID = lastContact.contactID
-
 			WHERE 1=1
 			<cfif len(#arguments.pidm#) gt 0>
-				and bannerGNumber = <cfqueryparam  value="#BannerPopulation.stu_id#">
+				and futureConnect.bannerGNumber = <cfqueryparam  value="#BannerPopulation.stu_id#">
 			</cfif>
 		</cfquery>
-
+		<cfset logEntry(value="finished fcTbl")>
 
 		<!--- if getting a single person, store future connect data in session to use when comparing on update --->
 		<cfif len(arguments.pidm) gt 0>
@@ -517,12 +547,14 @@ all the banner queries need to force a distinct by PIDM
 			FROM fcTbl, BannerPopulation
 			WHERE fcTbl.bannerGNumber = BannerPopulation.STU_ID
 		</cfquery>
+		<cfset logEntry(value="finished futureConnect_bannerPerson")>
 
 		<cfif len(#arguments.pidm#) gt 0>
 			<cfset maxTermData = getMaxTermData(bannerGNumber=#BannerPopulation.stu_id#, bannerPop = #BannerPopulation#)>
 		<cfelse>
 			<cfset maxTermData = getMaxTermData(bannerPop = #BannerPopulation#)>
 		</cfif>
+		<cfset logEntry(value="finished maxTermData")>
 
 		<!--- merge in maxTermData --->
 		<cfquery dbtype="query" name="caseload_banner" >
@@ -569,6 +601,7 @@ all the banner queries need to force a distinct by PIDM
 				and futureConnect_bannerPerson.PIDM = <cfqueryparam  value="#arguments.pidm#">
 			</cfif>
 		</cfquery>
+		<cfset logEntry(value="finished caseload_banner")>
 
 		<cfreturn caseload_banner>--->
 	</cffunction>
@@ -578,12 +611,8 @@ all the banner queries need to force a distinct by PIDM
 
 		<cfquery dbtype="query" name="qryData" >
 			select contactID, stu_name, bannerGNumber, Cohort
-				, ASAP_status, statusinternal, Coach, LastContactDate, pidm
-				, in_contract, pcc_email, maxterm, flagged
-<<<<<<< HEAD
-
-=======
->>>>>>> refs/remotes/origin/master
+				, ASAP_status, statusinternal, Coach, maxterm, LastContactDate, pidm
+				, in_contract, pcc_email, flagged
 			from caseloaddata
 		</cfquery>
 		<cfreturn qryData>
@@ -673,6 +702,30 @@ all the banner queries need to force a distinct by PIDM
 			SET flagged = <cfqueryparam value="#arguments.flagged#">
 			WHERE contactid = <cfqueryparam value="#arguments.contactid#">
 		</cfquery>
+	</cffunction>
+
+	<cffunction name="logDump" access="remote">
+		<cfargument name="label" default="">
+		<cfargument name="value" required=true>
+		<cfargument name="level" default=0>
+		<cfsavecontent variable="logtext">
+			<cfdump var="#arguments.value#" format="text">
+		</cfsavecontent>
+		<cfset logEntry(label=arguments.label, value=logtext, level=arguments.level)>
+	</cffunction>
+	<cffunction name="logEntry" access="remote">
+		<cfargument name="label" default="">
+		<cfargument name="value" required=true>
+		<cfargument name="level" default=0>
+		<cfset debuglevel = 0>
+		<cfif debuglevel GTE arguments.level>
+			<cfif len(label) GT 0>
+				<cfset logtext= arguments.label & ":" & arguments.value>
+			<cfelse>
+				<cfset logtext = value>
+			</cfif>
+			<cflog file="#logFileName#" text="#logtext#">
+		</cfif>
 	</cffunction>
 
 </cfcomponent>

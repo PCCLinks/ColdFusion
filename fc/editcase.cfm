@@ -91,6 +91,7 @@
 			>
 			<!-- end Parental status select -->
 
+			<!---  REMOVED FOR NOW
 			<!-- Household Information checkboxes -->
 			<!-- ajax jquery refreshed -->
 			<div id="householdInfo">
@@ -102,6 +103,7 @@
 				contactid = "#caseload_banner.contactID#"
 			>
 			</div>
+			--->
 
 			<!-- Living Situation checkboxes -->
 			<!-- ajax jquery refreshes div -->
@@ -200,7 +202,11 @@
 			<label>
 				Degree Declared
 				<cfoutput>
-					<input type="text" name="P_DEGREE" readonly value="#caseload_banner.P_DEGREE#" />
+					<cfset Variables.p_degree = #caseload_banner.P_DEGREE# >
+					<cfif #caseload_banner.P_DEGREE# EQ "000000" >
+						<cfset Variables.p_degree = "Undeclared">
+					</cfif>
+					<input type="text" name="P_DEGREE" readonly value="#Variables.p_degree#" />
 				</cfoutput>
 			</label>
 			<label>
@@ -268,7 +274,12 @@
 			<label>
 				FirstYearGPA
 				<cfoutput>
-					<input type="text" name="firstYearGPA" readonly value="#DecimalFormat(firstYearMetrics.firstYearGPA)#" />
+					<cfset Variables.firstYearGPA = #firstYearMetrics.firstYearGPA#>
+					<!--- set to rounded, if there is a value --->
+					<cfif LEN(Variables.firstYearGPA)>
+						<cfset Variables.firstYearGPA = #DecimalFormat(firstYearMetrics.firstYearGPA)#>
+					</cfif>
+					<input type="text" name="firstYearGPA" readonly value="#Variables.firstYearGPA#" />
 				</cfoutput>
 			</label>
 

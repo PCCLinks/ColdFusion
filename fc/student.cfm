@@ -9,9 +9,8 @@
 </cfif>
 <cfparam name="studentparam_pidm" default="#session.pidm#">
 <cfparam name="studentparam_maxterm" default="#session.maxterm#">
-<cfdump var="#session#">
 <cfinvoke component="fc" method="getCaseload" pidm="#studentparam_pidm#" returnvariable="caseload_banner"></cfinvoke>
-<cfdump var = "#caseload_banner#">
+
 <cfparam name="studentparam_cohort" default="#caseload_banner.cohort#" >
 <cfparam name="studentparam_bannerGNumber" default="#caseload_banner.bannerGNumber#">
 
