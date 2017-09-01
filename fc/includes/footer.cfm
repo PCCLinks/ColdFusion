@@ -43,5 +43,6 @@ function handleAjaxError(jqXHR, exception, thrownError){
 <!-- end template footer -->
 
 <!-- end body and html tags -->
+
 </body>
 </html>

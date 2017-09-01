@@ -364,8 +364,8 @@ all the banner queries need to force a distinct by PIDM
 				</cfloop> <!---existing entries --->
 				<cfif exists EQ false>
 					<cfquery name="insertEntry">
-						insert into householdContact(contactID, householdID, tableName)
-						values(#contactID#, #checkedID#, 'futureConnect')
+						insert into householdContact(contactID, householdID, tableName, createdBy, dateCreated, lastUpdatedBy, dateLastUpdated))
+						values(#contactID#, #checkedID#, 'futureConnect', <cfqueryparam value=#Session.username#>, current_timestamp, <cfqueryparam value=#Session.username#>, current_timestamp)
 					</cfquery>
 				</cfif>
 			</cfif> <!--- if enrichment field --->
@@ -416,8 +416,8 @@ all the banner queries need to force a distinct by PIDM
 				</cfloop> <!---existing entries --->
 				<cfif exists EQ false>
 					<cfquery name="insertEntry">
-						insert into livingSituationContact(contactID, livingSituationID, tableName)
-						values(#contactID#, #checkedID#, 'futureConnect')
+						insert into livingSituationContact(contactID, livingSituationID, tableName, createdBy, dateCreated, lastUpdatedBy, dateLastUpdated)
+						values(#contactID#, #checkedID#, 'futureConnect', <cfqueryparam value=#Session.username#>, current_timestamp, <cfqueryparam value=#Session.username#>, current_timestamp)
 					</cfquery>
 				</cfif>
 			</cfif> <!--- if enrichment field --->
@@ -657,7 +657,7 @@ all the banner queries need to force a distinct by PIDM
 				on ep.enrichmentProgramID = epc.enrichmentProgramID
 					and tableName = <cfqueryparam value="#tablename#">
 					and epc.contactID = <cfqueryparam value="#arguments.contactID#">
-		where epc.activeFlag = 1
+		where ep.activeFlag = 1
 	</cfquery>
 		<cfreturn programs>
 	</cffunction>
