@@ -105,7 +105,7 @@ function buildChart(type, labels, data, ctx, bgcolors, bcolors, yAxesMax, yAxesS
 	</thead>
 	<tbody>
 	<cfoutput query="coursesByStudent">
-		<tr <cfif PASSED eq "N"> class="highlight" </cfif> 	>
+		<tr <cfif PASSED eq "N" and LEN(GRADE) > class="highlight" </cfif> 	>
 			<td>#coursesByStudent.TERM#</td>
 			<td>#coursesByStudent.CRSE#</td>
 			<td>#coursesByStudent.SUBJ#</td>

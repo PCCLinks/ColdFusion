@@ -282,7 +282,7 @@ all the banner queries need to force a distinct by PIDM
 		<cfif len(trim(arguments.data.notes)) GT 0>
 			<cfset insertNote(contactID="#arguments.data.contactID#", noteText="#trim(arguments.data.notes)#")>
 		</cfif>
-		<cfset saveEnrichmentProgramData(data=arguments.data, contactid=#trim(arguments.data.contactID)#) >
+		<cfset saveEnrichmentProgramData(data=arguments.data) >
 		<cfset savehouseholdData(data=arguments.data) >
 		<cfset saveLivingSituationData(data=arguments.data) >
 		<cfheader statusCode=200 statustext="success" >
@@ -290,140 +290,87 @@ all the banner queries need to force a distinct by PIDM
 
 	<cffunction name="saveEnrichmentProgramData" access="private">
 		<cfargument name="data" required="true">
-		<cfargument name="contactID" required="true">
-		<cfset checkedIds = mscbCFC.getCheckedCollection(data=data, idFieldName="enrichmentProgramId")>
-		<cfquery name="existingEntries">
-			SELECT enrichmentProgramId Id
+		<cfset Variables.contactID = trim(arguments.data.contactID)>
+		<cfset Variables.checkedIds = mscbCFC.getCheckedCollection(data=arguments.data, idFieldName="enrichmentProgramId")>
+		<cfquery name="existingLookupEntries">
+			SELECT enrichmentProgramId LookUpTableId
 			FROM enrichmentProgramContact
-			WHERE contactID = <cfqueryparam value="#contactID#">
+			WHERE contactID = <cfqueryparam value="#Variables.contactID#">
 				AND tableName = 'futureConnect'
-			ORDER BY enrichmentProgramId
 		</cfquery>
-		<cfset idsToDelete = mscbCFC.getValuesToDelete(existingEntries, checkedIds)>
-		<cflog file="pcclinks_fc" text="idsToDelete:contactID:#arguments.contactID#">
-		<cflog file="pcclinks_fc" text="idsToDelete:#idsToDelete#">
+		<cfset lookupTableIdsToDelete = mscbCFC.getValuesToDelete(existingLookupEntries, Variables.checkedIds)>
+		<cfset logEntry(label="lookupTableIdsToDelete", value="#lookupTableIdsToDelete#")>
 		<cfquery name="deleteEntry">
-			UPDATE enrichmentProgramContact
-			SET activeFlag = 0,
-				lastUpdatedBy = <cfqueryparam value=#Session.username#>,
-				dateLastUpdated = current_timestamp
-			WHERE enrichmentProgramID IN (<cfqueryparam value="#idsToDelete#" cfsqltype="CF_SQL_INTEGER" list="yes" >)
-				and contactid = <cfqueryparam value="#contactId#">
+			DELETE FROM enrichmentProgramContact
+			WHERE enrichmentProgramID IN (<cfqueryparam value="#lookupTableIdsToDelete#" cfsqltype="CF_SQL_INTEGER" list="yes" >)
+				and contactid = <cfqueryparam value="#Variables.contactId#">
 		</cfquery>
-		<cfset idsToInsert = mscbCFC.getValuesToInsert(existingEntries, checkedIds)>
-		<cflog file="pcclinks_fc" text="idsToInsert:#idsToInsert#">
+		<cfset lookupTableIdsToInsert = mscbCFC.getValuesToInsert(existingLookupEntries, Variables.checkedIds)>
+		<cfset logEntry(label="lookupTableIdsToInsert", value="#lookupTableIdsToInsert#")>
 		<cfquery name="insertEntry">
 			insert into enrichmentProgramContact(contactID, enrichmentProgramID, tableName, createdBy, dateCreated, lastUpdatedBy, dateLastUpdated)
-			select <cfqueryparam value=#contactID#>, enrichmentProgramID, 'futureConnect', <cfqueryparam value=#Session.username#>, current_timestamp, <cfqueryparam value=#Session.username#>, current_timestamp
+			select <cfqueryparam value="#Variables.contactID#">, enrichmentProgramID, 'futureConnect', '#Session.username#', current_timestamp, '#Session.username#', current_timestamp
 			from enrichmentProgram
-			where enrichmentProgramID in (<cfqueryparam value="#idsToInsert#" cfsqltype="CF_SQL_INTEGER" list="yes">)
+			where enrichmentProgramID in (<cfqueryparam value="#lookupTableIdsToInsert#" cfsqltype="CF_SQL_INTEGER" list="yes">)
 		</cfquery>
 	</cffunction>
 
-	<cffunction name="savehouseholdData" access="private">
+	<cffunction name="saveHouseholdData" access="private">
 		<cfargument name="data" required="true">
-		<cfset contactID = "#trim(arguments.data.contactid)#">
-		<cfset debug=false>
-		<cfquery name="existingEntries">
-			SELECT *
+		<cfset Variables.contactID = trim(arguments.data.contactID)>
+		<cfset Variables.checkedIds = mscbCFC.getCheckedCollection(data=arguments.data, idFieldName="householdID")>
+		<cfquery name="existingLookupEntries">
+			SELECT householdID LookUpTableId
 			FROM householdContact
-			WHERE contactID = <cfqueryparam value="#contactID#">
+			WHERE contactID = <cfqueryparam value="#Variables.contactID#">
 				AND tableName = 'futureConnect'
 		</cfquery>
-		<cfloop query="existingEntries">
-			<cfset exists=false>
-			<cfloop collection="#arguments.data#" item="key">
-				<cfif debug>key left,11:<cfdump var="#left(key,11)#"><br></cfif>
-				<cfif left(key,11) EQ "householdID">
-					<cfset checkedID = RIGHT(key,len(key)-11)>
-					<cfif debug>checkedid=<cfdump var="#checkedID#"><br></cfif>
-					<cfif debug>existingEntries=<cfdump var="#existingEntries.householdID#"><br></cfif>
-					<cfif existingEntries.householdID EQ checkedID>
-						<cfset exists=true>
-						<cfif debug>found<br></cfif>
-					</cfif> <!--- matches a value that is checked --->
-				</cfif> <!--- if enrichment field --->
-			</cfloop> <!--- form values --->
-			<!--- no longer checked, delete it --->
-			<cfif exists EQ false>
-				<cfif debug>delete entry:<cfdump var="#existingEntries.householdContactID#"></cfif>
-				<cfquery name="deleteEntry">
-					delete from householdContact
-					where householdContactID = <cfqueryparam value="#existingEntries.householdContactID#">
-				</cfquery>
-			</cfif>
-		</cfloop>
-		<cfloop collection="#arguments.data#" item="key">
-			<cfif left(key,11) EQ "householdID">
-				<cfset checkedID = RIGHT(key,len(key)-11)>
-				<cfset exists=false>
-				<cfloop query="existingEntries">
-					<cfif existingEntries.householdID EQ checkedID>
-						<cfset exists=true>
-					</cfif> <!--- matches a value that is checked --->
-				</cfloop> <!---existing entries --->
-				<cfif exists EQ false>
-					<cfquery name="insertEntry">
-						insert into householdContact(contactID, householdID, tableName, createdBy, dateCreated, lastUpdatedBy, dateLastUpdated))
-						values(#contactID#, #checkedID#, 'futureConnect', <cfqueryparam value=#Session.username#>, current_timestamp, <cfqueryparam value=#Session.username#>, current_timestamp)
-					</cfquery>
-				</cfif>
-			</cfif> <!--- if enrichment field --->
-		</cfloop> <!--- form values --->
+		<cfset lookupTableIdsToDelete = mscbCFC.getValuesToDelete(existingLookupEntries, Variables.checkedIds)>
+		<cfset logEntry(label="lookupTableIdsToDelete", value="#lookupTableIdsToDelete#")>
+		<cfquery name="deleteEntry">
+			DELETE from householdContact
+			WHERE householdID IN (<cfqueryparam value="#lookupTableIdsToDelete#" cfsqltype="CF_SQL_INTEGER" list="yes" >)
+				and contactid = <cfqueryparam value="#Variables.contactId#">
+		</cfquery>
+		<cfset lookupTableIdsToInsert = mscbCFC.getValuesToInsert(existingLookupEntries, Variables.checkedIds)>
+		<cfset logEntry(label="lookupTableIdsToInsert", value="#lookupTableIdsToInsert#")>
+		<cfquery name="insertEntry">
+			insert into householdContact(contactID, householdID, tableName, createdBy, dateCreated, lastUpdatedBy, dateLastUpdated)
+			select <cfqueryparam value="#Variables.contactId#">, householdID, 'futureConnect', '#Session.username#', current_timestamp, '#Session.username#', current_timestamp
+			from household
+			where householdID in (<cfqueryparam value="#lookupTableIdsToInsert#" cfsqltype="CF_SQL_INTEGER" list="yes">)
+		</cfquery>
 	</cffunction>
 
-	<cffunction name="savelivingSituationData" access="private">
+	<cffunction name="saveLivingSituationData" access="private">
 		<cfargument name="data" required="true">
-		<cfset contactID = "#trim(arguments.data.contactid)#">
-		<cfset debug=false>
-		<cfquery name="existingEntries">
-			SELECT *
+		<cfset Variables.contactID = trim(arguments.data.contactID)>
+		<cfset Variables.checkedIds = mscbCFC.getCheckedCollection(data=arguments.data, idFieldName="livingSituationId")>
+		<cfset logEntry(value = "Starting saveLivingSituationData")>
+		<cfset logDump(label="arguments", value="#arguments#")>
+		<cfquery name="existingLookupEntries">
+			SELECT livingSituationId LookUpTableId
 			FROM livingSituationContact
-			WHERE contactID = <cfqueryparam value="#contactID#">
+			WHERE contactID = <cfqueryparam value="#Variables.contactId#">
 				AND tableName = 'futureConnect'
 		</cfquery>
-		<cfloop query="existingEntries">
-			<cfset exists=false>
-			<cfloop collection="#arguments.data#" item="key">
-				<cfif debug>key left,11:<cfdump var="#left(key,11)#"><br></cfif>
-				<cfif left(key,17) EQ "livingSituationID">
-					<cfset checkedID = RIGHT(key,len(key)-17)>
-					<cfif debug>checkedid=<cfdump var="#checkedID#"><br></cfif>
-					<cfif debug>existingEntries=<cfdump var="#existingEntries.livingSituationID#"><br></cfif>
-					<cfif existingEntries.livingSituationID EQ checkedID>
-						<cfset exists=true>
-						<cfif debug>found<br></cfif>
-					</cfif> <!--- matches a value that is checked --->
-				</cfif> <!--- if enrichment field --->
-			</cfloop> <!--- form values --->
-			<!--- no longer checked, delete it --->
-			<cfif exists EQ false>
-				<cfif debug>delete entry:<cfdump var="#existingEntries.livingSituationContactID#"></cfif>
-				<cfquery name="deleteEntry">
-					delete from livingSituationContact
-					where livingSituationContactID = <cfqueryparam value="#existingEntries.livingSituationContactID#">
-				</cfquery>
-			</cfif>
-		</cfloop>
-		<cfloop collection="#arguments.data#" item="key">
-			<cfif left(key,17) EQ "livingSituationID">
-				<cfset checkedID = RIGHT(key,len(key)-17)>
-				<cfset exists=false>
-				<cfloop query="existingEntries">
-					<cfif existingEntries.livingSituationID EQ checkedID>
-						<cfset exists=true>
-					</cfif> <!--- matches a value that is checked --->
-				</cfloop> <!---existing entries --->
-				<cfif exists EQ false>
-					<cfquery name="insertEntry">
-						insert into livingSituationContact(contactID, livingSituationID, tableName, createdBy, dateCreated, lastUpdatedBy, dateLastUpdated)
-						values(#contactID#, #checkedID#, 'futureConnect', <cfqueryparam value=#Session.username#>, current_timestamp, <cfqueryparam value=#Session.username#>, current_timestamp)
-					</cfquery>
-				</cfif>
-			</cfif> <!--- if enrichment field --->
-		</cfloop> <!--- form values --->
+		<cfset logDump(label="existingLookupEntries", value=#existingLookupEntries#)>
+		<cfset lookupTableIdsToDelete = mscbCFC.getValuesToDelete(existingLookupEntries, Variables.checkedIds)>
+		<cfset logEntry(label="lookupTableIdsToDelete", value="#lookupTableIdsToDelete#")>
+		<cfquery name="deleteEntry">
+			DELETE from livingSituationContact
+			WHERE livingSituationID IN (<cfqueryparam value="#lookupTableIdsToDelete#" cfsqltype="CF_SQL_INTEGER" list="yes" >)
+				and contactID = <cfqueryparam value="#Variables.contactId#">
+		</cfquery>
+		<cfset lookupTableIdsToInsert = mscbCFC.getValuesToInsert(existingLookupEntries, Variables.checkedIds)>
+		<cfset logEntry(label="lookupTableIdsToInsert", value="#lookupTableIdsToInsert#")>
+		<cfquery name="insertEntry">
+			insert into livingSituationContact(contactID, livingSituationId, tableName, createdBy, dateCreated, lastUpdatedBy, dateLastUpdated)
+			select <cfqueryparam value="#Variables.contactId#">, livingSituationId, 'futureConnect', '#Session.username#', current_timestamp, '#Session.username#', current_timestamp
+			from livingSituation
+			where livingSituationID in (<cfqueryparam value="#lookupTableIdsToInsert#" cfsqltype="CF_SQL_INTEGER" list="yes">)
+		</cfquery>
 	</cffunction>
-
 
 	<cffunction name="insertNote" access="private">
 		<cfargument name="contactID" required="true">
@@ -504,11 +451,11 @@ all the banner queries need to force a distinct by PIDM
 				when CAST(right(cohort,1) as char(50)) = '3' then 'Hillsboro'
 				else 'State' end as fund_source
 
-			, case when CAST(right(cohort,1) as char(50)) = '1'
-				and CURDATE() >= STR_TO_DATE(CONCAT(9, '/',1,'/',(convert(CAST(left(cohort,4) as char(50)), unsigned integer)+3) ),'%m/%d/%YY')
+			, case when fundedBy = 'City of Portland'
+				and CURDATE() >= STR_TO_DATE(CONCAT(9, '/',1,'/',(cohort + 3) ),'%m/%d/%YY')
 				then 'No'
-				when CAST(right(cohort,1) as char(50)) > '1'
-				and CURDATE() >= STR_TO_DATE(CONCAT(9, '/',1,'/',(convert(CAST(left(cohort,4) as char(50)), unsigned integer)+2) ),'%m/%d/%YY')
+				when fundedBy <>  'City of Portland'
+				and CURDATE() >= STR_TO_DATE(CONCAT(9, '/',1,'/',(cohort + 2) ),'%m/%d/%YY')
 				then 'No'
 				when statusInternal like 'X%' then 'No'
 				else 'Yes' end as in_contract

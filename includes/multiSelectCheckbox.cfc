@@ -49,7 +49,7 @@
 		<cfset idsToDelete="0">
 		<cfloop query="existingIds">
 			<cfset exists=false>
-			<cfset id = existingIds.Id>
+			<cfset id = existingIds.LookUpTableId>
 			<cfloop array="#arguments.checkedIds#" item="checkedID">
 				<cfif id EQ checkedID>
 					<cfset exists=true>
@@ -72,7 +72,7 @@
 		<cfloop array="#arguments.checkedIds#" item="checkedID">
 			<cfset exists=false>
 			<cfloop query="existingIds">
-				<cfif Id EQ checkedID>
+				<cfif LookUpTableId EQ checkedID>
 					<cfset exists=true>
 					<cfbreak>
 				</cfif> <!--- matches a value that is checked --->

@@ -105,18 +105,6 @@
 			</div>
 			--->
 
-			<!-- Living Situation checkboxes -->
-			<!-- ajax jquery refreshes div -->
-			<div id="livingsituation">
-			<cfmodule template="#pcc_source#/includes/multiSelectCheckboxes.cfm"
-				mscb_description = 'Living Situation'
-				mscb_fieldName = 'livingSituationID'
-				mscb_componentname = "fc"
-				mscb_methodName = "getLivingSituationWithAssignments"
-				contactid = "#caseload_banner.contactID#"
-			>
-			</div>
-
 			<!--- <label>Citizen Status -- REMOVE fix so it updates with selection
 				<select name='citizen_status' selected=#caseload_banner.citizen_status#>
 				<option value="Unknown">Unknown</option>
@@ -143,6 +131,7 @@
 			>
 			<!-- end Weekly Work Hours select -->
 
+
 			<label>
 				EFC
 				<cfoutput>
@@ -156,6 +145,34 @@
 					<input type="text" name="RE_HOLD" readonly value="#caseload_banner.RE_HOLD#" />
 				</cfoutput>
 			</label>
+
+
+		<!-- Living Situation checkboxes -->
+		<!-- ajax jquery refreshes div -->
+		<div id="livingsituation">
+		<cfmodule template="#pcc_source#/includes/multiSelectCheckboxes.cfm"
+			mscb_description = 'Living Situation'
+			mscb_fieldName = 'livingSituationID'
+			mscb_componentname = "fc"
+			mscb_methodName = "getLivingSituationWithAssignments"
+			contactid = "#caseload_banner.contactID#"
+		>
+		</div>
+
+		<!-- Enrichment Programs Checkboxes -->
+		<!-- refreshed by jquery -->
+		<div id="enrichmentprograms">
+		<cfmodule template="#pcc_source#/includes/multiSelectCheckboxes.cfm"
+			mscb_description = 'Enrichment Programs'
+			mscb_fieldName = 'enrichmentProgramID'
+			mscb_componentname = "fc"
+			mscb_methodName = "getEnrichmentProgramsWithAssignments"
+			contactid = "#caseload_banner.contactID#"
+		>
+		</div>
+		<!-- end enrichment programs -->
+
+
 		</div>
 		<!-- END COLUMN 1 -->
 
@@ -171,6 +188,22 @@
 				so_selectname="statusInternal"
 			>
 			<!-- end Status Internal select -->
+
+
+			<!-- Exit Reason Select -->
+			<cfset values=["Academic frustration", "ASAP Issue", "Completed Certificate","Completed Degree"
+							,"Completed Degree & Transfer","Entered the Military","Transferred"
+							,"Housing insecurity / homeless","Incarcerated","Leaving school to work"
+							,"Left without contact","Mental health barriers","Moving out of PCC district"
+							,"Parenting responsibilities"]>
+			<cfmodule template="#pcc_source#/includes/selectOption.cfm"
+				so_values="#values#"
+				so_selectedvalue="#caseload_banner.exitReason#"
+				so_label = "Exit Reason"
+				so_selectname="exitReason"
+			>
+			<!-- end Exit Reason select -->
+
 
 			<label>
 				ASAP
@@ -283,21 +316,6 @@
 				</cfoutput>
 			</label>
 
-
-			<!-- Exit Reason Select -->
-			<cfset values=["Academic frustration", "ASAP Issue", "Completed Certificate","Completed Degree"
-							,"Completed Degree & Transfer","Entered the Military","Transferred"
-							,"Housing insecurity / homeless","Incarcerated","Leaving school to work"
-							,"Left without contact","Mental health barriers","Moving out of PCC district"
-							,"Parenting responsibilities"]>
-			<cfmodule template="#pcc_source#/includes/selectOption.cfm"
-				so_values="#values#"
-				so_selectedvalue="#caseload_banner.exitReason#"
-				so_label = "Exit Reason"
-				so_selectname="exitReason"
-			>
-			<!-- end Exit Reason select -->
-
 		</div>
 		<!--- END COLUMN 2 --->
 
@@ -337,19 +355,6 @@
 					<input type="text" name="emailPersonal" value="#caseload_banner.emailPersonal#" />
 				</cfoutput>
 			</label>
-
-			<!-- Enrichment Programs Checkboxes -->
-			<!-- refreshed by jquery -->
-			<div id="enrichmentprograms">
-			<cfmodule template="#pcc_source#/includes/multiSelectCheckboxes.cfm"
-				mscb_description = 'Enrichment Programs'
-				mscb_fieldName = 'enrichmentProgramID'
-				mscb_componentname = "fc"
-				mscb_methodName = "getEnrichmentProgramsWithAssignments"
-				contactid = "#caseload_banner.contactID#"
-			>
-			</div>
-			<!-- end enrichment programs -->
 
 			<!-- Notes -->
 			<div id="notes">
