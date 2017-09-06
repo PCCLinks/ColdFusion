@@ -646,7 +646,9 @@ all the banner queries need to force a distinct by PIDM
 		<cfargument name="flagged" type="numeric" required="true">
 		<cfquery>
 			UPDATE futureConnect
-			SET flagged = <cfqueryparam value="#arguments.flagged#">
+			SET flagged = <cfqueryparam value="#arguments.flagged#">,
+				lastUpdatedBy=<cfqueryparam value=#Session.username#>,
+				dateLastUpdated=current_timestamp
 			WHERE contactid = <cfqueryparam value="#arguments.contactid#">
 		</cfquery>
 	</cffunction>
