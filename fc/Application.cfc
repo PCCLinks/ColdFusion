@@ -6,6 +6,7 @@
 	<cfset This.setdomaincookies = "no" />
 	<cfset This.loginstorage = "session" />
 	<cfset This.datasource = "pcclinks" />
+	<cfset This.sessiontimeout=createTimeSpan(0,2,0,0)>
 
 	<cffunction name="OnApplicationStart"></cffunction>
 
@@ -14,6 +15,29 @@
 	        <cfset SESSION.DateInitialized = Now() />
         </CFLOCK>
     </cffunction>
+
+	<!---<cffunction name="OnRequestStart">
+		<cfargument name="req">
+		<cfset logEntry(value="OnRequestStart")>
+		 <cfset logDump(label="req", value="#req#")>
+		<cfif not structKeyExists(session, "username") >
+		 	<cfset logDump(label="missingusername", value="#session#")>
+    		<!---for ajax requests, throw an error --->
+			<cfset Variables.reqData = getHTTPRequestData() >
+		 	<!---<cfset logDump(label="reqData", value="#Variables.reqData#")>--->
+    		<cfif structKeyExists(Variables.reqData.headers,"X-Requested-With")
+					&& reqData.headers["X-Requested-With"] eq "XMLHttpRequest">
+				<cfset logEntry(value="SessionTimeout")>
+				<cfheader statusCode=600 statustext="SessionTimeout" >
+		 	<cfelse>
+			 	<cfset StructClear(Session)>
+		     	<cfset session.authorized = "0">
+		     	<cfset sessionInvalidate() >
+		 	</cfif>
+		 </cfif>
+		<cfreturn "true">
+	</cffunction>--->
+
 
 	<cffunction name="onError">
 		<cfargument name="exception" >
