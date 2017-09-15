@@ -417,6 +417,7 @@
             url: 'fc.cfc?method=updateCase',
             data: {data : JSON.stringify(form), isAjax:'yes'},
             datatype:'json',
+            async:false,
             success: function (data, textStatus, jqXHR) {
             	updateContent();
             	var d = new Date();

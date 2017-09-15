@@ -1,0 +1,1 @@
+<cfheader statuscode="600" statustext="Session Timeout.">

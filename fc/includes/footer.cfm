@@ -17,23 +17,16 @@
 <script>
 $(document).foundation();
 function handleAjaxError(jqXHR, exception, thrownError){
+	if(jqXHR.status == 600){
+		window.location = "SessionTimeout.cfm";
+	}else{
 		msg = encodeURIComponent(jqXHR.statusText + ' ' + jqXHR.responseText);
 		data = {error: msg, exception: exception, throwError: thrownError, errorType: 'ajax'};
 		$.post("Error.cfm", data, function(){
 		  		window.location	='Error.cfm';
-		  	});
-		//alert('Error with request:' + msg);
-		/*var url = 'Error.cfm';
-		var errorForm = $('<form name="errorForm" id="errorForm" action="' + url + '" method="post">' +
-			'<input type="text" name="Error" value="' + msg + '" />' +
-			'<input type="text" name="exception" value="' + exception + '" />' +
-			'<input type="text" name="thrownError" value="' + thrownError + '" />' +
-			'<input type="text" name="ErrorType" value="ajax" />' +
-			'</form>');
-		$('body').append(errorForm);
-		errorForm.submit();*/
+		 });
 	}
-
+}
 </script>
 
 <!--- script content created in content pages and referenced here --->

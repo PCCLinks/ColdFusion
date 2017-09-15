@@ -1,5 +1,5 @@
 <cfcomponent displayname="FC">
-	<cfset logFileName = "pcclinks_fc_#DateFormat(Now(),'yyyymmdd_hhmmss')#" >
+<cfinclude template="#session.pccsource#/includes/logfunctions.cfm">
 <!------- NOTES -------
 Queries with bannerpcclinks datasource are views from the Banner system
 Banner views have an ATTS attribute that identify what program a student is in.  Since overtime, a student may be in more than one program
@@ -651,30 +651,6 @@ all the banner queries need to force a distinct by PIDM
 				dateLastUpdated=current_timestamp
 			WHERE contactid = <cfqueryparam value="#arguments.contactid#">
 		</cfquery>
-	</cffunction>
-
-	<cffunction name="logDump" access="remote">
-		<cfargument name="label" default="">
-		<cfargument name="value" required=true>
-		<cfargument name="level" default=0>
-		<cfsavecontent variable="logtext">
-			<cfdump var="#arguments.value#" format="text">
-		</cfsavecontent>
-		<cfset logEntry(label=arguments.label, value=logtext, level=arguments.level)>
-	</cffunction>
-	<cffunction name="logEntry" access="remote">
-		<cfargument name="label" default="">
-		<cfargument name="value" required=true>
-		<cfargument name="level" default=0>
-		<cfset debuglevel = 0>
-		<cfif debuglevel GTE arguments.level>
-			<cfif len(label) GT 0>
-				<cfset logtext= arguments.label & ":" & arguments.value>
-			<cfelse>
-				<cfset logtext = value>
-			</cfif>
-			<cflog file="#logFileName#" text="#logtext#">
-		</cfif>
 	</cffunction>
 
 </cfcomponent>

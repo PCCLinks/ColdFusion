@@ -4,12 +4,12 @@
 <html class="no-js" lang="en">
 
 <!--- CF Parameters --->
-<cfparam name="pcc_source" default='/pcclinks' />
 <cfparam name="pcc_title" default="PCC Links">
 <cfparam name="pcc_styles" default='' />
 <cfparam name="pcc_scripts" default='' />
 <cfparam name="pcc_logo" default='' />
 <cfparam name="pcc_menu" default='' />
+<cfset pcc_source = session.pccsource>
 <!--- end CF Parameters --->
 
 <cfset pcc_title 	= 'PCC Links' /> 	<!--- Page title & h3 --->
@@ -41,9 +41,6 @@
 
 <!-- BODY -->
  <body>
-
-	<!--- Authentication Template --->
-	<cfinclude template="#pcc_source#/includes/auth.cfm">
 
     <!-- header -->
     <header id="header" aria-label="Main header" role="banner">
