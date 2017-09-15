@@ -1,5 +1,5 @@
 <cfcomponent displayname="FC">
-<cfinclude template="#session.pccsource#/includes/logfunctions.cfm">
+<cfinclude template="/pcclinks/includes/logfunctions.cfm">
 <!------- NOTES -------
 Queries with bannerpcclinks datasource are views from the Banner system
 Banner views have an ATTS attribute that identify what program a student is in.  Since overtime, a student may be in more than one program
@@ -231,27 +231,29 @@ all the banner queries need to force a distinct by PIDM
 	<cffunction name="updateCase" access="remote" returnformat="json" >
 		<cfargument name="data" type="struct">
 
-		<cfset doUpdate = true>
+		<cfset Local.doUpdate = true>
+		<cfset Local.syncSessionObject = false>
 		<!--- Check to see if any data has changed --->
 		<!--- if we have an object for comparison --->
 		<cfif StructKeyExists(session, "fcTbl")>
-			<cfset fcTbl = QueryGetRow(session.fcTbl,1)>
 			<!--- if it is for the same contact going to be updated --->
-			<cfif fcTbl.contactid EQ arguments.data.contactid>
+			<cfif session.fcTbl.contactid EQ arguments.data.contactid>
 				<!--- have what is needed to do a compare, start with it set to false --->
-				<cfset doUpdate = false>
+				<cfset Local.doUpdate = false>
 				<cfloop collection=#arguments.data# item="key">
-					<cfif StructKeyExists(fcTbl, key)>
+					<cfif StructKeyExists(session.fcTbl, key)>
 						<!--- see if difference in data exists --->
-						<cfif #arguments.data[key]# NEQ #fcTbl[key]#>
-							<cfset doUpdate = true>
+						<cfif arguments.data[key] NEQ session.fcTbl[key]>
+							<cfset Local.doUpdate = true>
+							<cfset Local.syncSessionObject = true>
 						</cfif>
 					</cfif>
 				</cfloop>
 			</cfif>
 		</cfif>
 
-		<cfif doUpdate>
+		<cfset logEntry(value="doUpdate = " & Local.doUpdate & ", syncSessionObject=" & Local.syncSessionObject, label=2)>
+		<cfif Local.doUpdate>
 			<cfquery name="create" >
 				UPDATE futureConnect SET
 					preferredName = <cfqueryparam cfsqltype="cf_sql_varchar" value="#trim(arguments.data.preferredName)#">,
@@ -277,7 +279,14 @@ all the banner queries need to force a distinct by PIDM
 					DateLastUpdated=current_timestamp
 				WHERE futureConnect.contactID =  <cfqueryparam cfsqltype="cf_sql_varchar" value="#trim(arguments.data.contactID)#">
 			  </cfquery>
-		</cfif>
+
+			<!--- update succeeded, sync with session model --->
+			<cfif Local.syncSessionObject>
+				<cfloop collection=#arguments.data# item="key">
+					<cfset session.fcTbl[key] = arguments.data[key]>
+				</cfloop>
+			</cfif> <!--- synchSessionObject --->
+		</cfif><!--- doUpdate --->
 
 		<cfif len(trim(arguments.data.notes)) GT 0>
 			<cfset insertNote(contactID="#arguments.data.contactID#", noteText="#trim(arguments.data.notes)#")>
@@ -299,14 +308,14 @@ all the banner queries need to force a distinct by PIDM
 				AND tableName = 'futureConnect'
 		</cfquery>
 		<cfset lookupTableIdsToDelete = mscbCFC.getValuesToDelete(existingLookupEntries, Variables.checkedIds)>
-		<cfset logEntry(label="lookupTableIdsToDelete", value="#lookupTableIdsToDelete#")>
+		<cfset logEntry(label="lookupTableIdsToDelete", value="#lookupTableIdsToDelete#", level=3)>
 		<cfquery name="deleteEntry">
 			DELETE FROM enrichmentProgramContact
 			WHERE enrichmentProgramID IN (<cfqueryparam value="#lookupTableIdsToDelete#" cfsqltype="CF_SQL_INTEGER" list="yes" >)
 				and contactid = <cfqueryparam value="#Variables.contactId#">
 		</cfquery>
 		<cfset lookupTableIdsToInsert = mscbCFC.getValuesToInsert(existingLookupEntries, Variables.checkedIds)>
-		<cfset logEntry(label="lookupTableIdsToInsert", value="#lookupTableIdsToInsert#")>
+		<cfset logEntry(label="lookupTableIdsToInsert", value="#lookupTableIdsToInsert#", level=3)>
 		<cfquery name="insertEntry">
 			insert into enrichmentProgramContact(contactID, enrichmentProgramID, tableName, createdBy, dateCreated, lastUpdatedBy, dateLastUpdated)
 			select <cfqueryparam value="#Variables.contactID#">, enrichmentProgramID, 'futureConnect', '#Session.username#', current_timestamp, '#Session.username#', current_timestamp
@@ -326,14 +335,14 @@ all the banner queries need to force a distinct by PIDM
 				AND tableName = 'futureConnect'
 		</cfquery>
 		<cfset lookupTableIdsToDelete = mscbCFC.getValuesToDelete(existingLookupEntries, Variables.checkedIds)>
-		<cfset logEntry(label="lookupTableIdsToDelete", value="#lookupTableIdsToDelete#")>
+		<cfset logEntry(label="lookupTableIdsToDelete", value="#lookupTableIdsToDelete#", level=3)>
 		<cfquery name="deleteEntry">
 			DELETE from householdContact
 			WHERE householdID IN (<cfqueryparam value="#lookupTableIdsToDelete#" cfsqltype="CF_SQL_INTEGER" list="yes" >)
 				and contactid = <cfqueryparam value="#Variables.contactId#">
 		</cfquery>
 		<cfset lookupTableIdsToInsert = mscbCFC.getValuesToInsert(existingLookupEntries, Variables.checkedIds)>
-		<cfset logEntry(label="lookupTableIdsToInsert", value="#lookupTableIdsToInsert#")>
+		<cfset logEntry(label="lookupTableIdsToInsert", value="#lookupTableIdsToInsert#", level=3)>
 		<cfquery name="insertEntry">
 			insert into householdContact(contactID, householdID, tableName, createdBy, dateCreated, lastUpdatedBy, dateLastUpdated)
 			select <cfqueryparam value="#Variables.contactId#">, householdID, 'futureConnect', '#Session.username#', current_timestamp, '#Session.username#', current_timestamp
@@ -346,24 +355,24 @@ all the banner queries need to force a distinct by PIDM
 		<cfargument name="data" required="true">
 		<cfset Variables.contactID = trim(arguments.data.contactID)>
 		<cfset Variables.checkedIds = mscbCFC.getCheckedCollection(data=arguments.data, idFieldName="livingSituationId")>
-		<cfset logEntry(value = "Starting saveLivingSituationData")>
-		<cfset logDump(label="arguments", value="#arguments#")>
+		<cfset logEntry(value = "Starting saveLivingSituationData", level=3)>
+		<cfset logDump(label="arguments", value="#arguments#", level=3)>
 		<cfquery name="existingLookupEntries">
 			SELECT livingSituationId LookUpTableId
 			FROM livingSituationContact
 			WHERE contactID = <cfqueryparam value="#Variables.contactId#">
 				AND tableName = 'futureConnect'
 		</cfquery>
-		<cfset logDump(label="existingLookupEntries", value=#existingLookupEntries#)>
+		<cfset logDump(label="existingLookupEntries", value=#existingLookupEntries#, level=3)>
 		<cfset lookupTableIdsToDelete = mscbCFC.getValuesToDelete(existingLookupEntries, Variables.checkedIds)>
-		<cfset logEntry(label="lookupTableIdsToDelete", value="#lookupTableIdsToDelete#")>
+		<cfset logEntry(label="lookupTableIdsToDelete", value="#lookupTableIdsToDelete#", level=3)>
 		<cfquery name="deleteEntry">
 			DELETE from livingSituationContact
 			WHERE livingSituationID IN (<cfqueryparam value="#lookupTableIdsToDelete#" cfsqltype="CF_SQL_INTEGER" list="yes" >)
 				and contactID = <cfqueryparam value="#Variables.contactId#">
 		</cfquery>
 		<cfset lookupTableIdsToInsert = mscbCFC.getValuesToInsert(existingLookupEntries, Variables.checkedIds)>
-		<cfset logEntry(label="lookupTableIdsToInsert", value="#lookupTableIdsToInsert#")>
+		<cfset logEntry(label="lookupTableIdsToInsert", value="#lookupTableIdsToInsert#", level=3)>
 		<cfquery name="insertEntry">
 			insert into livingSituationContact(contactID, livingSituationId, tableName, createdBy, dateCreated, lastUpdatedBy, dateLastUpdated)
 			select <cfqueryparam value="#Variables.contactId#">, livingSituationId, 'futureConnect', '#Session.username#', current_timestamp, '#Session.username#', current_timestamp
@@ -482,7 +491,7 @@ all the banner queries need to force a distinct by PIDM
 
 		<!--- if getting a single person, store future connect data in session to use when comparing on update --->
 		<cfif len(arguments.pidm) gt 0>
-			<cfset Session.fcTbl = fcTbl>
+			<cfset Session.fcTbl = QueryGetRow(fcTbl,1)>
 		</cfif>
 
 		<!---  end SIDNY Future Connect Data --->

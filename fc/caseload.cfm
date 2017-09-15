@@ -248,7 +248,6 @@ select {
 
    // save flag checkbox changes
    function saveFlag(checkBox){
-		$.blockUI({ message: 'Just a moment...' });
 		flagged = (checkBox.checked ? 1 : 0);
 
 		//set the underlying data in the flagged column for filtering
@@ -268,7 +267,6 @@ select {
 		        handleAjaxError(jqXHR, exception);
 			}
 		});
-		$.unblockUI();
 	}
 	function filterContract(dt, button) {
 		filter =  button.text() == txt_includeAllFilter ? "" : "Yes";
@@ -297,9 +295,17 @@ select {
 		sessionStorage.setItem('maxterm', maxterm);
 		//sessionStorage.setItem('contactid', contactid);
 		var data = $.param({data:encodeURIComponent(JSON.stringify(sessionStorage))});
-  		$.post("SaveSession.cfm", data, function(){
-  			window.location	='student.cfm';
-  		});
+		$.ajax({
+			type:'post',
+			url: "SaveSession.cfm",
+			data: data,
+			success: (function(){
+				window.location='student.cfm';
+			}),
+			error: function (jqXHR, exception) {
+		        handleAjaxError(jqXHR, exception);
+			}
+		})
 	}
 
 </script>

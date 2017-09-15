@@ -380,7 +380,7 @@
 <cfsavecontent variable="editcase_script">
 <script>
 	//milliseconds - save every 5 minutes
-   var saveInterval = 1000*60*5;
+   var saveInterval = 1000*10;
    var doSave = setInterval(saveContent, saveInterval);
 
    //save before leaving

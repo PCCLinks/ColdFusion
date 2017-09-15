@@ -1,7 +1,6 @@
 <cfinclude template="#pcc_source#/includes/logfunctions.cfm">
 
 	<cfset This.name = "PCC Future Connect" />
-	<cfset This.sessionManagement = True />
 	<cfset This.clientmanagement = "yes" />
 	<cfset This.setclientcookies = "yes" />
 	<cfset This.setdomaincookies = "no" />
@@ -31,8 +30,9 @@
 	<cffunction name="OnRequestStart">
 		<cfargument name="req">
 		<cfset logEntry(value="OnRequestStart", level=2)>
+		<cfset logEntry(value="req=" & arguments.req, level=2)>
 		<cfset session.pccsource = Variables.pcc_source>
-<!---
+
 		<cfif structKeyExists(url, "accessdenied")>
 			<cfset logEntry(value="url contains accessdenied for user " & #session.username#)>
 			<cfset Session.Error = "Access denied on login">
@@ -55,18 +55,21 @@
 			<cfreturn "true">
 		</cfif>
 
+
+		<cfset logEntry(value="username=" & session.username, level=2)>
+		<cfset logEntry(value="sessionid=" & session.sessionid, level=2)>
 	 	<cfif not len(trim(session.username)) or session.authorized EQ 0>
 		 	<cfset isAjax = isAjaxCall()>
 		 	<cfif isAjax>
-			 	<cflocation url="SessionTimeout.cfm">
+			 	<cflocation url="SessionTimeoutError.cfm">
 			<cfelse>
 	 			<cfinclude template="../includes/auth.cfm">
 	 		</cfif>
-	 	</cfif>--->
+	 	</cfif>
 		<cfreturn "true">
 	</cffunction>
 
-	<!---<cffunction name="onError">
+	<cffunction name="onError">
 		<cfargument name="exception" >
 		<cfargument name="thrownError" default="">
 		<cfargument name="eventname" type="string" >
@@ -127,9 +130,11 @@
 			    <cfdump var="#arguments.exception#" >
 		    </cfoutput>
 		</cfsavecontent>
-		<cfmail to="arlette.slachmuylder@pcc.edu" from="arlette.slachmuylder@pcc.edu" subject="PCC Links Future Connect Application Error" type="html">
-			#errortext#
-		</cfmail>
+		<cfif CGI.SERVER_NAME DOES NOT CONTAIN "intranettest" && CGI.SERVER_NAME DOES NOT CONTAIN "localhost">
+			<cfmail to="arlette.slachmuylder@pcc.edu" from="arlette.slachmuylder@pcc.edu" subject="PCC Links Future Connect Application Error" type="html">
+				#errortext#
+			</cfmail>
+		</cfif>
 
 		<cfset Variables.isAjax = isAjaxCall()>
 		<cfif Variables.isAjax>
@@ -138,7 +143,7 @@
 		   	<cflocation url="error.cfm">
 		</cfif>
 
-	</cffunction>--->
+	</cffunction>
 
 
 

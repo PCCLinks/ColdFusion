@@ -7,7 +7,7 @@
 		<cfargument name="label" default="">
 		<cfargument name="value" required=true>
 		<cfargument name="level" default=0>
-		<cfset debuglevel = 3>
+		<cfset debuglevel = 2>
 		<cfif debuglevel GTE arguments.level>
 			<cfif len(label) GT 0>
 				<cfset logtext= arguments.label & ":" & arguments.value>
