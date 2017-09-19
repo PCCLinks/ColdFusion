@@ -12,6 +12,7 @@
 	<cfset Variables.cas_path="https://authenticate-test.pcc.edu/cas/">
  	<cfset Variables.app_path="https://" & "#CGI.SERVER_NAME#" & "#CGI.SCRIPT_NAME#">
  	<cfset Variables.cas_url=cas_path & "login?" & "service=" & app_path>
+
 	<cfparam name="url.ticket" default="">
 	<cfparam name="url.action" default="">
 	<cfparam name="pcc_source" default='/pcclinks' />
