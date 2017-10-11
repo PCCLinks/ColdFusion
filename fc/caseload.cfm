@@ -124,7 +124,7 @@ select {
 
          		 <!--server code determines:-->
 				 <!--if user is a coach, show flag checkbox otherwise,  contactid column hidden-->
-         		 <cfif Session.userPosition EQ "Coach">
+         		<cfif Session.userPosition EQ "Coach">
 				{targets:idx_contactid,
 				 	sortable:false,
 				 	render: function ( data, type, row ) {
@@ -150,7 +150,15 @@ select {
 			dom: '<"top"iB>rt<"bottom"flp>',
 			buttons: [
 
-            	//Copy Email Button
+            	//Export Grid Button
+            	{
+            	  extend: 'csv',
+            	  text: 'export',
+                  exportOptions: { columns: [idx_pcc_email, idx_stu_name, idx_bannerGNumber,
+                  					idx_cohort, idx_ASAP_status, idx_statusinternal, idx_coach,
+                  					idx_maxterm, idx_lastContactDate] }
+            	},
+            		//Copy Email Button
             	{
             	  extend: 'copy',
             	  text: 'copy email',
@@ -221,9 +229,15 @@ select {
 		dt.columns().every( function () {
 			var that = this;
 			$( 'input', this.header() ).on( 'keyup change', function () {
-				if ( that.search() !== this.value ) {
+				var value = this.value;
+				var isRegEx = false;
+				if(value.charAt(0)=="!"){
+						value = '^(?'+ value + ')';
+						isRegEx = true;
+				}
+				if ( that.search() !== value ) {
 					that
-						.search( this.value )
+						.search( value, isRegEx, true )
 						.draw();
 				}
 			} );
