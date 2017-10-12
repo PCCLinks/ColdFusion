@@ -17,11 +17,18 @@
 	<cfinvokeargument name="bannerGNumber" value="#Variables.BannerGNumber#">
 	<cfinvokeargument name="term" value="#Variables.Term#">
 </cfinvoke>
+<cfset Variables.programType = "term">
+<cfif qryStudent.program CONTAINS "attendance" >
+	<cfset Variables.programType = "attendance">
+</cfif>
+
 <!--- Previous Statuses for Year --->
 <cfinvoke component="ProgramBilling" method="getOtherBilling"  returnvariable="qryOtherBilling">
 	<cfinvokeargument name="contactid" value="#qryStudent.contactid#">
 	<cfinvokeargument name="term" value="#Variables.Term#">
 </cfinvoke>
+
+
 
 <!--- Set Billing Student Variables --->
 <cfset Variables.BillingStudentID = qryStudent.billingStudentID>
@@ -55,19 +62,20 @@
 		</cfif>
 		<div class="row">
 			<div class="small-1 columns"><b>G</b></div>
-			<div class="small-2 columns"><b>Name</b></div>
-			<div class="small-2 columns"><b>Program</b></div>
+			<div class="small-1 columns"><b>Name</b></div>
+			<div class="small-3 columns"><b>Program</b></div>
 			<div class="small-1 columns"><b>Enrolled Date</b></div>
 			<div class="small-1 columns"><b>Exit Date </b></div>
 			<div class="small-1 columns"><b>Term</b></div>
 			<div class="small-1 columns"><b>School</b></div>
 			<div class="small-1 columns"><b>Status</b></div>
-			<div class="small-2 columns"><b>Review with Coach</b></div>
+			<div class="small-1 columns"><b>Review with Coach</b></div>
+			<div class="small-1 columns"><b>Include in Billing</b></div>
 		</div>
 		<div class="row">
 			<div class="small-1 columns">#bannerGNumber#</div>
-			<div class="small-2 columns">#FIRSTNAME# #LASTNAME#</div>
-			<div class="small-2 columns">
+			<div class="small-1 columns">#FIRSTNAME# #LASTNAME#</div>
+			<div class="small-3 columns">
 				<cfif #billingstatus# EQ 'COMPLETE'>
 					#program#
 				<cfelse>
@@ -83,10 +91,23 @@
 			<div class="small-1 columns">#term#</div>
 			<div class="small-1 columns">#schooldistrict#</div>
 			<div class="small-1 columns">#billingstatus#</div>
-			<div class="small-2 columns">
-				<input type="checkbox"  >
+			<div class="small-1 columns">
+				<input type="checkbox" id="reviewWithCoachFlag" <cfif #reviewWithCoachFlag# EQ 1>checked</cfif>>
+			</div>
+			<div class="small-1 columns">
+				<input type="checkbox" id="includeFlag" <cfif #includeFlag# EQ 1>checked</cfif>>
 			</div>
 		</div>
+		<div class="row">
+			<div class="small-2 columns"><b>Internal Billing Notes</b></div>
+			<div class="small-7 columns">
+				<input name="notes" value="#billingNotes#" id="billingNotes" style="width:600px;">
+			</div>
+			<div class="small-3 columns">
+				<input  type="button" onClick="javascript:saveBillingNotes();" value="Save Billing Notes">
+			</div>
+		</div>
+
 		<div class="row">
 			<div class="small-12 columns" style="color:red">
 				#ErrorMessage#
@@ -138,7 +159,7 @@
 		            <th id="SUBJ">SUBJ</th>
 		            <th id="Title">Title</th>
 					<td id="TakenPreviousTerm">Taken Prev.</td>
-					<th id="CourseValue">CR</th>
+					<th id="CourseValue"><cfif Variables.programType EQ "attendance">Attend.<cfelse>CR</cfif></th>
 					<th id="IncludeFlag">Incl.</th>
 		       </tr>
 		     </thead>
@@ -151,7 +172,12 @@
 		            <td>#SUBJ#</td>
 		            <td>#Title#</td>
 					<td><cfif LEN(#TakenPreviousTerm#) EQ 0 OR #TakenPreviousTerm# EQ 0>No<cfelse><span style="color:red">#TakenPreviousTerm#</span></cfif></td>
-		            <td>#NumberFormat(CourseValue,"0")#</td>
+		            <td><cfif programType EQ "attendance">
+		            		<a href="javascript:getAttendanceDetail(#CRN#)" >#NumberFormat(CourseValue,"0.0000")#</a>
+		            	<cfelse>
+		            		#NumberFormat(CourseValue,"0")#
+		            	</cfif>
+					</td>
 		            <td><input type="checkbox" id="IncludeFlag"  <cfif #IncludeFlag# EQ 1>checked</cfif>></td>
 				</tr>
 				</cfoutput>
@@ -160,6 +186,7 @@
 		<div class="callout">
 			<b>Billing Reviewed:</b> <input type="checkbox" name="billingReviewed" id="billingReviewed" <cfif Variables.BillingStatus EQ "Complete" and Variables.term EQ qryStudent.Term>checked</cfif> >
 		</div>
+		<cfmodule template="includes/billingRecord.cfm"  billingStudentId = "#qryStudent.billingStudentId#">
 	</div>
 	<div class="small-1 columns"></div>
 	<!---------------------------------------------------------------------------->
@@ -260,12 +287,12 @@
 			$.unblockUI();
 		}); //end save checkbox changes
 
-
-	   // save include checkbox changes
-	   $('#dt_billed').find('td').click(function(){
-			cb = $(this).find('input:checkbox');
+	   // save include course checkbox changes
+	   	$('#dt_billed').find('input:checkbox').click(function(){
+			//cb = $(this).find('input:checkbox');
+			cb = $(this);
 	 		dt = $('#dt_billed').DataTable();
-			var tableRow  = dt.row(this).data();
+			var tableRow  = dt.row(this.parentNode).data();
 
 			var billingStudentItemId = tableRow[0];
 			var includeFlag = (cb[0].checked ? 1 : 0);
@@ -275,6 +302,42 @@
 				type: "POST",
 				async: false,
 				data: { billingstudentitemid: billingStudentItemId, includeflag:includeFlag },
+				error: function (jqXHR, exception) {
+			        handleAjaxError(jqXHR, exception);
+				}
+			});
+			$.unblockUI();
+		}); //end save checkbox changes
+
+
+		// save review with coach checkbox changes
+	   	 $('#reviewWithCoachFlag').click(function(){
+			var reviewWithCoachFlag = $(this)[0].checked ? 1 : 0;
+			var billingStudentId = <cfoutput>#Variables.BillingStudentID#</cfoutput>;
+			$.blockUI({ message: 'Just a moment...' });
+			$.ajax({
+				url: "programbilling.cfc?method=updateStudentReviewWithCoachFlag",
+				type: "POST",
+				async: false,
+				data: { billingStudentId: billingStudentId, reviewWithCoachFlag:reviewWithCoachFlag },
+				error: function (jqXHR, exception) {
+			        handleAjaxError(jqXHR, exception);
+				}
+			});
+			$.unblockUI();
+		}); //end save checkbox changes
+
+
+		// save include in billing checkbox changes
+	   	 $('#includeFlag').click(function(){
+			var includeFlag = $(this)[0].checked ? 1 : 0;
+			var billingStudentId = <cfoutput>#Variables.BillingStudentID#</cfoutput>;
+			$.blockUI({ message: 'Just a moment...' });
+			$.ajax({
+				url: "programbilling.cfc?method=updateStudentIncludeFlag",
+				type: "POST",
+				async: false,
+				data: { billingStudentId: billingStudentId, includeFlag:includeFlag },
 				error: function (jqXHR, exception) {
 			        handleAjaxError(jqXHR, exception);
 				}
@@ -292,6 +355,23 @@
 			goToDetailPage(gnumber);
 		});
 	});
+
+		// save include in billing checkbox changes
+	function saveBillingNotes(){
+		var notes = $('#billingNotes').val();
+		var billingStudentId = <cfoutput>#Variables.BillingStudentID#</cfoutput>;
+		$.blockUI({ message: 'Just a moment...' });
+		$.ajax({
+			url: "programbilling.cfc?method=updateStudentBillingNotes",
+			type: "POST",
+			async: false,
+			data: { billingStudentId: billingStudentId, billingNotes:notes },
+			error: function (jqXHR, exception) {
+		        handleAjaxError(jqXHR, exception);
+			}
+		});
+		$.unblockUI();
+	}
 
 	function setNextGNumber(isGetNext){
 		var next = isGetNext;
@@ -311,6 +391,15 @@
 			}
 		});
 		return gNumber;
+	}
+
+	function getAttendanceDetail(crn){
+		<cfoutput>sessionStorage.setItem("term", #Variables.term#);</cfoutput>
+		sessionStorage.setItem("CRN", crn);
+		var data = $.param({data:encodeURIComponent(JSON.stringify(sessionStorage))});
+  		$.post("SaveSession.cfm", data, function(){
+  			window.open('AttendanceDetail.cfm?crn=' + crn);
+  		});
 	}
 
  </script>

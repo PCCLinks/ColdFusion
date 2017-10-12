@@ -6,74 +6,39 @@
 	<cfinvokeargument name="program" value="#Session.program#">
 	<cfinvokeargument name="schooldistrict" value="#Session.schooldistrict#">
 </cfinvoke>
+<cfset Session.attendanceReportPrintTable = data>
+
 
 <style>
-
-		table tbody td, table tfoot td{
-			text-align:right;
-		}
-		/*table thead th, table tbody td, table tfoot td {
-			border-color:black;
-			border-style:solid solid none none;
-			border-width: 0.5px;
-			background-color:white;
-		}*/
-		.no-border{
-			border-color:none;
-			border-style:none;
-			border-width: 0px;
-		}
-		.bold-left-border{
-			border-left-width:1px;
-			border-left-style:solid;
-		}
-		.bold-right-border{
-			border-right-width:1px;
-			border-right-style:solid;
-		}
-		.border-no-bottom{
-			border-bottom-style:none;
-		}
-		.border-no-top{
-			border-top-style:none;
-		}
-
-		.dataTables_wrapper .dataTables_processing{
-			top: 70% !important;
-			height: 50px !important;
-			background-color: lightGray;
-		}
-		.dataTables_info{
-			margin-right:10px !important;
-		}
-		select {
-			width:auto !important;
-		}
-		input{
-			display:inline-block !important;
-			width:auto !important;
-		}
-		.tdAlignLeft{
-			text-align:left;
-		}
-		td{
-			border-style:none;
-		}
-	</style>
-
+	.dataTables_wrapper .dataTables_processing{
+		top: 70% !important;
+		height: 50px !important;
+		background-color: lightGray;
+	}
+	.dataTables_info{
+		margin-right:10px !important;
+	}
+	select {
+		width:auto !important;
+	}
+	input{
+		display:inline-block !important;
+		width:auto !important;
+	}
+</style>
 
 	<div class="row" id="tableheader">
 		<table width="100%" style="border-style:none;">
 			<tr>
-				<td class="bottom-border" style="text-align:left; font-size:x-small">
+				<td class="bottom-border" style="text-align:left; font-size:8px">
 					<cfoutput>#Session.schooldistrict#</cfoutput>
 				</td>
-				<td class="bottom-border" style="text-align:right; font-size:x-small">
+				<td class="bottom-border" style="text-align:right; font-size:8px">
 					Alternative Education Program
 				</td>
 			</tr>
 			<tr>
-				<td class="no-border" style="text-align:center">
+				<td colspan="2" class="no-border" style="text-align:center; font-size:12px">
 					<h4>Monthly Attendance And Days Enrolled - Public School Days</h4>
 					<cfoutput><b>All Students at #Session.Program# between #data.ReportingStartDate# and #data.ReportingEndDate#</b></cfoutput>
 				</td>
@@ -97,23 +62,13 @@
 <cfset Variables.attnd = 0>
 <cfset Variables.enrl = 0>
 
-<table id="dt_table" class="hover compact">
-<thead><tr><th></th></tr></thead>
-<tbody><tr><td>
-
-<table id="maindata">
+<table id="dt_table" class="hover">
 	<thead>
 		<tr>
-			<th colspan="6" style="text-align:left">Student</th>
-			<th colspan="2" style="text-align:left">Apprv. Status</th>
-			<th colspan="2" style="text-align:left">DOB</th>
-			<th colspan="2" style="text-align:left">Entry Date</th>
-			<th colspan="2" style="text-align:left">Exit Date</th>
-			<th colspan="2"></th>
-		</tr>
-		<tr>
-			<th style="border-bottom-style:solid"></th>
-			<th style="border-bottom-style:solid"></th>
+			<th style="border-bottom-style:solid">Student</th>
+			<th style="border-bottom-style:solid">DOB</th>
+			<th style="border-bottom-style:solid">Entry Date</th>
+			<th style="border-bottom-style:solid">Exit Date</th>
 			<th style="border-bottom-style:solid">Jun</th>
 			<th style="border-bottom-style:solid">Jul</th>
 			<th style="border-bottom-style:solid">Aug</th>
@@ -130,21 +85,16 @@
 			<th style="border-bottom-style:solid">Enrl</th>
 		</tr>
 		<tr>
-			<th colspan="16">No Plan Assigned</th>
+			<th colspan="18">No Plan Assigned</th>
 		</tr>
 	</thead>
 	<tbody>
 	<cfoutput query="data">
 		<tr>
-			<td colspan="6" style="text-align:left"><a href='attendanceReportDetail.cfm?billingStudentId=#billingStudentId#' target='_blank'>#name#</a></td>
-			<td colspan="2" style="text-align:left">Approved</td>
-			<td colspan="2" style="text-align:left">#DateFormat(dob,"m/d/y")#</td>
-			<td colspan="2" style="text-align:left">#DateFormat(enrolleddate,"m/d/y")#</td>
-			<td colspan="2" style="text-align:left">#DateFormat(exitdate,"m/d/y")#</td>
-			<td colspan="2"></td>
-		</tr>
-		<tr>
-			<td colspan="2"></td>
+			<td style="text-align:left"><a href='attendanceReportDetail.cfm?billingStudentId=#billingStudentId#' target='_blank'>#name#</a></td>
+			<td style="text-align:left">#DateFormat(dob,"m/d/y")#</td>
+			<td style="text-align:left">#DateFormat(enrolleddate,"m/d/y")#</td>
+			<td style="text-align:left">#DateFormat(exitdate,"m/d/y")#</td>
 			<td>#Jun#</td>
 			<td>#Jul#</td>
 			<td>#Aug#</td>
@@ -181,8 +131,10 @@
 	<tfoot>
 		<cfoutput>
 		<tr>
-			<td style="border-top-style:">Total:</td>
-			<td style="border-top-style:solid">#Variables.count#</td>
+			<td style="border-top-style:">Total:#Variables.count#</td>
+			<td></td>
+			<td></td>
+			<td></td>
 			<td style="border-top-style:solid">#Variables.Jun#</td>
 			<td style="border-top-style:solid">#Variables.Jul#</td>
 			<td style="border-top-style:solid">#Variables.Aug#</td>
@@ -201,7 +153,6 @@
 		</cfoutput>
 	</tfoot>
 </table>
-</td></tr></tbody></table>
 
 
 	<cfsavecontent variable="pcc_scripts">
@@ -216,18 +167,13 @@
 			$('#dt_table').DataTable( {
 		    	dom: '<"top"iBf>rt<"bottom"lp>',
 		    	bSort:false,
-				bFilter:false,
-				bInfo:false,
-				lengthChange:false,
-				paging:false,
 			    buttons: [
 		          {	extend:'print',
 		            autoPrint:false,
 		            header:true,
 		            footer:true,
 		            orientation:'portrait',
-
-		            // Set up some custom HTML for printing
+		           // Set up some custom HTML for printing
 		            customize: function ( win ) {
 		            	//set body font size and type
 		            	$(win.document.body)
@@ -238,8 +184,20 @@
 		                $(win.document.body).find( 'table' )
 		              			.css( 'font-size', 'inherit' );
 
-		              	var mainData = $('#maindata').html();
-		              	$(win.document.body).find('table').replaceWith('<table>' + mainData + '</table>');
+		              	var dt_table = $('#dt_table').html();
+		              	var printTable = '';
+		              	$.ajax({
+				            type: 'get',
+				            url: 'AttendanceReportPrintTable.cfm',
+							async: false,
+				            success: function (data, textStatus, jqXHR) {
+				            	printTable = data;
+							},
+				            error: function (xhr, textStatus, thrownError) {
+								 handleAjaxError(xhr, textStatus, thrownError);
+							}
+				          });
+		              	$(win.document.body).find('table').replaceWith(printTable);
 
 						$(win.document.body).find('a').each(function(){
 																	this.outerHTML = this.innerHTML;
@@ -253,6 +211,20 @@
 		    ] //end buttons
 			});
 		}
+
+	function getPrintTableHTML(){
+		return $.ajax({
+            type: 'get',
+            url: 'AttendanceReportPrintTable.cfm',
+			async: false,
+            success: function (data, textStatus, jqXHR) {
+            	return data;
+			},
+            error: function (xhr, textStatus, thrownError) {
+				 handleAjaxError(xhr, textStatus, thrownError);
+			}
+          });
+	}
 
 	</script>
 	</cfsavecontent>

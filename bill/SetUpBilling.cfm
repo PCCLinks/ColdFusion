@@ -16,20 +16,9 @@
 
 <!--- query parameters --->
 <form id="pageForm" action="javascript:setUpBilling();" method="post">
+	<cfoutput><input type="hidden" name="type" value="#url.type#"></cfoutput>
 	<div class="row">
-		<!---<div class="small-3 columns">
-			<label>Program:<br/>
-				<select name="program" id="program"/>
-					<option disabled selected value="" >
-						--Select Program--
-					</option>
-					<cfoutput query="qryPrograms">
-						<option value="#programName#" >#programName#</option>
-					</cfoutput>
-				</select>
-			</label>
-		</div> --->
-		<div class="small-5 columns">
+		<div class="small-3 columns">
 			<label>Term:<br/>
 				<select name="term" id="term"/>
 					<option disabled selected value="" >
@@ -42,6 +31,11 @@
 			</label>
 		</div>
 		<cfoutput>
+		<div class="small-2 columns">
+			<label><cfif url.type EQ "term">Term Enrollment Date<cfelse>Month Start Date</cfif>:<br/>
+				<input name="billingStartDate" id="billingStartDate" type="text" />
+			</label>
+		</div>
 		<div class="small-2 columns">
 			<label>Term Begin Date:<br/>
 				<input name="termBeginDate" id="termBeginDate" type="text"  readonly="true"/>
@@ -71,6 +65,7 @@
 
 <cfsavecontent variable="pcc_scripts">
 <script type="text/javascript">
+	$('#billingStartDate').datepicker({ dateFormat: 'mm/dd/yy' });
 	var selectedTerm;
 	$(document).ready(function(){
 		function setDate(term, displayField, idName){
@@ -89,6 +84,7 @@
     	}
 		 $('body').on('change', '#term', function(e) {
 		 	termValue = $('#term').val();
+		 	billingStartDate = $('#billingStartDate').val();
 		 	sessionStorage.setItem("term",termValue);
 		 	saveSessionToServer();
 		 	setDate(termValue, 'TermBeginDate', 'termBeginDate');

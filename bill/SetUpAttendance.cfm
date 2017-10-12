@@ -23,14 +23,20 @@
 			<label>CRN<br><input name="crn" ></label>
 		</div>
 		<div class="small-2 columns">
-			<label>Billing Date<br><input name="billingDate" >
+			<label>Month Start Date<br><input name="billingStartDate" id="billingStartDate" >
 		</div>
 		<div class="small-2 columns">
-			<label><br/><input class="button" type="submit" name="submit" value="Generate Attendance Rows" /></label>
+			<label><br/><input class="button" type="submit" name="submit" value="Get Attendance Rows" /></label>
 		</div>
 	</div>
 </form>
 <!--- end query parameters --->
 </div> <!-- end div callout primary -->
+
+<cfsavecontent variable="pcc_scripts">
+<script type="text/javascript">
+$('#billingStartDate').datepicker({ dateFormat: 'mm/dd/yy' });
+</script>
+</cfsavecontent>
 
 <cfinclude template="includes/footer.cfm" />
