@@ -38,6 +38,7 @@
 		<cfquery name="data" datasource="pcclinks">
 			select Term
 			from bannerCalendar
+			where termBeginDate >= date_add(now(), INTERVAL - 1 YEAR)
 			order by term
 		</cfquery>
 		<cfreturn data>

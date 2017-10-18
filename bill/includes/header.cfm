@@ -19,7 +19,7 @@
 		 <li><a>Term Billing</a>
 			<ul class="menu">
 				<li><a href="SetUpBilling.cfm?type=Term">Set Up Billing</a></li>
-				<li><a href="BillingSummary.cfm?type=Term">Reporting</a></li>
+				<li><a href="ReportSummary.cfm?type=Term">Reporting</a></li>
 			</ul>
 		</li>
 		 <li><a>Attendance Billing</a>
@@ -28,7 +28,7 @@
 		 		<li><a href="AttendanceSummary.cfm">Enter Attendance</a></li>
 		 		<li><a href="AddClass.cfm">Add Class</a></li>
 		 		<li><a href="AddScenario.cfm">Scenarios</a></li>
-				<li><a href="BillingSummary.cfm?type=Attendance">Reporting</a></li>
+				<li><a href="ReportSummary.cfm?type=Attendance">Reporting</a></li>
 			</ul>
 		</li>
 		<li><a href="ProgramStudent.cfm">Review Billing</a></li>
@@ -47,6 +47,7 @@
     <link rel="stylesheet" href="<cfoutput>#pcc_source#</cfoutput>/css/foundation.min.css" />
     <link rel="stylesheet" href="<cfoutput>#pcc_source#</cfoutput>/css/app.css" />
 	<link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/v/dt/jszip-3.1.3/pdfmake-0.1.27/dt-1.10.15/b-1.3.1/b-colvis-1.3.1/b-html5-1.3.1/b-print-1.3.1/cr-1.3.3/fc-3.2.2/fh-3.1.2/r-2.1.1/rg-1.0.0/sc-1.4.2/se-1.2.2/datatables.min.css"/>
+	<link rel="stylesheet" href="<cfoutput>#pcc_source#</cfoutput>/css/foundation-datepicker.css" />
 
 	<link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/1.10.15/css/jquery.dataTables.min.css"/>
 	<link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/buttons/1.3.1/css/buttons.dataTables.min.css"/>

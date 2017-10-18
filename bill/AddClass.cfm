@@ -16,8 +16,8 @@
 			</select>
 		</div>
 		<div class="medium-10 columns">
-			<br><input type="button" value="Add New Class" id="addClass" onClick="javascript:showNewClass();">
-			<input type="button" value="Get Student List" id="addStudents" onClick="javascript:showStudents();">
+			<br><input type="button" class="button" value="Add New Class" id="addClass" onClick="javascript:showNewClass();">
+			<input type="button" class="button" value="Get Student List" id="addStudents" onClick="javascript:showStudents();">
 		</div>
 	</div>
 </div>
@@ -29,8 +29,8 @@
 		<div class="small-2 columns"><label>CRSE: <input id="crse"></label></div>
 		<div class="small-2 columns"><label>TITLE: <input id="title"></label></div>
 		<div class="small-4 columns">
-			<input type="button" value="Get Student List" onClick="javascript:showStudents();"/>
-			<input type="button" value="Add Existing Class" id="addClass" onClick="javascript:showExistingClass();">
+			<input type="button" class="button" value="Get Student List" onClick="javascript:showStudents();"/>
+			<input type="button" class="button" value="Add Existing Class" id="addClass" onClick="javascript:showExistingClass();">
 		</div>
 	</div>
 </div>

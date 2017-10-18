@@ -22,7 +22,7 @@
 <div class="row">
 	<table width="800px"><tr><td class="header">
 		<h3>College Quarterly Credit - Equivalent Instructional Days</h3>
-		<cfoutput><b>All Students at  #qryData.Program# for #terms.term1# and #terms.currentterm#</b></cfoutput>
+		<cfoutput><b>All Students at  #Program# for #terms.term1# and #terms.currentterm#</b></cfoutput>
 	</td></tr></table>
 </div>
 
@@ -105,31 +105,31 @@
 								<tr><td class="name-column" colspan="4">
 									<cfif IsDefined("attributes")>
 									 	<cfif StructKeyExists(attributes, "onScreen")>
-											<a href="javascript:goToDetail('#bannerGNumber#');">#qryData.LASTNAME#, #qryData.FIRSTNAME#</a>
+											<a href="javascript:goToDetail('#bannerGNumber#');">#LASTNAME#, #FIRSTNAME#</a>
 										</cfif>
 									<cfelse>
-										#qryData.LASTNAME#, #qryData.FIRSTNAME#
+										#LASTNAME#, #FIRSTNAME#
 									</cfif>
 								</td></tr>
-								<tr><td class="no-border">&nbsp;</td><td class="no-border-text-align-left" >#qryData.EnrolledDate#</td><td class="no-border-text-align-left">#qryData.ExitDate#</td><td class="no-border" ></td></tr>
+								<tr><td class="no-border">&nbsp;</td><td class="no-border-text-align-left" >#EnrolledDate#</td><td class="no-border-text-align-left">#ExitDate#</td><td class="no-border" ></td></tr>
 							</table>
 						</td>
 						<!-- SUMMER -->
 						<!-- Number of Credits -->
 						<td class="bold-left-border">
-							<cfif LEN(qryData.SummerNoOfCredits) EQ 0>0
-							<cfelse>#NumberFormat(qryData.SummerNoOfCredits,'_._')#
+							<cfif LEN(SummerNoOfCredits) EQ 0>0
+							<cfelse>#NumberFormat(SummerNoOfCredits,'_._')#
 							</cfif>
 						</td>
 						<!-- Number of Days -->
 						<td>
-							<cfif LEN(qryData.SummerNoOfCredits) EQ 0>0
-							<cfelse>#NumberFormat(qryData.SummerNoOfCredits/36*175,'_._')#
+							<cfif LEN(SummerNoOfCredits) EQ 0>0
+							<cfelse>#NumberFormat(SummerNoOfCredits/36*175,'_._')#
 							</cfif>
 						</td>
 						<!-- FALL -->
 						<!-- Determine Overage -->
-						<cfset Variables.overage = qryData.SummerNoOfCredits+qryData.FallNoOfCredits>
+						<cfset Variables.overage = SummerNoOfCredits+FallNoOfCredits>
 						<cfif Variables.overage GT 36>
 							<cfset Variables.overage = Variables.overage -36>
 							<cfset Variables.fallCreditsOver = Variables.fallCreditsOver + Variables.overage>
@@ -139,8 +139,8 @@
 						</cfif>
 						<!-- Number of Credits -->
 						<td class="bold-left-border">
-							<cfif LEN(qryData.FallNoOfCredits) EQ 0>0
-							<cfelse>#NumberFormat(qryData.FallNoOfCredits,'_._')#</cfif>
+							<cfif LEN(FallNoOfCredits) EQ 0>0
+							<cfelse>#NumberFormat(FallNoOfCredits,'_._')#</cfif>
 						</td>
 						<!-- Overage Credits -->
 						<td>
@@ -148,8 +148,8 @@
 						</td>
 						<!-- Number of Days -->
 						<td>
-							<cfif LEN(qryData.FallNoOfCredits) EQ 0>0
-							<cfelse>#NumberFormat(qryData.FallNoOfCredits/36*175,'_._')#</cfif>
+							<cfif LEN(FallNoOfCredits) EQ 0>0
+							<cfelse>#NumberFormat(FallNoOfCredits/36*175,'_._')#</cfif>
 						</td>
 						<!-- Overage Days -->
 						<td>
@@ -157,7 +157,7 @@
 						</td>
 						<!-- WINTER -->
 						<!-- Determine Overage -->
-						<cfset Variables.overage = qryData.SummerNoOfCredits+qryData.FallNoOfCredits+qryData.WinterNoOfCredits-Variables.overage>
+						<cfset Variables.overage = SummerNoOfCredits+FallNoOfCredits+WinterNoOfCredits-Variables.overage>
 						<cfif Variables.overage GT 36>
 							<cfset Variables.overage = Variables.overage -36>
 							<cfset Variables.winterCreditsOver = Variables.winterCreditsOver + Variables.overage>
@@ -167,8 +167,8 @@
 						</cfif>
 						<!-- Number of Credits -->
 						<td class="bold-left-border">
-							<cfif LEN(qryData.WinterNoOfCredits) EQ 0>0
-							<cfelse>#NumberFormat(qryData.WinterNoOfCredits,'_._')#</cfif>
+							<cfif LEN(WinterNoOfCredits) EQ 0>0
+							<cfelse>#NumberFormat(WinterNoOfCredits,'_._')#</cfif>
 						</td>
 						<!-- Overage Credits -->
 						<td>
@@ -176,8 +176,8 @@
 						</td>
 						<!-- Number of Days -->
 						<td>
-							<cfif LEN(qryData.WinterNoOfCredits) EQ 0>0
-							<cfelse>#NumberFormat(qryData.WinterNoOfCredits/36*175,'_._')#</cfif>
+							<cfif LEN(WinterNoOfCredits) EQ 0>0
+							<cfelse>#NumberFormat(WinterNoOfCredits/36*175,'_._')#</cfif>
 						</td>
 						<!-- Overage Days -->
 						<td>
@@ -185,7 +185,7 @@
 						</td>
 						<!-- SPRING -->
 						<!-- Determine Overage -->
-						<cfset Variables.overage = qryData.SummerNoOfCredits+qryData.FallNoOfCredits+qryData.WinterNoOfCredits+qryData.SpringNoOfCredits-Variables.overage>
+						<cfset Variables.overage = SummerNoOfCredits+FallNoOfCredits+WinterNoOfCredits+SpringNoOfCredits-Variables.overage>
 						<cfif Variables.overage GT 36>
 							<cfset Variables.overage = Variables.overage -36>
 							<cfset Variables.springCreditsOver = Variables.springCreditsOver + Variables.overage>
@@ -195,8 +195,8 @@
 						</cfif>
 						<!-- Number of Credits -->
 						<td class="bold-left-border">
-							<cfif LEN(qryData.SpringNoOfCredits) EQ 0>0
-							<cfelse>#NumberFormat(qryData.SpringNoOfCredits,'_._')#</cfif>
+							<cfif LEN(SpringNoOfCredits) EQ 0>0
+							<cfelse>#NumberFormat(SpringNoOfCredits,'_._')#</cfif>
 						</td>
 						<!-- Overage Credits -->
 						<td>
@@ -204,28 +204,28 @@
 						</td>
 						<!-- Number of Days -->
 						<td>
-							<cfif LEN(qryData.SpringNoOfCredits) EQ 0>0
-							<cfelse>#NumberFormat(qryData.SpringNoOfCredits/36*175,'_._')#</cfif>
+							<cfif LEN(SpringNoOfCredits) EQ 0>0
+							<cfelse>#NumberFormat(SpringNoOfCredits/36*175,'_._')#</cfif>
 						</td>
 						<!-- Overage Days -->
 						<td>
 							<cfif Variables.overage GT 0>#NumberFormat(Variables.overage/36*175,'_._')#</cfif>
 						</td>
 						<!-- Total Credits -->
-						<td class="bold-left-border">#NumberFormat(qryData.FYTotalNoOfCredits,'_._')#</td>
+						<td class="bold-left-border">#NumberFormat(FYTotalNoOfCredits,'_._')#</td>
 						<!-- Max Total Credits -->
-						<td>#NumberFormat(qryData.FYTotalNoOfCredits-Variables.personOverage,'_._')#</td>
+						<td>#NumberFormat(FYTotalNoOfCredits-Variables.personOverage,'_._')#</td>
 						<!-- Total Days -->
-						<td>#NumberFormat(qryData.FYTotalNoOfCredits/36*175,'_._')#</td>
+						<td>#NumberFormat(FYTotalNoOfCredits/36*175,'_._')#</td>
 						<!-- Max Total Days -->
-						<td>#NumberFormat((qryData.FYTotalNoOfCredits-Variables.personOverage)/36*175,'_._')#</td>
+						<td>#NumberFormat((FYTotalNoOfCredits-Variables.personOverage)/36*175,'_._')#</td>
                     </tr>
 						<!-- Totals for Footer -->
-						<cfset Variables.summerCredits = Variables.summerCredits + qryData.SummerNoOfCredits>
-						<cfset Variables.fallCredits = Variables.fallCredits + qryData.fallNoOfCredits>
-						<cfset Variables.winterCredits = Variables.winterCredits + qryData.winterNoOfCredits>
-						<cfset Variables.springCredits = Variables.springCredits + qryData.springNoOfCredits>
-						<cfset Variables.totalCredits = Variables.totalCredits + qryData.FYTotalNoOfCredits>
+						<cfset Variables.summerCredits = Variables.summerCredits + SummerNoOfCredits>
+						<cfset Variables.fallCredits = Variables.fallCredits + fallNoOfCredits>
+						<cfset Variables.winterCredits = Variables.winterCredits + winterNoOfCredits>
+						<cfset Variables.springCredits = Variables.springCredits + springNoOfCredits>
+						<cfset Variables.totalCredits = Variables.totalCredits + FYTotalNoOfCredits>
                 	</cfloop>
 				</cfif>
             </tbody>

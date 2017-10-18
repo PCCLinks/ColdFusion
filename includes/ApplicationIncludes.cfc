@@ -9,7 +9,7 @@
 	<cfset This.logfilename = "pcclinks">
 	<cfset This.sessiontimeout=createTimeSpan(0,2,0,0)>
 
-	<cfset Variables.cas_path="https://authenticate-test.pcc.edu/cas/">
+	<cfset Variables.cas_path="https://authenticate.pcc.edu/cas/">
  	<cfset Variables.app_path="https://" & "#CGI.SERVER_NAME#" & "#CGI.SCRIPT_NAME#">
  	<cfset Variables.cas_url=cas_path & "login?" & "service=" & app_path>
 
@@ -76,7 +76,7 @@
 		<cfargument name="eventname" type="string" >
 
 		<cfset var errortext = "">
-
+		<cfset logEntry(value="entering onError", level=3)>
 		<cfset logentry(value="-------------BEGIN ENTRY------------") >
 		<cfset logentry(value="#arguments.exception#") >
 		<cfif StructkeyExists(arguments.exception, "cause")>

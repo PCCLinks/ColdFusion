@@ -10,7 +10,7 @@
 	<cfinvokeargument name="BannerGNumber" value="#varBannerGNumber#">
 	<cfinvokeargument name="Term" value="#varTerm#">
 </cfinvoke>
-<cfset args = {"gnumber"= "#varBannerGNumber#", "term" = "#varTerm#", "subj" = ""}>
+<cfset args = {"bannerGNumber"= "#varBannerGNumber#", "term" = "#varTerm#", "subj" = ""}>
 <cfinvoke component="ProgramBilling" method="selectBannerClasses"  returnvariable="qryPastClasses">
 	<cfinvokeargument name="row" value="#args#">
 </cfinvoke>
@@ -73,7 +73,7 @@
 		            <th id="SUBJ">SUBJ</th>
 		            <th id="Title">Title</th>
 					<td id="TakenPreviousTerm">Taken Prev.</td>
-					<th id="CourseValue">CR</th>
+					<th id="Credits">CR</th>
 					<th id="IncludeFlag">Incl.</th>
 		       </tr>
 		     </thead>
@@ -86,7 +86,7 @@
 		            <td>#SUBJ#</td>
 		            <td>#Title#</td>
 					<td><cfif LEN(#TakenPreviousTerm#) EQ 0 OR #TakenPreviousTerm# EQ 0>No<cfelse><span style="color:red">Yes</span></cfif></td>
-		            <td>#NumberFormat(CourseValue,"0")#</td>
+		            <td>#NumberFormat(Credits,"0")#</td>
 		            <td><input type="checkbox" id="IncludeFlag" <cfif #IncludeFlag# EQ 1>checked</cfif>></td>
 				</tr>
 				</cfoutput>
@@ -107,8 +107,8 @@
 	            <th id="CRSE">CRSE</th>
 	            <th id="SUBJ">SUBJ</th>
 	            <th id="Title">Title</th>
-				<th id="IncludeFlag">CR</th>
-				<th id="CourseValue">Grade</th>
+				<th id="Credits">CR</th>
+				<th id="Grade">Grade</th>
 	       </tr>
 	     </thead>
 	     <tbody>

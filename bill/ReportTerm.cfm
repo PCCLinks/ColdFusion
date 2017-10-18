@@ -16,7 +16,7 @@
 	<cfset termValue="#Session.term#" >
 </cfif>--->
 <cfinvoke component="LookUp" method = "getProgramYearTerms" term="#Variables.term#" returnvariable="terms"></cfinvoke>
-<cfinvoke component="ProgramBilling" method="billingReport" returnvariable="qryData">
+<cfinvoke component="Report" method="billingReport" returnvariable="qryData">
 	<cfinvokeargument name="program" value="#Variables.program#">
 	<cfinvokeargument name="schooldistrict" value="#Variables.schooldistrict#">
 	<cfinvokeargument name="term" value="#Variables.term#">
@@ -84,7 +84,7 @@
 			<tr>
 				<td class="no-border" style="text-align:center">
 					<h3>College Quarterly Credit - Equivalent Instructional Days</h3>
-					<cfoutput><b>All Students at <cfif qryData.Program EQ "gtc">PCC/HSC<cfelse>#qryData.Program#</cfif> for #qryData.reportingStartDate# and #qryData.reportingEndDate#</b></cfoutput>
+					<cfoutput><b>All Students at <cfif Program EQ "gtc">PCC/HSC<cfelse>#Program#</cfif> for #qryData.reportingStartDate# and #qryData.reportingEndDate#</b></cfoutput>
 				</td>
 			</tr>
 		</table>
@@ -140,36 +140,36 @@
 					<cfif not isNull(qryData)>
 						<cfoutput query="qryData">
 	                    <tr>
-							<td>#qryData.bannerGNumber#</td>
-	                        <td id="namecol" class="name-column" style="white-space:nowrap"><b>#qryData.LASTNAME#, #qryData.FIRSTNAME#</b><br/>
-									#qryData.EnrolledDate# <cfif qryData.ExitDate NEQ "">-#qryData.ExitDate#</cfif>
+							<td>#bannerGNumber#</td>
+	                        <td id="namecol" class="name-column" style="white-space:nowrap"><b>#LASTNAME#, #FIRSTNAME#</b><br/>
+									#EnrolledDate# <cfif ExitDate NEQ "">-#ExitDate#</cfif>
 							</td>
 							<!-- SUMMER -->
-							<td class="bold-left-border">#NumberFormat(qryData.SummerNoOfCredits,'_._')#</td>
-							<td>#NumberFormat(qryData.SummerNoOfDays,'_._')#</td>
+							<td class="bold-left-border"><a href='javascript:goToBillingRecord(#billingStudentIdSummer#);'>#NumberFormat(SummerNoOfCredits,'_._')#</a></td>
+							<td>#NumberFormat(SummerNoOfDays,'_._')#</td>
 							<!-- FALL -->
-							<td class="bold-left-border">#NumberFormat(qryData.FallNoOfCredits,'_._')#</td>
-							<td>#NumberFormat(qryData.FallNoOfCreditsOver,'_._')#</td>
-							<td>#NumberFormat(qryData.FallNoOfDays,'_._')#</td>
-							<td>#NumberFormat(qryData.FallNoOfDaysOver,'_._')#</td>
+							<td class="bold-left-border"><a href='javascript:goToBillingRecord(#billingStudentIdFall#);'>#NumberFormat(FallNoOfCredits,'_._')#</a></td>
+							<td>#NumberFormat(FallNoOfCreditsOver,'_._')#</td>
+							<td>#NumberFormat(FallNoOfDays,'_._')#</td>
+							<td>#NumberFormat(FallNoOfDaysOver,'_._')#</td>
 							<!-- WINTER -->
-							<td class="bold-left-border">#NumberFormat(qryData.WinterNoOfCredits,'_._')#</td>
-							<td>#NumberFormat(qryData.WinterNoOfCreditsOver,'_._')#</td>
-							<td>#NumberFormat(qryData.WinterNoOfDays,'_._')#</td>
-							<td>#NumberFormat(qryData.WinterNoOfDaysOver,'_._')#</td>
+							<td class="bold-left-border"><a href='javascript:goToBillingRecord(#billingStudentIdWinter#);'>#NumberFormat(WinterNoOfCredits,'_._')#</a></td>
+							<td>#NumberFormat(WinterNoOfCreditsOver,'_._')#</td>
+							<td>#NumberFormat(WinterNoOfDays,'_._')#</td>
+							<td>#NumberFormat(WinterNoOfDaysOver,'_._')#</td>
 							<!-- SPRING -->
-							<td class="bold-left-border">#NumberFormat(qryData.SpringNoOfCredits,'_._')#</td>
-							<td>#NumberFormat(qryData.SpringNoOfCreditsOver,'_._')#</td>
-							<td>#NumberFormat(qryData.SpringNoOfDays,'_._')#</td>
-							<td>#NumberFormat(qryData.SpringNoOfDaysOver,'_._')#</td>
+							<td class="bold-left-border"><a href='javascript:goToBillingRecord(#billingStudentIdSpring#);'>#NumberFormat(SpringNoOfCredits,'_._')#</a></td>
+							<td>#NumberFormat(SpringNoOfCreditsOver,'_._')#</td>
+							<td>#NumberFormat(SpringNoOfDays,'_._')#</td>
+							<td>#NumberFormat(SpringNoOfDaysOver,'_._')#</td>
 							<!-- Total Credits -->
-							<td class="bold-left-border">#NumberFormat(qryData.FYTotalNoOfCredits,'_._')#</td>
+							<td class="bold-left-border">#NumberFormat(FYTotalNoOfCredits,'_._')#</td>
 							<!-- Max Total Credits -->
-							<td>#NumberFormat(qryData.FYMaxTotalNoOfCredits,'_._')#</td>
+							<td>#NumberFormat(FYMaxTotalNoOfCredits,'_._')#</td>
 							<!-- Total Days -->
-							<td>#NumberFormat(qryData.FYTotalNoOfDays,'_._')#</td>
+							<td>#NumberFormat(FYTotalNoOfDays,'_._')#</td>
 							<!-- Max Total Days -->
-							<td>#NumberFormat(qryData.FYMaxTotalNoOfDays,'_._')#</td>
+							<td>#NumberFormat(FYMaxTotalNoOfDays,'_._')#</td>
 	                    </tr>
 	                	</cfoutput>
 					</cfif>
@@ -250,39 +250,6 @@
 		    	// order by lastname
 		    	order:1,
 		    	bSort:false,
-		    	//set up hyperlinks for each cell of data
-		    	columnDefs: [
-		    			//summer
-						{targets:2,
-						 	sortable:false,
-						 	render: function ( data, type, row ) {
-		                  				return '<a href="javascript:goToDetail(\'<cfoutput>#terms.term1#</cfoutput>\', \'' + row[0] +'\')">' + data + '</a>';
-		             				}
-						 	},
-						 //fall
-						{targets:4,
-						 	sortable:false,
-						 	render: function ( data, type, row ) {
-		                  				return '<a href="javascript:goToDetail(\'<cfoutput>#terms.term2#</cfoutput>\', \'' + row[0] +'\')">' + data + '</a>';
-		             				}
-						 	},
-						 //winter
-						{targets:8,
-						 	sortable:false,
-						 	render: function ( data, type, row ) {
-		                  				return '<a href="javascript:goToDetail(\'<cfoutput>#terms.term3#</cfoutput>\', \'' + row[0] +'\')">' + data + '</a>';
-		             				}
-						 	},
-						 //spring
-						{targets:12,
-						 	sortable:false,
-						 	render: function ( data, type, row ) {
-		                  				return '<a href="javascript:goToDetail(\'<cfoutput>#terms.term4#</cfoutput>\', \'' + row[0] +'\')">' + data + '</a>';
-		             				}
-						 	}
-
-
-						],
 				//print button
 		        buttons: [
 		          {	extend:'print',
@@ -335,6 +302,10 @@
 
 		    } ); //end data table
 		} //end setup table
+
+		function goToBillingRecord(billingStudentId){
+			window.open('billingStudentRecord.cfm?billingStudentId='+billingStudentId,'_blank');
+		}
 
 		function goToDetail(term, bannerGNumber){
 			sessionStorage.setItem('bannerGNumber', bannerGNumber);

@@ -47,12 +47,12 @@
 		<cfset g = ''>
 		<cfoutput query="data">
 		<cfif g EQ #bannerGnumber#>
-				<td>#courseValue#</td>
+				<td>#attendance#</td>
 		<cfelse>
 			<cfif g NEQ ''></tr></cfif>
 			<tr>
 				<td>#bannerGnumber#</td>
-				<td>#courseValue#</td>
+				<td>#attendance#</td>
 		</cfif>
 		<cfset g = "#bannerGnumber#">
 		</cfoutput>

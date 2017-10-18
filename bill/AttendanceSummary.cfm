@@ -1,19 +1,25 @@
 <cfinclude template="includes/header.cfm" />
-
-<cfinvoke component="ProgramBilling" method="getLatestDateAttendanceMonth"  returnvariable="attendanceMonth"></cfinvoke>
+<cfif StructKeyExists(form, "billingStartDate")>
+	<cfset billingStartDate = "#form.billingStartDate#">
+<cfelse>
+	<cfinvoke component="ProgramBilling" method="getLatestDateAttendanceMonth"  returnvariable="attendanceMonth"></cfinvoke>
+	<cfset billingStartDate = "#attendanceMonth#">
+</cfif>
 <cfinvoke component="ProgramBilling" method="getAttendanceClassesForMonth"  returnvariable="data">
-	<cfinvokeargument name="billingStartDate" value="#attendanceMonth#">
+	<cfinvokeargument name="billingStartDate" value="#Variables.billingStartDate#">
 </cfinvoke>
 
 <div class="callout primary">
 <div class="row">
 <cfoutput>
+<form name="frm" action="AttendanceSummary.cfm" method="post">
 	<div class="small-4 columns">
-		<label>Month Start Date:&nbsp;<input name="billingStartDate" id="billingStartDate" value="#DateFormat(attendanceMonth,'m/d/yyyy')#"></label>
+		<label>Month Start Date:&nbsp;<input name="billingStartDate" id="billingStartDate" value="#DateFormat(Variables.billingStartDate,'m/d/yyyy')#"></label>
 	</div>
 	<div class="small-8 columns">
 		<input class="button" type="submit" name="submit" value="Get List of Classes" />
 	</div>
+</form>
 </cfoutput>
 </div>
 </div>

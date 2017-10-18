@@ -31,25 +31,38 @@
 			</label>
 		</div>
 		<cfoutput>
-		<div class="small-2 columns">
-			<label><cfif url.type EQ "term">Term Enrollment Date<cfelse>Month Start Date</cfif>:<br/>
-				<input name="billingStartDate" id="billingStartDate" type="text" />
-			</label>
-		</div>
-		<div class="small-2 columns">
+		<div class="small-3 columns">
 			<label>Term Begin Date:<br/>
 				<input name="termBeginDate" id="termBeginDate" type="text"  readonly="true"/>
 			</label>
 		</div>
-		<div class="small-2 columns">
+		<div class="small-3 columns">
 			<label>Term Drop Date:<br/>
 				<input name="termDropDate" id="termDropDate" type="text" readonly="true"/>
+			</label>
+		</div>
+		</cfoutput>
+		<div class="small-3 columns"></div>
+	</div>
+	<div class="row">
+		<div class="small-3 columns">
+			<label><cfif url.type EQ "term">Term Enrollment Date<cfelse>Month Start Date</cfif>:<br/>
+				<input name="billingStartDate" id="billingStartDate" type="text" />
+			</label>
+		</div>
+		<div class="small-3 columns">
+			<label>Reporting Start Date:<br/>
+				<input name="reportingStartDate" id="reportingStartDate" type="text" />
+			</label>
+		</div>
+		<div class="small-3 columns">
+			<label>Reporting End Date:<br/>
+				<input name="reportingEndDate" id="reportingEndDate" type="text" />
 			</label>
 		</div>
 		<div class="small-3 columns">
 			<label><br/><input class="button" type="submit" name="submit" value="Generate Billing" /></label>
 		</div>
-		</cfoutput>
 	</div>
 </form>
 <!--- end query parameters --->
@@ -65,8 +78,27 @@
 
 <cfsavecontent variable="pcc_scripts">
 <script type="text/javascript">
-	$('#billingStartDate').datepicker({ dateFormat: 'mm/dd/yy' });
+	$('#billingStartDate').fdatepicker({
+		format: 'mm-dd-yyyy',
+		disableDblClickSelection: true,
+		leftArrow:'<<',
+		rightArrow:'>>',
+		closeIcon:'X',
+		closeButton: true });
+	$('#reportingStartDate').fdatepicker({ format: 'mm/dd/yy',
+		disableDblClickSelection: true,
+		leftArrow:'<<',
+		rightArrow:'>>',
+		closeIcon:'X',
+		closeButton: true });
+	$('#reportingEndDate').fdatepicker({ format: 'mm/dd/yy',
+		disableDblClickSelection: true,
+		leftArrow:'<<',
+		rightArrow:'>>',
+		closeIcon:'X',
+		closeButton: true });
 	var selectedTerm;
+
 	$(document).ready(function(){
 		function setDate(term, displayField, idName){
 			selectedTerm = term;
@@ -92,14 +124,16 @@
 		 }
 	 );
 	});
+
 	function saveSessionToServer(){
 		var data = $.param({data:encodeURIComponent(JSON.stringify(sessionStorage))});
   		$.post("SaveSession.cfm", data);
 	}
 	var serverBillingSetupComplete = 0;
 	function setUpBilling(){
+		var urlValue = '<cfoutput><cfif url.type EQ 'Term'>SetUpBilling.cfc?method=setUpBilling<cfelse>SetUpBilling.cfc?method=setUpMonthlyBilling</cfif></cfoutput>';
 		$.ajax({
-			url: "SetUpBilling.cfc?method=setUpBilling",
+			url: urlValue,
 			dataType: "json",
 			type: "POST",
 			async: true,
@@ -117,9 +151,10 @@
 	function getCount(){
 		var currentCount = 0;
 		$.ajax({
-			url: "SetUpBilling.cfc?method=getInsertCount&term="+selectedTerm,
+			url: "SetUpBilling.cfc?method=getInsertCount&term="+selectedTerm + '&billingStartDate=' + $('#billingStartDate').val(),
 			dataType: "json",
 			type: "GET",
+			cache:false,
 			async: false,
 			success:function(data){
 				currentCount = data;
@@ -154,25 +189,7 @@
 			window.location="index.cfm";
 		}
 	}
-	function showStatus1(percentComplete, waitCount){
-		if(serverBillingSetupComplete == 0 && waitCount <= 8){
-			percentComplete += 5;
-			var p = $('.success progress');
-			p.attr('aria-valuenow', percentComplete);
-			p.attr('aria-valuetext', percentComplete + ' percent');
-			p.attr('aria-valuenow', percentComplete);
-			$('.progress-meter').css('width', percentComplete + '%');
-			$('.progress-meter-text').text(percentComplete + '%');
-			waitCount++;
-			setTimeout(function(){showStatus(percentComplete, waitCount);},25000);
-		}else if(serverBillingSetupComplete == 0 && waitCount >8){
-			jqDef = new $.Deferred(),
-        	jqXHR = jqDef.promise();
-        	jqXHR.statusText = "Error with SetUpBilling. WaitCount timed out and did not return a success code.";
-		}else{
-			window.location="index.cfm";
-		}
-	}
+
 </script>
 </cfsavecontent>
 <cfinclude template="includes/footer.cfm">

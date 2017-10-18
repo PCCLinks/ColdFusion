@@ -86,34 +86,34 @@
 				<cfif not isNull(qryData)>
                 	<cfloop query="qryData">
                     <tr>
-                        <td>#qryData.bannerGNumber#</td>
-                        <td>#qryData.FIRSTNAME#</td>
-                        <td>#qryData.LASTNAME#</td>
-                        <td>#qryData.CurrentSchoolDistrict#</td>
-                        <td>#qryData.CurrentEnrolledDate#</td>
-						<td>#qryData.CurrentExitDate#</td>
-						<td>#qryData.CurrentProgram#</td>
+                        <td>#bannerGNumber#</td>
+                        <td>#FIRSTNAME#</td>
+                        <td>#LASTNAME#</td>
+                        <td>#CurrentSchoolDistrict#</td>
+                        <td>#CurrentEnrolledDate#</td>
+						<td>#CurrentExitDate#</td>
+						<td>#CurrentProgram#</td>
 						<td>
-							<cfif LEN(qryData.SummerNoOfCredits) EQ 0>0
-							<cfelse>#NumberFormat(qryData.SummerNoOfCredits,'_')#
+							<cfif LEN(SummerNoOfCredits) EQ 0>0
+							<cfelse>#NumberFormat(SummerNoOfCredits,'_')#
 							</cfif>
 						</td>
 						<cfif #termValue# GTE #terms.term2#>
 						<td>
-							<cfif LEN(qryData.FallNoOfCredits) EQ 0>0
-							<cfelse>#NumberFormat(qryData.FallNoOfCredits,'_')#</cfif>
+							<cfif LEN(FallNoOfCredits) EQ 0>0
+							<cfelse>#NumberFormat(FallNoOfCredits,'_')#</cfif>
 						</td>
 						</cfif>
 						<cfif #termValue# GTE #terms.term3#>
 						<td>
-							<cfif LEN(qryData.WinterNoOfCredits) EQ 0>0
-							<cfelse>#NumberFormat(qryData.WinterNoOfCredits,'_')#</cfif>
+							<cfif LEN(WinterNoOfCredits) EQ 0>0
+							<cfelse>#NumberFormat(WinterNoOfCredits,'_')#</cfif>
 						</td>
 						</cfif>
 						<cfif #termValue# GTE #terms.term4#>
 						<td>
-							<cfif LEN(qryData.SpringNoOfCredits) EQ 0>0
-							<cfelse>#NumberFormat(qryData.SpringNoOfCredits,'_')#</cfif>
+							<cfif LEN(SpringNoOfCredits) EQ 0>0
+							<cfelse>#NumberFormat(SpringNoOfCredits,'_')#</cfif>
 						</td>
 						</cfif>
                     </tr>

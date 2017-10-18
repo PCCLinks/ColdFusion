@@ -2,7 +2,7 @@
 <cfdump var="#Session#">
 <cfinvoke component="ProgramBilling" method="getCurrentTermSummary"  returnvariable="qryData">
 </cfinvoke>
-<cfset Session.Term = qryData.Term>
+<cfset Session.Term = Term>
 <cflock timeout=20 scope="Session" type="Exclusive">
 	<cfset StructDelete(Session, "Program")>
 	<cfset StructDelete(Session, "SchoolDistrict")>
@@ -26,7 +26,7 @@
 </nav>
 <div class="row">
 	<div class="callout primary">
-		<cfoutput>Billing for Term: #qryData.Term#</cfoutput>
+		<cfoutput>Billing for Term: #Term#</cfoutput>
 	</div>
 </div>
 <div class="row">
@@ -43,10 +43,10 @@
 			<cfif not isNull(qryData)>
                <cfoutput query="qryData">
                	<tr>
-                    <td>#qryData.schoolDistrict#</td>
-					<td>#qryData.program#</td>
-					<td>#qryData.StudentsStillBeingReviewed#</td>
-					<td>#qryData.StudentsReviewed#</td>
+                    <td>#schoolDistrict#</td>
+					<td>#program#</td>
+					<td>#StudentsStillBeingReviewed#</td>
+					<td>#StudentsReviewed#</td>
                </tr>
                </cfoutput>
 			</cfif>

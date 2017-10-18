@@ -8,11 +8,22 @@
 <cfinvoke component="LookUp" method="getSchools" returnvariable="schools"></cfinvoke>
 
 
-<div class="row">
-	<div class="callout primary">
-		<cfoutput>Billing for Program Year: #terms.ProgramYear#</cfoutput>
+
+<div class="callout primary">
+	<div class="row">
+		<div class="medium-7 columns">
+			<cfoutput>Billing for Program Year: #terms.ProgramYear#</cfoutput>
+		</div>
+		<div class="medium-2 columns">
+			<input class="button" value="Generate Billing" onClick="javascript:generateBilling();">
+		</div>
+		<div class="medium-3 columns">
+			<input class="button" value="Close Billing Cycle" onClick="javascript:closeBillingCycle();">
+		</div>
 	</div>
 </div>
+
+
 <div class="row">
        <table id="dt_table" class="hover" cellspacing="0" width="100%">
            <thead>
@@ -29,50 +40,50 @@
 			<cfif not isNull(qryData)>
                <cfoutput query="qryData">
                    <tr>
-                       <td>#qryData.schoolDistrict#</td>
-					<td>#qryData.program#</td>
+                       <td>#schoolDistrict#</td>
+					<td>#program#</td>
 					<cfif terms.CurrentTerm GTE terms.Term1>
 						<td>
-							<cfif LEN(qryData.SummerNoOfCredits) EQ 0>0
-							<cfelse>#NumberFormat(qryData.SummerNoOfCredits,'_')#</cfif>
+							<cfif LEN(SummerAmount) EQ 0>0
+							<cfelse>#NumberFormat(SummerAmount,'_')#</cfif>
 						</td>
 					</cfif>
 					<cfif terms.CurrentTerm GTE terms.Term2 >
 						<td>
-							<cfif LEN(qryData.FallNoOfCredits) EQ 0>
-								<cfif terms.CurrentTerm GTE terms.Term2 AND (LEN(qryData.SummerNoOfCredits) GT 0 AND LEN(qryData.FallNoOfCredits) EQ 0) >
+							<cfif LEN(FallAmount) EQ 0>
+								<cfif terms.CurrentTerm GTE terms.Term2 AND (LEN(SummerAmount) GT 0 AND LEN(FallAmount) EQ 0) >
 									<span style="color:red">0</span>
 								<cfelse>
 									0
 								</cfif>
 							<cfelse>
-								#NumberFormat(qryData.FallNoOfCredits,'_')#
+								#NumberFormat(FallAmount,'_')#
 							</cfif>
 						</td>
 					</cfif>
 					<cfif terms.CurrentTerm GTE terms.Term3>
 						<td>
-							<cfif LEN(qryData.WinterNoOfCredits) EQ 0>
-								<cfif terms.CurrentTerm GTE terms.Term3 AND (LEN(qryData.FallNoOfCredits) GT 0 AND LEN(qryData.WinterNoOfCredits) EQ 0)>
+							<cfif LEN(WinterAmount) EQ 0>
+								<cfif terms.CurrentTerm GTE terms.Term3 AND (LEN(FallAmount) GT 0 AND LEN(WinterAmount) EQ 0)>
 									<span style="color:red">0</span>
 								<cfelse>
 									0
 								</cfif>
 							<cfelse>
-								#NumberFormat(qryData.WinterNoOfCredits,'_')#
+								#NumberFormat(WinterAmount,'_')#
 							</cfif>
 						</td>
 					</cfif>
 					<cfif terms.CurrentTerm GTE terms.Term4>
 						<td>
-							<cfif LEN(qryData.SpringNoOfCredits) EQ 0>
-								<cfif terms.CurrentTerm GTE terms.Term4 AND (LEN(qryData.WinterNoOfCredits) GT 0 AND LEN(qryData.SpringNoOfCredits) EQ 0)>
+							<cfif LEN(SpringAmount) EQ 0>
+								<cfif terms.CurrentTerm GTE terms.Term4 AND (LEN(WinterAmount) GT 0 AND LEN(SpringAmount) EQ 0)>
 									<span style="color:red">0</span>
 								<cfelse>
 									0
 								</cfif>
 							<cfelse>
-								#NumberFormat(qryData.SpringNoOfCredits,'_')#
+								#NumberFormat(SpringAmount,'_')#
 							</cfif>
 						</td>
 					</cfif>
@@ -103,12 +114,29 @@
 		sessionStorage.setItem('program', program);
 		sessionStorage.setItem('term', <cfoutput>#terms.CurrentTerm#</cfoutput>);
 		var data = $.param({data:encodeURIComponent(JSON.stringify(sessionStorage))});
-		var url = 'BillingReport.cfm';
+		var url = 'ReportTerm.cfm';
 		if(program.indexOf('Attendance')>0)
-			url = 'AttendanceReport.cfm'
+			url = 'ReportAttendance.cfm'
   		$.post("SaveSession.cfm", data, function(){
 	  		window.location=url;
   		});
+	}
+	function generateBilling(){
+		$.ajax({
+			url: 'report.cfc?method=generateBilling',
+			async: true,
+			type:'post',
+			data:{billingType:<cfoutput>'#url.type#', term: '#terms.CurrentTerm#'</cfoutput>},
+			success:function(){
+				alert('Billing Generated');
+			},
+			error: function (jqXHR, exception) {
+				handleAjaxError(jqXHR, exception);
+			}
+		});
+	}
+	function closeBillingCycle(){
+		window.open('CloseBillingCycle.cfm?type=<cfoutput>#url.type#</cfoutput>', '_blank');
 	}
 
 	</script>

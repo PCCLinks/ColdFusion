@@ -1,9 +1,10 @@
 
-<cfinclude template="includes/header.cfm">
+<!---<cfinclude template="includes/header.cfm">--->
+
 <cfinvoke component="ProgramBilling" method="attendanceReportDetail" returnvariable="data">
 	<cfinvokeargument name="billingStudentId" value="#url.billingStudentId#">
 </cfinvoke>
-
+<!---
 <div class="callout primary">
 <div class="row">
 <cfoutput>
@@ -14,8 +15,8 @@
 </cfoutput>
 </div>
 </div>
-
-
+--->
+<b>Attendance Details<b><br>
 <table>
 	<thead>
 		<tr>
@@ -97,4 +98,4 @@
 </table>
 
 
-<cfinclude template="includes/footer.cfm">
+<!---<cfinclude template="includes/footer.cfm">--->

@@ -1,8 +1,9 @@
 
 <cfinclude template="includes/header.cfm">
 <cfinvoke component="ProgramBilling" method="getLatestDateAttendanceMonth"  returnvariable="attendanceMonth"></cfinvoke>
-<cfinvoke component="ProgramBilling" method="attendanceReport" returnvariable="data">
+<cfinvoke component="Report" method="attendanceReport" returnvariable="data">
 	<cfinvokeargument name="monthStartDate" value="#attendanceMonth#">
+	<cfinvokeargument name="term" value="#Session.term#">
 	<cfinvokeargument name="program" value="#Session.program#">
 	<cfinvokeargument name="schooldistrict" value="#Session.schooldistrict#">
 </cfinvoke>
@@ -91,22 +92,22 @@
 	<tbody>
 	<cfoutput query="data">
 		<tr>
-			<td style="text-align:left"><a href='attendanceReportDetail.cfm?billingStudentId=#billingStudentId#' target='_blank'>#name#</a></td>
+			<td style="text-align:left">#name#</td>
 			<td style="text-align:left">#DateFormat(dob,"m/d/y")#</td>
 			<td style="text-align:left">#DateFormat(enrolleddate,"m/d/y")#</td>
 			<td style="text-align:left">#DateFormat(exitdate,"m/d/y")#</td>
-			<td>#Jun#</td>
-			<td>#Jul#</td>
-			<td>#Aug#</td>
-			<td>#Sept#</td>
-			<td>#Oct#</td>
-			<td>#Nov#</td>
-			<td>#Dec#</td>
-			<td>#Jan#</td>
-			<td>#Feb#</td>
-			<td>#Mar#</td>
-			<td>#Apr#</td>
-			<td>#May#</td>
+			<td><cfif JunbillingStudentId GT 0><a href='javascript:goToDetail(#JunbillingStudentId#);'>#Jun#</a><cfelse>0</cfif></td>
+			<td><cfif JulbillingStudentId GT 0><a href='javascript:goToDetail(#JulbillingStudentId#);' >#Jul#</a><cfelse>0</cfif></td>
+			<td><cfif AugbillingStudentId GT 0><a href='javascript:goToDetail(#AugbillingStudentId#);'>#Aug#</a><cfelse>0</cfif></td>
+			<td><cfif SeptbillingStudentId GT 0><a href='javascript:goToDetail(#SeptbillingStudentId#);'>#Sept#</a><cfelse>0</cfif></td>
+			<td><cfif OctbillingStudentId GT 0><a href='javascript:goToDetail(#OctbillingStudentId#);'>#Oct#</a><cfelse>0</cfif></td>
+			<td><cfif NovbillingStudentId GT 0><a href='javascript:goToDetail(#NovbillingStudentId#);'>#Nov#</a><cfelse>0</cfif></td>
+			<td><cfif DecbillingStudentId GT 0><a href='javascript:goToDetail(#DecbillingStudentId#);'>#Dec#</a><cfelse>0</cfif></td>
+			<td><cfif JanbillingStudentId GT 0><a href='javascript:goToDetail(#JanbillingStudentId#);'>#Jan#</a><cfelse>0</cfif></td>
+			<td><cfif FebbillingStudentId GT 0><a href='javascript:goToDetail(#FebbillingStudentId#);'>#Feb#</a><cfelse>0</cfif></td>
+			<td><cfif MarbillingStudentId GT 0><a href='javascript:goToDetail(#MarbillingStudentId#);'>#Mar#</a><cfelse>0</cfif></td>
+			<td><cfif AprbillingStudentId GT 0><a href='javascript:goToDetail(#AprbillingStudentId#);'>#Apr#</a><cfelse>0</cfif></td>
+			<td><cfif MaybillingStudentId GT 0><a href='javascript:goToDetail(#MaybillingStudentId#);'`>#May#</a><cfelse>0</cfif></td>
 			<td>#Attnd#</td>
 			<td>#Enrl#</td>
 		</tr>
@@ -224,6 +225,9 @@
 				 handleAjaxError(xhr, textStatus, thrownError);
 			}
           });
+	}
+	function goToDetail(billingStudentId){
+	 	window.open('billingStudentRecord.cfm?billingStudentId='+billingStudentId,'_blank');
 	}
 
 	</script>

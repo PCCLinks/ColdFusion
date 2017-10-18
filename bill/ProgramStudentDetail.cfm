@@ -98,15 +98,6 @@
 				<input type="checkbox" id="includeFlag" <cfif #includeFlag# EQ 1>checked</cfif>>
 			</div>
 		</div>
-		<div class="row">
-			<div class="small-2 columns"><b>Internal Billing Notes</b></div>
-			<div class="small-7 columns">
-				<input name="notes" value="#billingNotes#" id="billingNotes" style="width:600px;">
-			</div>
-			<div class="small-3 columns">
-				<input  type="button" onClick="javascript:saveBillingNotes();" value="Save Billing Notes">
-			</div>
-		</div>
 
 		<div class="row">
 			<div class="small-12 columns" style="color:red">
@@ -158,8 +149,8 @@
 		            <th id="CRSE">CRSE</th>
 		            <th id="SUBJ">SUBJ</th>
 		            <th id="Title">Title</th>
-					<td id="TakenPreviousTerm">Taken Prev.</td>
-					<th id="CourseValue"><cfif Variables.programType EQ "attendance">Attend.<cfelse>CR</cfif></th>
+					<th id="TakenPreviousTerm">Taken Prev.</td>
+					<th <cfif Variables.programType EQ "attendance">id="Attendace">Attend.<cfelse>id="Credits">CR</cfif></th>
 					<th id="IncludeFlag">Incl.</th>
 		       </tr>
 		     </thead>
@@ -173,9 +164,9 @@
 		            <td>#Title#</td>
 					<td><cfif LEN(#TakenPreviousTerm#) EQ 0 OR #TakenPreviousTerm# EQ 0>No<cfelse><span style="color:red">#TakenPreviousTerm#</span></cfif></td>
 		            <td><cfif programType EQ "attendance">
-		            		<a href="javascript:getAttendanceDetail(#CRN#)" >#NumberFormat(CourseValue,"0.0000")#</a>
+		            		<a href="javascript:getAttendanceDetail(#CRN#)" >#NumberFormat(Attendance,"0.0000")#</a>
 		            	<cfelse>
-		            		#NumberFormat(CourseValue,"0")#
+		            		#NumberFormat(Credits,"0")#
 		            	</cfif>
 					</td>
 		            <td><input type="checkbox" id="IncludeFlag"  <cfif #IncludeFlag# EQ 1>checked</cfif>></td>
@@ -186,7 +177,6 @@
 		<div class="callout">
 			<b>Billing Reviewed:</b> <input type="checkbox" name="billingReviewed" id="billingReviewed" <cfif Variables.BillingStatus EQ "Complete" and Variables.term EQ qryStudent.Term>checked</cfif> >
 		</div>
-		<cfmodule template="includes/billingRecord.cfm"  billingStudentId = "#qryStudent.billingStudentId#">
 	</div>
 	<div class="small-1 columns"></div>
 	<!---------------------------------------------------------------------------->
@@ -346,37 +336,22 @@
 		}); //end save checkbox changes
 
 		$('#nextStudent').button().click(function (){
-			gnumber = setNextGNumber(1);
-			goToDetailPage(gnumber);
+			bannerGNumber = setNextGNumber(1);
+			goToDetailPage(bannerGNumber);
 		});
 
 		$('#prevStudent').button().click(function (){
-			gnumber = setNextGNumber(0);
-			goToDetailPage(gnumber);
+			bannerGNumber = setNextGNumber(0);
+			goToDetailPage(bannerGNumber);
 		});
 	});
 
-		// save include in billing checkbox changes
-	function saveBillingNotes(){
-		var notes = $('#billingNotes').val();
-		var billingStudentId = <cfoutput>#Variables.BillingStudentID#</cfoutput>;
-		$.blockUI({ message: 'Just a moment...' });
-		$.ajax({
-			url: "programbilling.cfc?method=updateStudentBillingNotes",
-			type: "POST",
-			async: false,
-			data: { billingStudentId: billingStudentId, billingNotes:notes },
-			error: function (jqXHR, exception) {
-		        handleAjaxError(jqXHR, exception);
-			}
-		});
-		$.unblockUI();
-	}
+
 
 	function setNextGNumber(isGetNext){
 		var next = isGetNext;
 		var prev = isGetNext ? 0 : 1;
-		var gNumber = "";
+		var bannerGNumber = "";
 		$.ajax({
 			url: "programbilling.cfc?method=getNextGNumberInSession",
 			type: "POST",
@@ -387,10 +362,10 @@
 		        handleAjaxError(jqXHR, exception);
 			},
 			success: function(data){
-				gNumber = data;
+				bannerGNumber = data;
 			}
 		});
-		return gNumber;
+		return bannerGNumber;
 	}
 
 	function getAttendanceDetail(crn){

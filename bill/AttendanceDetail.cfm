@@ -52,21 +52,21 @@
 	<div class="small-2 columns">Student</div>
 	<div class="small-1 columns">Attendance</div>
 	<div class="small-1 columns"># Days</div>
-	<div class="small-5 columns">Details</div>
-	<div class="small-3 columns">Paste copied data</div>
+	<div class="small-6 columns">Details</div>
+	<div class="small-2 columns">Paste copied data</div>
 </div>
 </b>
 <cfoutput query="data">
 <div class="row">
 	<div class="small-2 columns display readonly">#data.lastname#, #data.firstname# (#data.bannerGNumber#)</div>
-	<div class="small-1 columns" ><input onBlur="saveEntry(#data.billingStudentItemId#);" value="#NumberFormat(CourseValue,"0")#" id='attendance#data.billingStudentItemId#' style="width:80px"></div>
-	<div class="small-1 columns" ><input onBlur="saveEntry(#data.billingStudentItemId#);" value="#NumberFormat(Amount2,"0")#" id='numberOfDays#data.billingStudentItemId#' style="width:80px"></div>
-	<div class="small-5 columns" id="detail#data.billingStudentItemId#">
+	<div class="small-1 columns" ><input onBlur="saveEntry(#data.billingStudentItemId#);" value="#NumberFormat(Attendance,"0")#" id='attendance#data.billingStudentItemId#' style="width:82px"></div>
+	<div class="small-1 columns" ><input onBlur="saveEntry(#data.billingStudentItemId#);" value="#NumberFormat(MaxPossibleAttendance,"0")#" id='numberOfDays#data.billingStudentItemId#' style="width:60px"></div>
+	<div class="small-6 columns" id="detail#data.billingStudentItemId#">
 		<cfmodule template="billingStudentItemDetail.cfm" billingStudentItemId = "#data.billingStudentItemId#"
 		>
 	</div>
-	<div class="small-3 columns" style="padding-left:0px;">
-		<input id='paste#data.billingStudentItemId#'>
+	<div class="small-2 columns" style="padding-left:0px;">
+		<input id='paste#data.billingStudentItemId#' >
 		<a href="javascript:doPaste(#data.billingStudentItemId#);">Save Paste</a>
 	</div>
 </div>
@@ -84,7 +84,7 @@
 		$.ajax({
 		          type: 'post',
 		          url: 'programBilling.cfc?method=updateAttendance',
-		          data: {billingStudentItemId: id, courseValue: cv, amount2: a},
+		          data: {billingStudentItemId: id, attendance: cv, maxPossibleAttendance: a},
 		          datatype:'json',
 		          error: function (jqXHR, exception) {
 				handleAjaxError(jqXHR, exception);

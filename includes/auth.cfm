@@ -39,7 +39,7 @@
           	       	<cfset session.userDisplayName = "#qryUser.displayName#">
           	       	<cfset session.userPosition = "#qryUser.position#">
           	   	</cflock>
-          	 <!--- not valid appication user --->
+          	 <!--- not valid application user --->
          	 <cfelse>
 				<cfset logEntry(value=#username# & " not a valid user: " & #now()#)>
 				<cfset Session.Error = "You are not an authorized user of this application.  Please see your manager if you believe this is in error.">
@@ -51,8 +51,10 @@
 		</cftry>
 	<!--- expected search results have failed --->
 	<cfelse>
-		<cfset logEntry(value="Search results from CAS did not provide key information")>
-		<cfset Session.Error = "Search results from CAS did not provide key information">
+		<cfset logEntry(value="Search results from CAS did not provide key informationxx")>
+		<cfset logDump(label="Search Results", value="#SearchResults#")>
+		<cfset logDump(label="session", value="#session#", level=2)>
+		<cfset Session.Error = "Search results from CAS did not provide key informationxxx">
 	</cfif> <!--- end arraylen(SearchResults --->
  </cfif> <!--- end if ticket --->
 
@@ -72,6 +74,8 @@
 			from applicationUser
 			where username = <cfqueryparam value="#username#">
 		</cfquery>
+		<!---<cfset logEntry(value="Search results from CAS did not provide key information")>
+		<cfset Session.Error = "Search results from CAS did not provide key information">--->
 		<cflock scope="session" timeout="30" type="exclusive">
 			<cfset session.username = username>
 			<cfset session.authorized = "1">
@@ -84,5 +88,6 @@
 </cfif>  <!--- end if not localhost --->
 
 <cfif Session.authorized EQ 0>
+	<cfset logEntry(value = "Unauthorized session for " & session.username)>
 	<cflocation url="../UnauthorizedError.cfm">
 </cfif>
