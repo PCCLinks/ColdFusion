@@ -6,7 +6,7 @@
 </cfinvoke>
 <cfinvoke component="LookUp" method="getPrograms" returnvariable="programs"></cfinvoke>
 <cfinvoke component="LookUp" method="getSchools" returnvariable="schools"></cfinvoke>
-
+<cfinvoke component="LookUp" method="getTerms" returnvariable="qryTerms"></cfinvoke>
 
 
 <div class="callout primary">
@@ -15,13 +15,93 @@
 			<cfoutput>Billing for Program Year: #terms.ProgramYear#</cfoutput>
 		</div>
 		<div class="medium-2 columns">
-			<input class="button" value="Generate Billing" onClick="javascript:generateBilling();">
+			<input class="button" value="Calculate Billing" onClick="javascript:showCalculateBilling();">
 		</div>
 		<div class="medium-3 columns">
-			<input class="button" value="Close Billing Cycle" onClick="javascript:closeBillingCycle();">
+			<input class="button" value="Close Billing Cycle" onClick="javascript:showCloseBillingCycle();">
 		</div>
 	</div>
 </div>
+
+<!--- CLOSE BILLING CYCLE --->
+<div class="callout" id="closeBillingCycle">
+<!--- query parameters --->
+<form id="frmCloseBillingCycle" action="report.cfc?method=closeBillingCycle" method="post">
+	<input type="hidden" name="billingType" id="billingType" value=<cfoutput>"#url.type#"</cfoutput>>
+	<div class="row">
+		<div class="small-3 columns">
+			<label>Term:<br/>
+				<select name="term" id="term" >
+					<option disabled selected value="" >
+						--Select Term--
+					</option>
+					<cfoutput query="qryTerms">
+					<option  value="#term#" >#term#</option>
+					</cfoutput>
+				</select>
+			</label>
+		</div>
+		<cfif url.type EQ "attendance">
+		<div class="small-3 columns">
+			<label>Month Start Date:<br/>
+				<input name="billingStartDate" id="billingStartDate1" type="text" />
+			</label>
+		</div>
+		<div class="small-3 columns">
+		<cfelse>
+		<div class="small-6 columns">
+		</cfif>
+			<div id="saveMessagefrmCloseBillingCycle">&nbsp;</div>
+			<input class="button" value="Close Billing Cycle" onClick='javascript:saveValues("frmCloseBillingCycle");' />
+		</div>
+	</div>
+</form>
+</div>
+<!----END CLOSE BILLING CYCLE -------------------------------->
+
+<!--- CALCULATE BILLING ---------------------------------->
+<div class="callout" id="calculateBilling">
+<!--- query parameters --->
+<form id="frmCalculateBilling" action="report.cfc?method=calculateBilling" method="post">
+	<input type="hidden" name="billingType" id="billingType" value=<cfoutput>"#url.type#"</cfoutput>>
+	<div class="row">
+		<div class="small-3 columns">
+			<label>Term:<br/>
+				<select name="term" id="term" >
+					<option disabled selected value="" >
+						--Select Term--
+					</option>
+					<cfoutput query="qryTerms">
+					<option  value="#term#" >#term#</option>
+					</cfoutput>
+				</select>
+			</label>
+		</div>
+		<cfif url.type EQ 'attendance'>
+			<div class="small-3 columns">
+				<label>Month Start Date:<br/>
+					<input name="billingStartDate" id="billingStartDate2" type="text" />
+				</label>
+			</div>
+			<div class="small-3 columns">
+				<label># of Max Days for Month: <input name="maxDaysPerMonth" id="maxDaysPerMonth" type="text" /></label>
+			</div>
+		<cfelse>
+			<div class="small-3 columns">
+				<label># of Max Credits Per Term: <input name="maxCreditsPerTerm" id="maxCreditsPerTerm" type="text" value="36"/></label>
+			</div>
+			<div class="small-3 columns">
+				<label># of Max Days Per Year: <input name="maxDaysPerYear" id="maxDaysPerYear" type="text" value="175"/></label>
+			</div>
+		</cfif>
+		<div class="small-3 columns">
+			<div id="saveMessagefrmCalculateBilling">&nbsp;</div>
+			<input class="button" value="Calculate Billing" onClick='javascript:saveValues("frmCalculateBilling");' />
+		</div>
+	</div>
+</form>
+</div>
+<!--- END CALCULATE BILLING ---------------------------------->
 
 
 <div class="row">
@@ -95,8 +175,26 @@
    </div>
 
 <cfsavecontent variable="pcc_scripts">
-	<script>
+<script type="text/javascript">
+	$('#billingStartDate1').fdatepicker({
+			format: 'mm-dd-yyyy',
+			disableDblClickSelection: true,
+			leftArrow:'<<',
+			rightArrow:'>>',
+			closeIcon:'X',
+			closeButton: true });
+	$('#billingStartDate2').fdatepicker({
+			format: 'mm-dd-yyyy',
+			disableDblClickSelection: true,
+			leftArrow:'<<',
+			rightArrow:'>>',
+			closeIcon:'X',
+			closeButton: true });
+
 	$(document).ready(function() {
+		$('#calculateBilling').hide();
+		$('#closeBillingCycle').hide();
+
 		$('#dt_table').dataTable({
 			paging:false,
 			searching:false,
@@ -110,7 +208,11 @@
 		});
 	});
 	function goToBillingReport(schooldistrict, program){
-		sessionStorage.setItem('schooldistrict', schooldistrict);
+		var url = 'ReportTerm.cfm';
+		if(program.indexOf('Attendance')>0)
+			url = 'ReportAttendance.cfm';
+		window.location=url+'?term=<cfoutput>#terms.CurrentTerm#</cfoutput>&schooldistrict='+schooldistrict+'&program='+program
+		/*sessionStorage.setItem('schooldistrict', schooldistrict);
 		sessionStorage.setItem('program', program);
 		sessionStorage.setItem('term', <cfoutput>#terms.CurrentTerm#</cfoutput>);
 		var data = $.param({data:encodeURIComponent(JSON.stringify(sessionStorage))});
@@ -119,14 +221,30 @@
 			url = 'ReportAttendance.cfm'
   		$.post("SaveSession.cfm", data, function(){
 	  		window.location=url;
-  		});
+  		});*/
 	}
+	function saveValues(formName){
+	 	var $form = $('#'+formName);
+	    $.ajax({
+	       	url:$form.attr('action'),
+	       	type: 'POST',
+	       	data: $form.serialize(),
+	       	success: function (data, textStatus, jqXHR) {
+	        	var d = new Date();
+				$('#saveMessage'+formName).html('Completed  ' + addZero(d.getHours()) + ':' + addZero(d.getMinutes()) + ':' + addZero(d.getSeconds()));
+	    	},
+			error: function (jqXHR, exception) {
+	      		handleAjaxError(jqXHR, exception);
+			}
+	    });
+	}
+	/*
 	function generateBilling(){
 		$.ajax({
 			url: 'report.cfc?method=generateBilling',
 			async: true,
 			type:'post',
-			data:{billingType:<cfoutput>'#url.type#', term: '#terms.CurrentTerm#'</cfoutput>},
+			data:{billingType:<cfoutput>'#url.type#', term: '#terms.CurrentTerm#', maxDaysPerMonth: </cfoutput>},
 			success:function(){
 				alert('Billing Generated');
 			},
@@ -134,11 +252,41 @@
 				handleAjaxError(jqXHR, exception);
 			}
 		});
+	}*/
+	function showCloseBillingCycle(){
+		$('#closeBillingCycle').show();
+		$('#calculateBilling').hide();
 	}
+	function showCalculateBilling(){
+		$('#calculateBilling').show();
+		$('#closeBillingCycle').hide();
+	}
+	function addZero($time) {
+  		if ($time < 10) {
+    		$time = "0" + $time;
+  		}
+  		return $time;
+	}
+	/*
+	$('#billingStartDate').datepicker({ dateFormat: 'mm/dd/yy' });
 	function closeBillingCycle(){
-		window.open('CloseBillingCycle.cfm?type=<cfoutput>#url.type#</cfoutput>', '_blank');
-	}
-
+		var r = confirm("Are you sure you want to close this billing cycle?");
+		if(r){
+			var $form = $('#pageForm');
+		    $.ajax({
+		       	url: 'programBilling.cfc?method=closeBillingCycle',
+		       	type: 'POST',
+		       	data: $form.serialize(),
+		       	success: function (data, textStatus, jqXHR) {
+		        	var d = new Date();
+					$('#savemessage').html('<br>Billing cycle closed.');
+		    	},
+				error: function (jqXHR, exception) {
+		      		handleAjaxError(jqXHR, exception);
+				}
+		    });
+		}
+	}*/
 	</script>
 </cfsavecontent>
 

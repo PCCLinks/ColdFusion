@@ -32,6 +32,12 @@
 			</ul>
 		</li>
 		<li><a href="ProgramStudent.cfm">Review Billing</a></li>
+		<li><a>Additional Reports</a>
+			<ul class="menu">
+				<li><a href="ReportExitStatus.cfm">Exit Status Report</a></li>
+				<li><a href="ReportADM.cfm">ADM Report</a></li>
+			</ul>
+		</li>
 		 <!---<li><a href="Reconcile.cfm">Reconcile Previous Billing</a></li>--->
 	</ul>
 </cfsavecontent>

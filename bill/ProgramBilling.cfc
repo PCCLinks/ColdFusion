@@ -992,25 +992,7 @@
 			where billingStudentItemId = <cfqueryparam value="#arguments.billingstudentitemid#">
 		</cfquery>
 	</cffunction>
-	<cffunction name="attendanceReportDetail" access="remote">
-		<cfargument name="billingStudentId" required="true">
-		<cfquery name="data">
-			select c.firstname, c.lastname, c.bannerGNumber, bs.billingStartDate
-				,ROUND(bsi.Attendance,2) Attendance, bsi.CRN, bsc.billingScenarioName, IndPercent, SmallPercent, InterPercent, LargePercent
-				,ROUND(IFNULL(bsi.Attendance,0)*IndPercent,2) as Ind
-				,ROUND(IFNULL(bsi.Attendance,0)*SmallPercent,2) as Small
-				,ROUND(IFNULL(bsi.Attendance,0)*InterPercent,2) as Inter
-				,ROUND(IFNULL(bsi.Attendance,0)*LargePercent,2) as Large
-			from contact c
-				join billingStudent bs on c.contactID = bs.contactID
-				join billingStudentItem bsi on bs.BillingStudentID = bsi.BillingStudentID
-			    join billingScenarioByCourse bsbc  on bsi.CRN = bsbc.CRN
-				join billingScenario bsc on bsbc.billingScenarioId = bsc.billingScenarioId
-			    join keySchoolDistrict sd on bs.DistrictID = sd.keySchoolDistrictID
-			where bs.billingStudentId = <cfqueryparam value="#arguments.billingStudentId#">
-		</cfquery>
-		<cfreturn data>
-	</cffunction>
+
 
 	<cffunction name="getScenarioCourses" access="remote">
 		<cfargument name="term" required="true">
@@ -1031,67 +1013,8 @@
 		</cfquery>
 		<cfreturn data>
 	</cffunction>
-	<cffunction name="getBillingStudentRecord" access="remote">
-		<cfargument name="billingStudentId" required="true">
-		<cfquery name="data">
-			select bs.*, c.firstname, c.lastname, sd.schooldistrict
-			from billingStudent bs
-				join contact c on bs.contactid = c.contactid
-				join keySchoolDistrict sd on bs.districtid = sd.keyschooldistrictid
-			where billingStudentId = <cfqueryparam value="#arguments.billingStudentId#">
-		</cfquery>
-		<cfreturn data>
-	</cffunction>
-	<cffunction name="updatebillingStudentRecord" access="remote">
-		<cfargument name="billingStudentId" required="true">
-		<cfargument name="correctedBilledAmount" required="true">
-		<cfargument name="correctedOverageAmount" required="true">
-		<cfargument name="correctedBilledUnits" default="">
-		<cfargument name="correctedOverageUnits" default="">
-		<cfargument name="program" required="true">
-		<cfargument name="billingNotes" required="true">
-		<cfargument name="invoiceNotes" required="true">
-		<cfargument name="includeFlag" default="0">
-		<cfargument name="exitDate" required="true">
 
-		<cfif arguments.includeFlag EQ "on">
-			<cfset arguments.includeFlag = 1>
-		</cfif>
 
-		<cfquery name="update">
-			UPDATE billingStudent
-				SET correctedBilledAmount = <cfif arguments.correctedBilledAmount EQ "">NULL<cfelse><cfqueryparam value="#arguments.correctedBilledAmount#"></cfif>,
-				 correctedOverageAmount = <cfif arguments.correctedOverageAmount EQ "">NULL<cfelse><cfqueryparam value="#arguments.correctedOverageAmount#"></cfif>,
-				 correctedBilledUnits = <cfif arguments.correctedBilledUnits EQ "">NULL<cfelse><cfqueryparam value="#arguments.correctedBilledUnits#"></cfif>,
-				 correctedOverageUnits = <cfif arguments.correctedOverageUnits EQ "">NULL<cfelse><cfqueryparam value="#arguments.correctedOverageUnits#"></cfif>,
-				 program = <cfqueryparam value="#arguments.program#">,
-				 billingNotes = <cfqueryparam value="#arguments.billingNotes#">,
-				 invoiceNotes = <cfqueryparam value="#arguments.invoiceNotes#">,
-				 includeFlag = <cfqueryparam value="#arguments.includeFlag#">,
-				 exitDate = <cfqueryparam value="#DateFormat(arguments.exitDate,'yyyy-mm-dd')#">
-			WHERE billingStudentId = <cfqueryparam value="#arguments.billingStudentId#">
-		</cfquery>
-	</cffunction>
 
-	<cffunction name="closeBillingCycle" access="remote">
-		<cfargument name="term" required="true">
-		<cfargument name="billingStartDate" required="true">
-		<cfargument name="billingType" required="true">
-		<cfquery name="update">
-			update billingStudent
-			set billingStatus = 'COMPLETE',
-				FinalBilledUnits = COALESCE(CorrectedBilledUnits, GeneratedBilledUnits),
-				FinalOverageUnits = COALESCE(CorrectedOverageUnits, GeneratedOverageUnits),
-				FinalBilledAmount = COALESCE(CorrectedBilledAmount, GeneratedBilledAmount),
-				FinalOverageAmount = COALESCE(CorrectedOverageAmount, GeneratedOverageAmount)
-			where term = <cfqueryparam value="#arguments.term#">
-				and billingStartDate =<cfqueryparam value="#DateFormat(arguments.billingStartDate,'yyyy-mm-dd')#">
-				<cfif arguments.billingType EQ "attendance">
-					 and program like '%attendance%'
-				<cfelse>
-					and program not like '%attendance%'
-				</cfif>
-		</cfquery>
-	</cffunction>
 
 </cfcomponent>

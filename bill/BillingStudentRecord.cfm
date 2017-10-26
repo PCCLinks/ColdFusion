@@ -3,15 +3,18 @@
 <!--- Get Page Header Data --->
 
 
-<cfinvoke component="ProgramBilling" method="getBillingStudentRecord" returnvariable="qryBillingStudentRecord">
+<cfinvoke component="Report" method="getBillingStudentRecord" returnvariable="qryBillingStudentRecord">
 	<cfinvokeargument name="billingStudentId" value="#url.billingStudentID#">
 </cfinvoke>
 <cfinvoke component="LookUp" method="getPrograms" returnvariable="programs"></cfinvoke>
+<cfinvoke component="LookUp" method="getExitReasons" returnvariable="exitReasons"></cfinvoke>
+
 <cfoutput query="qryBillingStudentRecord">
 
 <cfset readonly = false>
 <cfif BillingStatus EQ 'COMPLETE'><cfset readonly = true></cfif>
 
+<cfoutput><div><a href='#session.returnToReport#' class="button">Return to report</a> </div></cfoutput>
 <div class="callout">
 <form id="frm" action="javascript:saveValues();" method="post">
 	<input type="hidden" name="billingStudentId" value="#billingStudentId#"><br>
@@ -33,7 +36,7 @@
 			<div class="small-2 columns"><b>Include in Billing</b></div>
 		</div>
 		<div class="row">
-			<div class="small-1 columns">#bannerGNumber#</div>
+			<div class="small-1 columns"><a href="javascript:goToDetail('#bannerGNumber#',#term#)">#bannerGNumber#</a></div>
 			<div class="small-2 columns">#FIRSTNAME# #LASTNAME#</div>
 			<div class="small-3 columns">
 				<cfif readonly>
@@ -48,7 +51,7 @@
 			</div>
 			<div class="small-1 columns">
 				<cfif readonly><cfif LEN(#EXITDATE#) EQ 0>None<cfelse>#DateFormat(EXITDATE,"m/d/yy")#</cfif>
-				<cfelse><input id="exitDate" name="exitDate" value="#DateFormat(EXITDATE,"m/d/yy")#" style="width:75px;">
+				<cfelse><input id="exitDate" name="exitDate" value="#DateFormat(EXITDATE,"m/d/yy")#" style="width:75px;" type="text">
 				</cfif>
 			</div>
 			<div class="small-1 columns">#term#</div>
@@ -67,7 +70,8 @@
 				<label>Generated:&nbsp;&nbsp;#NumberFormat(generatedBilledUnits,'_._')#</label>
 				<label>Corrected:&nbsp;&nbsp;&nbsp;
 					<cfif readonly>#correctedBilledUnits#
-					<cfelse><input style="width:65px;" name="correctedBilledUnits" id="correctedBilledUnits" value="#correctedBilledUnits#" onchange="javascript:updateCorrectedBilledAmount();">
+					<cfelse><input style="width:65px;" name="correctedBilledUnits" id="correctedBilledUnits" value="#correctedBilledUnits#"
+									onchange="javascript:updateCorrectedBilledAmount(#maxCreditsPerTerm#, #maxDaysPerYear#);">
 					</cfif>
 				</label>
 				<label>Final Billed:&nbsp;#NumberFormat(finalBilledUnits,'_._')#</label>
@@ -77,7 +81,8 @@
 				<label>Generated:&nbsp;&nbsp;#NumberFormat(generatedOverageUnits,'_._')#</label>
 				<label>Corrected:&nbsp;&nbsp;&nbsp;
 					<cfif readonly>#correctedOverageUnits#
-					<cfelse><input style="width:65px;" name="correctedOverageUnits" id="correctedOverageUnits" value="#correctedOverageUnits#" onchange="javascript:updateCorrectedOverageAmount();">
+					<cfelse><input style="width:65px;" name="correctedOverageUnits" id="correctedOverageUnits" value="#correctedOverageUnits#"
+								onchange="javascript:updateCorrectedOverageAmountTerm(#maxCreditsPerTerm#, #maxDaysPerYear#);">
 					</cfif>
 				</label>
 				<label>Final Billed:&nbsp;#NumberFormat(finalOverageUnits,'_._')#</label>
@@ -89,13 +94,17 @@
 		<div class="row">
 			<div class="small-6 columns">
 				Billed Amount
-				<label>Generated:&nbsp;&nbsp;#NumberFormat(generatedBilledAmount,'_._')#</label>
+				<label>Generated:&nbsp;&nbsp;
+					<input id="generatedBilledAmount" name="generatedBilledAmount" value="#NumberFormat(generatedBilledAmount,'_._')#" readonly></label>
 				<label>Corrected:&nbsp;&nbsp;&nbsp;
 					<cfif readonly>#correctedBilledAmount#
 					<cfelse><input style="width:65px;" name="correctedBilledAmount" id="correctedBilledAmount" value="#correctedBilledAmount#">
 					</cfif>
 				</label>
 				<label>Final Billed:&nbsp;#NumberFormat(finalBilledAmount,'_._')#</label>
+				<label>Corrected Post Billed Amount:&nbsp;&nbsp;&nbsp;
+					<input style="width:65px;" name="postBillCorrectedBilledAmount" id="postBillCorrectedBilledAmount" value="#postBillCorrectedBilledAmount#">
+				</label>
 			</div>
 			<div class="small-6 columns">
 				Overage Amount
@@ -109,6 +118,37 @@
 			</div>
 		</div>
 	</div>
+	<cfif qryBillingStudentRecord.program CONTAINS 'attendance'>
+	<div class="callout">
+		<div class="row">
+			<div class="small-3 columns">
+				<label>Max Days For Month:
+					<input id="maxDaysPerMonth" name="maxDaysPerMonth" value="#maxDaysPerMonth#" readonly></label>
+				</label>
+				<label>
+					Adjusted Days For Month: <input style="width:65px;" name="adjustedDaysPerMonth" id="adjustedDaysPerMonth" value="#adjustedDaysPerMonth#"
+												onchange="javascript:updateBilledAmountAttendance();">
+				</label>
+			</div>
+			<div class="small-9 columns">
+				<label>Exit Reason:
+				<cfif readonly>
+					#billingStudentExitReasonCode#
+				<cfelse>
+				<select name="billingStudentExitReasonCode" id="billingStudentExitReasonCode" style="max-width:600px">
+					<option disabled selected value="" >
+						--Select Exit Reason--
+					</option>
+					<cfloop query="exitReasons">
+						<option value="#billingStudentExitReasonCode#" <cfif #qryBillingStudentRecord.billingStudentExitReasonCode# EQ #billingStudentExitReasonCode#> selected </cfif> > #billingStudentExitReasonDescription# </option>
+					</cfloop>
+				</select>
+				</cfif>
+				</label>
+			</div>
+		</div>
+	</div>
+	</cfif>
 	<div class="callout">
 		<div class="row">
 			<div class="small-2 columns">Internal Billing Notes</div>
@@ -116,13 +156,13 @@
 				<input name="billingNotes" value="#billingNotes#"  style="width:700px;">
 			</div>
 		</div>
-		<div class="row">&nbsp;</div>
+		<!---<div class="row">&nbsp;</div>
 		<div class="row">
 			<div class="small-2 columns">Invoice Notes</div>
 			<div class="small-10 columns">
 				<input name="invoiceNotes" value="#invoiceNotes#" style="width:700px;">
 			</div>
-		</div>
+		</div>--->
 	</div>
 	<div class="row">
 		<div class="small-12 columns" style="color:red">
@@ -138,69 +178,91 @@
 	</div>
 	</form>
 
-	<div class="callout">
-		<cfif qryBillingStudentRecord.program CONTAINS 'attendance'>
+	<cfif qryBillingStudentRecord.program CONTAINS 'attendance'>
+		<div class="callout">
 			<cfinclude template="includes/AttendanceDetailInclude.cfm" />
-		</cfif>
-	</div>
+		</div>
+	</cfif>
 </div>
 </cfoutput>
 
 <cfsavecontent variable="pcc_scripts">
 <script>
 
-$('#exitDate').fdatepicker({ format: 'mm/dd/yy',
-	disableDblClickSelection: true,
-	leftArrow:'<<',
-	rightArrow:'>>',
-	closeIcon:'X',
-	closeButton: true });
+	$('#exitDate').fdatepicker({ format: 'mm/dd/yy',
+		disableDblClickSelection: true,
+		leftArrow:'<<',
+		rightArrow:'>>',
+		closeIcon:'X',
+		closeButton: true });
 
-function saveValues(){
- 	var $form = $('#frm');
-    $.ajax({
-       	url: 'programBilling.cfc?method=updateBillingStudentRecord',
-       	type: 'POST',
-       	data: $form.serialize(),
-       	success: function (data, textStatus, jqXHR) {
-        	var d = new Date();
-			$('#savemessage').html('Saved ' + addZero(d.getHours()) + ':' + addZero(d.getMinutes()) + ':' + addZero(d.getSeconds()));
-    	},
-		error: function (jqXHR, exception) {
-      		handleAjaxError(jqXHR, exception);
-		}
-    });
-}
-function updateCorrectedBilledAmount(){
-	var correctedBilledUnits = $('#correctedBilledUnits').val();
-	var r = confirm("Update Corrected Billed Amount?");
-	if(r == true){
-		if(correctedBilledUnits == ""){
-			$('#correctedBilledAmount').val("");
-		}else{
-			$('#correctedBilledAmount').val(correctedBilledUnits/36*175);
+	function saveValues(){
+	 	var $form = $('#frm');
+	    $.ajax({
+	       	url: 'report.cfc?method=updateBillingStudentRecord',
+	       	type: 'POST',
+	       	data: $form.serialize(),
+	       	success: function (data, textStatus, jqXHR) {
+	        	var d = new Date();
+				$('#savemessage').html('Saved ' + addZero(d.getHours()) + ':' + addZero(d.getMinutes()) + ':' + addZero(d.getSeconds()));
+	    	},
+			error: function (jqXHR, exception) {
+	      		handleAjaxError(jqXHR, exception);
+			}
+	    });
+	}
+	function updateCorrectedBilledAmount(maxNumberOfCreditsPerTerm, maxNumberOfDaysPerYear){
+		var correctedBilledUnits = $('#correctedBilledUnits').val();
+		var r = confirm("Update Corrected Billed Amount?");
+		if(r == true){
+			if(correctedBilledUnits == ""){
+				$('#correctedBilledAmount').val("");
+			}else{
+				$('#correctedBilledAmount').val(correctedBilledUnits/maxNumberOfCreditsPerTerm*maxNumberOfDaysPerYear);
+			}
 		}
 	}
-}
-
-function updateCorrectedOverageAmount(){
-	var correctedOverageUnits = $('#correctedOverageUnits').val();
-	var r = confirm("Update Corrected Overage Amount?");
-	if(r == true){
-		if(correctedOverageUnits == ""){
-			$('#correctedOverageAmount').val("");
-		}else{
-			$('#correctedOverageAmount').val(correctedOverageUnits/36*175);
+	function updateCorrectedOverageAmount(maxNumberOfCreditsPerTerm, maxNumberOfDaysPerYear){
+		var correctedOverageUnits = $('#correctedOverageUnits').val();
+		var r = confirm("Update Corrected Overage Amount?");
+		if(r == true){
+			if(correctedOverageUnits == ""){
+				$('#correctedOverageAmount').val("");
+			}else{
+				$('#correctedOverageAmount').val(correctedOverageUnits/maxNumberOfCreditsPerTerm*maxNumberOfDaysPerYear);
+			}
 		}
 	}
-}
+	function updateBilledAmountAttendance(){
+		var adjustedDaysPerMonth = $('#adjustedDaysPerMonth').val();
+		//if(adjustedDaysPerMonth == 0 || !adjustedDaysPerMonth){
+		//	var maxDaysPerMonth = $('#maxDaysPerMonth').val();
+		//	$('#correctedBilledAmount').val("");
+		//}else{
+			if($('#generatedBilledAmount').val() > adjustedDaysPerMonth){
+				$('#correctedBilledAmount').val(adjustedDaysPerMonth);
+			}else{
+				$('#correctedBilledAmount').val("");
+			}
+		//}
+	}
 
-function addZero($time) {
-  if ($time < 10) {
-    $time = "0" + $time;
-  }
-  return $time;
-}
+	function goToDetail(bannerGNumber, term){
+		sessionStorage.setItem('bannerGNumber', bannerGNumber);
+		sessionStorage.setItem('term', term);
+		sessionStorage.setItem('showNext',false);
+		var data = $.param({data:encodeURIComponent(JSON.stringify(sessionStorage))});
+		$.post("SaveSession.cfm", data, function(){
+			window.open('programStudentDetail.cfm');
+		});
+	}
+
+	function addZero($time) {
+	  if ($time < 10) {
+	    $time = "0" + $time;
+	  }
+	  return $time;
+	}
 </script>
 </cfsavecontent>
 

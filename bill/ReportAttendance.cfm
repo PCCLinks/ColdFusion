@@ -3,11 +3,11 @@
 <cfinvoke component="ProgramBilling" method="getLatestDateAttendanceMonth"  returnvariable="attendanceMonth"></cfinvoke>
 <cfinvoke component="Report" method="attendanceReport" returnvariable="data">
 	<cfinvokeargument name="monthStartDate" value="#attendanceMonth#">
-	<cfinvokeargument name="term" value="#Session.term#">
-	<cfinvokeargument name="program" value="#Session.program#">
-	<cfinvokeargument name="schooldistrict" value="#Session.schooldistrict#">
+	<cfinvokeargument name="term" value="#url.term#">
+	<cfinvokeargument name="program" value="#url.program#">
+	<cfinvokeargument name="schooldistrict" value="#url.schooldistrict#">
 </cfinvoke>
-<cfset Session.attendanceReportPrintTable = data>
+<cfset Session.reportAttendancePrintTable = data>
 
 
 <style>
@@ -27,12 +27,11 @@
 		width:auto !important;
 	}
 </style>
-
 	<div class="row" id="tableheader">
 		<table width="100%" style="border-style:none;">
 			<tr>
 				<td class="bottom-border" style="text-align:left; font-size:8px">
-					<cfoutput>#Session.schooldistrict#</cfoutput>
+					<cfoutput>#url.schooldistrict#</cfoutput>
 				</td>
 				<td class="bottom-border" style="text-align:right; font-size:8px">
 					Alternative Education Program
@@ -41,7 +40,7 @@
 			<tr>
 				<td colspan="2" class="no-border" style="text-align:center; font-size:12px">
 					<h4>Monthly Attendance And Days Enrolled - Public School Days</h4>
-					<cfoutput><b>All Students at #Session.Program# between #data.ReportingStartDate# and #data.ReportingEndDate#</b></cfoutput>
+					<cfoutput><b>All Students at #url.Program# between #data.ReportingStartDate# and #data.ReportingEndDate#</b></cfoutput>
 				</td>
 			</tr>
 		</table>
@@ -168,6 +167,7 @@
 			$('#dt_table').DataTable( {
 		    	dom: '<"top"iBf>rt<"bottom"lp>',
 		    	bSort:false,
+		    	stateSave: true,
 			    buttons: [
 		          {	extend:'print',
 		            autoPrint:false,
@@ -189,7 +189,7 @@
 		              	var printTable = '';
 		              	$.ajax({
 				            type: 'get',
-				            url: 'AttendanceReportPrintTable.cfm',
+				            url: 'ReportAttendancePrintTable.cfm',
 							async: false,
 				            success: function (data, textStatus, jqXHR) {
 				            	printTable = data;
@@ -208,7 +208,7 @@
 						//adding in the document header
 		     			 $(win.document.body).find('h1').replaceWith('<style> .no-border{border-style:none !important} .bottom-border{ 	border-top-style:none;	border-left-style:none; border-right-style:none; border-bottom-style:solid; } </style><div class="row">' + $('#tableheader').html() + '</div><br><br>');
 		            } //end customize
-		        }, //end print button definition
+		        } //end print button definition
 		    ] //end buttons
 			});
 		}
@@ -227,7 +227,11 @@
           });
 	}
 	function goToDetail(billingStudentId){
-	 	window.open('billingStudentRecord.cfm?billingStudentId='+billingStudentId,'_blank');
+		sessionStorage.setItem('returnToReport', '<cfoutput>#cgi.script_name#?#cgi.query_string#</cfoutput>');
+		var data = $.param({data:encodeURIComponent(JSON.stringify(sessionStorage))});
+		$.post("SaveSession.cfm", data, function(){
+	  		window.location='billingStudentRecord.cfm?billingStudentId='+billingStudentId;
+  		});
 	}
 
 	</script>

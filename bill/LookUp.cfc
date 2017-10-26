@@ -57,7 +57,7 @@
 	</cffunction>
 	<cffunction name="getCurrentYearTerms" access="remote" >
 		<cfquery name="data" >
-			select c.*
+			select c.Term
 			from bannerCalendar c
 				join bannerCalendar c1 on c.ProgramYear = c1.ProgramYear
 			where c1.Term = (select max(Term) from billingStudent)
@@ -156,13 +156,18 @@
 	<cffunction  name="getScenarios" access="remote" returnformat="JSON" >
 		<cfargument name="billingScenarioName" default="">
 		<cfquery name="data" >
-				SELECT * FROM sidny.billingScenario
+				SELECT * FROM billingScenario
 				<cfif len(arguments.billingScenarioName) GT 0>
 				WHERE billingScenarioName = <cfqueryparam value="#arguments.billingScenarioName#">
 				</cfif>
 		</cfquery>
 		<cfreturn data>
 	</cffunction>
-
+	<cffunction  name="getExitReasons" access="remote" returnformat="JSON" >
+		<cfquery name="data" >
+				SELECT * FROM billingStudentExitReason
+		</cfquery>
+		<cfreturn data>
+	</cffunction>
 
 </cfcomponent>

@@ -1,4 +1,4 @@
-<cfset data = Session.attendanceReportPrintTable>
+<cfset data = Session.reportAttendancePrintTable>
 
 
 <cfset Variables.count = 0>

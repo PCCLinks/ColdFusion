@@ -1,31 +1,23 @@
 <cfset pcc_title = 'PCC Links Billing' />
 <cfinclude template="includes/header.cfm">
 
-<cfset Variables.program="#Session.program#" >
-<cfset Variables.schooldistrict="#Session.schooldistrict#" >
-<cfset Variables.term="#Session.term#" >
-<!---<cfif isDefined("Session.Program") >
-	<cfset programValue="#Session.Program#" >
-</cfif>
-<cfset schooldistrictValue="" >
-<cfif isDefined("Session.schooldistrict") >
-	<cfset schooldistrictValue="#Session.schooldistrict#" >
-</cfif>
-<cfset termValue="" >
-<cfif isDefined("Session.term") >
-	<cfset termValue="#Session.term#" >
-</cfif>--->
+<cfset Variables.program="#url.program#" >
+<cfset Variables.schooldistrict="#url.schooldistrict#" >
+<cfset Variables.term="#url.term#" >
+
 <cfinvoke component="LookUp" method = "getProgramYearTerms" term="#Variables.term#" returnvariable="terms"></cfinvoke>
 <cfinvoke component="Report" method="billingReport" returnvariable="qryData">
 	<cfinvokeargument name="program" value="#Variables.program#">
 	<cfinvokeargument name="schooldistrict" value="#Variables.schooldistrict#">
 	<cfinvokeargument name="term" value="#Variables.term#">
 </cfinvoke>
+<cfset Session.reportTermPrintTable = qryData>
 <cfinvoke component="LookUp" method="getProgramYearTerms" value="terms"></cfinvoke>
 <style>
 
 		table tbody td, table tfoot td{
 			text-align:right;
+			padding:4x;
 		}
 		table thead th, table tbody td, table tfoot td {
 			border-color:black;
@@ -33,13 +25,14 @@
 			border-width: 0.5px;
 			background-color:white;
 		}
+
 		.no-border{
 			border-color:none;
 			border-style:none;
 			border-width: 0px;
 		}
 		.bold-left-border{
-			border-left-width:1px;
+			border-left-width:2px;
 			border-left-style:solid;
 		}
 		.bold-right-border{
@@ -68,48 +61,33 @@
 			display:inline-block !important;
 			width:auto !important;
 		}
+
 	</style>
 
 
-	<div class="row" id="tableheader">
-		<table width="100%" style="border-style:none;">
-			<tr>
-				<td class="bottom-border" style="text-align:left; font-size:x-small">
-					<cfoutput>#Variables.schooldistrict#</cfoutput>
-				</td>
-				<td class="bottom-border" style="text-align:right; font-size:x-small">
-					Alternative Education Program
-				</td>
-			</tr>
-			<tr>
-				<td class="no-border" style="text-align:center">
-					<h3>College Quarterly Credit - Equivalent Instructional Days</h3>
-					<cfoutput><b>All Students at <cfif Program EQ "gtc">PCC/HSC<cfelse>#Program#</cfif> for #qryData.reportingStartDate# and #qryData.reportingEndDate#</b></cfoutput>
-				</td>
-			</tr>
-		</table>
+	<div class="callout primary">
+	<cfoutput>Credit Report for Term: <b>#term#</b>, District <b>#SchoolDistrict#</b>,  Program <b>#Program#</b> for #qryData.reportingStartDate# and #qryData.reportingEndDate#</cfoutput>
 	</div>
 
 
-	<table id="dt_table" class="hover compact">
-		<!---<div class="row">--->
+	<table id="dt_table" class="compact">
 			<cfoutput>
 	            <thead >
-	                <tr id="dt-header">
-	                    <th>G</th>
-						<th class="name-column">Student</th>
+	                <tr>
+						<th class="no-border"></th>
+						<th class="no-border"></th>
+						<th class="no-border"></th>
 						<th id="SummerNoOfCredits" colspan="2" class="bold-left-border">SUMMER</th>
 						<th colspan="4" id="FallNoOfCredits" class="bold-left-border">FALL</th>
 						<th colspan="4" id="WinterNoOfCredits" class="bold-left-border">WINTER</th>
 						<th colspan="4" id="SpringNoOfCredits" class="bold-left-border">SPRING</th>
 						<th class="bold-left-border border-no-bottom"></th>
-						<th class="border-no-bottom"></th>
-						<th class="border-no-bottom"></th>
-						<th class="border-no-bottom"></th>
+						<th class="border-no-bottom" colspan="3"></th>
 	                </tr>
 	                <tr>
-						<th></th>
-	                    <th class="border-left-none name-column" style="white-space:nowrap">Entry Date - Exit Date</th>
+						<th class="border-left-border">Student</th>
+	                    <th>G</th>
+	                    <th class="border-left-border" >Dates</th>
 						<!-- SUMMER -->
 						<th class="bold-left-border">Credits</th>
 						<th >Days</th>
@@ -130,9 +108,9 @@
 						<th>Over</th>
 						<!-- ROW TOTALS -->
 						<th class="border-no-top bold-left-border">Total Credit</th>
-						<th class="border-no-top" >Max Total Credit</th>
+						<th class="border-no-top" >Max&nbsp;Total Credit</th>
 						<th class="border-no-top" >Total Days</th>
-						<th class="border-no-top" >Max Bill Days</th>
+						<th class="border-no-top" >Max&nbsp;Bill Days</th>
 	                </tr>
 	            </thead>
 	            </cfoutput>
@@ -140,25 +118,28 @@
 					<cfif not isNull(qryData)>
 						<cfoutput query="qryData">
 	                    <tr>
+	                        <td ><b>#LASTNAME#,&nbsp;#FIRSTNAME#</b></td>
 							<td>#bannerGNumber#</td>
-	                        <td id="namecol" class="name-column" style="white-space:nowrap"><b>#LASTNAME#, #FIRSTNAME#</b><br/>
-									#EnrolledDate# <cfif ExitDate NEQ "">-#ExitDate#</cfif>
-							</td>
+	                        <td>#EnrolledDate# <cfif ExitDate NEQ "">-#ExitDate#</cfif></td>
 							<!-- SUMMER -->
-							<td class="bold-left-border"><a href='javascript:goToBillingRecord(#billingStudentIdSummer#);'>#NumberFormat(SummerNoOfCredits,'_._')#</a></td>
+							<cfif billingStudentIdSummer GT 0><cfset link = true><cfelse><cfset link = false></cfif>
+							<td class="bold-left-border"><cfif link><a href='javascript:goToBillingRecord(#billingStudentIdSummer#);'></cfif>#NumberFormat(SummerNoOfCredits,'_._')#<cfif link></a></cfif></td>
 							<td>#NumberFormat(SummerNoOfDays,'_._')#</td>
 							<!-- FALL -->
-							<td class="bold-left-border"><a href='javascript:goToBillingRecord(#billingStudentIdFall#);'>#NumberFormat(FallNoOfCredits,'_._')#</a></td>
+							<cfif billingStudentIdFall GT 0><cfset link = true><cfelse><cfset link = false></cfif>
+							<td class="bold-left-border"><cfif link><a href='javascript:goToBillingRecord(#billingStudentIdFall#);'></cfif>#NumberFormat(FallNoOfCredits,'_._')#<cfif link></a></cfif></td>
 							<td>#NumberFormat(FallNoOfCreditsOver,'_._')#</td>
 							<td>#NumberFormat(FallNoOfDays,'_._')#</td>
 							<td>#NumberFormat(FallNoOfDaysOver,'_._')#</td>
 							<!-- WINTER -->
-							<td class="bold-left-border"><a href='javascript:goToBillingRecord(#billingStudentIdWinter#);'>#NumberFormat(WinterNoOfCredits,'_._')#</a></td>
+							<cfif billingStudentIdWinter GT 0><cfset link = true><cfelse><cfset link = false></cfif>
+							<td class="bold-left-border"><cfif link><a href='javascript:goToBillingRecord(#billingStudentIdWinter#);'></cfif>#NumberFormat(WinterNoOfCredits,'_._')#<cfif link></a></cfif></td>
 							<td>#NumberFormat(WinterNoOfCreditsOver,'_._')#</td>
 							<td>#NumberFormat(WinterNoOfDays,'_._')#</td>
 							<td>#NumberFormat(WinterNoOfDaysOver,'_._')#</td>
 							<!-- SPRING -->
-							<td class="bold-left-border"><a href='javascript:goToBillingRecord(#billingStudentIdSpring#);'>#NumberFormat(SpringNoOfCredits,'_._')#</a></td>
+							<cfif billingStudentIdSpring GT 0><cfset link = true><cfelse><cfset link = false></cfif>
+							<td class="bold-left-border"><cfif link><a href='javascript:goToBillingRecord(#billingStudentIdSpring#);'></cfif>#NumberFormat(SpringNoOfCredits,'_._')#<cfif link></a></cfif></td>
 							<td>#NumberFormat(SpringNoOfCreditsOver,'_._')#</td>
 							<td>#NumberFormat(SpringNoOfDays,'_._')#</td>
 							<td>#NumberFormat(SpringNoOfDaysOver,'_._')#</td>
@@ -178,7 +159,7 @@
 				<tfoot>
 					<cfquery dbtype="query" name="totals">
 						select sum(SummerNoOfCredits) SummerNoOfCredits, sum(SummerNoOfDays) SummerNoOfDays
-								,sum(FallNoOfCredits) FallNoOfCredits, sum(FallNoOfCreditsOver) FallNoOfCreditsOver
+								,CAST(sum(FallNoOfCredits) as decimal) FallNoOfCredits, CAST(sum(FallNoOfCreditsOver) as decimal) FallNoOfCreditsOver
 								,sum(FallNoOfDays) FallNoOfDays, sum(FallNoOfDaysOver) FallNoOfDaysOver
 								,sum(WinterNoOfCredits) WinterNoOfCredits, sum(WinterNoOfCreditsOver) WinterNoOfCreditsOver
 								,sum(WinterNoOfDays) WinterNoOfDays, sum(WinterNoOfDaysOver) WinterNoOfDaysOver
@@ -191,15 +172,16 @@
 					<cfoutput query="totals">
 					<tr id="dt-footer1">
 						<td></td>
+						<td></td>
 						<td>Totals</td>
 						<!--- have to use DecimalFormat or does not round properly --->
 						<!-- SUMMER -->
 						<td class="bold-left-border">#NumberFormat(DecimalFormat(SummerNoOfCredits),'_._')#</td>
 						<td>#NumberFormat(DecimalFormat(SummerNoOfDays),'_._')#</td>
 						<!-- FALL -->
-						<td class="bold-left-border">#NumberFormat(DecimalFormat(FallNoOfCredits),'_._')#</td>
+						<td class="bold-left-border">#NumberFormat(Replace(DecimalFormat(FallNoOfCredits),",",""),'_._')#</td>
 						<td>#NumberFormat(DecimalFormat(FallNoOfCreditsOver),'_._')#</td>
-						<td>#NumberFormat(DecimalFormat(FallNoOfDays),'_._')#</td>
+						<td>#NumberFormat(Replace(DecimalFormat(FallNoOfDays),',',''),'_._')#</td>
 						<td>#NumberFormat(DecimalFormat(FallNoOfDaysOver),'_._')#</td>
 						<!-- WINTER -->
 						<td class="bold-left-border">#NumberFormat(DecimalFormat(WinterNoOfCredits),'_._')#</td>
@@ -212,22 +194,23 @@
 						<td>#NumberFormat(DecimalFormat(SpringNoOfDays),'_._')#</td>
 						<td>#NumberFormat(DecimalFormat(SpringNoOfDaysOver),'_._')#</td>
 						<!-- Grand Totals -->
-						<td class="bold-left-border">#NumberFormat(DecimalFormat(FYTotalNoOfCredits),'_._')#</td>
-						<td>#NumberFormat(DecimalFormat(FYMaxTotalNoOfCredits),'_._')#</td>
-						<td>#NumberFormat(DecimalFormat(FYTotalNoOfDays),'_._')#</td>
-						<td>#NumberFormat(DecimalFormat(FYMaxTotalNoOfDays),'_._')#</td>
+						<td class="bold-left-border">#NumberFormat(Replace(DecimalFormat(FYTotalNoOfCredits),',',''),'_._')#</td>
+						<td>#NumberFormat(Replace(DecimalFormat(FYMaxTotalNoOfCredits),',',''),'_._')#</td>
+						<td>#NumberFormat(Replace(DecimalFormat(FYTotalNoOfDays),',',''),'_._')#</td>
+						<td>#NumberFormat(Replace(DecimalFormat(FYMaxTotalNoOfDays),',',''),'_._')#</td>
 					</tr>
 					<tr id="dt-footer2">
 						<td></td>
+						<td></td>
 						<td>Max Billing</td>
 						<!-- Summer -->
-						<td colspan="2" style="text-align:center;"  class="bold-left-border">#NumberFormat(DecimalFormat(SummerNoOfDays),'_._')#</td>
+						<td colspan="2" style="text-align:center;"  class="bold-left-border">#NumberFormat(Replace(DecimalFormat(SummerNoOfDays),',',''),'_._')#</td>
 						<!-- Fall -->
-						<td colspan="4" style="text-align:center;"  class="bold-left-border">#NumberFormat(DecimalFormat(FallNoOfDays-FallNoOfDaysOver),'_._')#</td>
+						<td colspan="4" style="text-align:center;"  class="bold-left-border">#NumberFormat(Replace(DecimalFormat(FallNoOfDays-FallNoOfDaysOver),',',''),'_._')#</td>
 						<!-- Winter -->
-						<td colspan="4" style="text-align:center;"  class="bold-left-border">#NumberFormat(DecimalFormat(WinterNoOfDays-WinterNoOfDaysOver),'_._')#</td>
+						<td colspan="4" style="text-align:center;"  class="bold-left-border">#NumberFormat(Replace(DecimalFormat(WinterNoOfDays-WinterNoOfDaysOver),',',''),'_._')#</td>
 						<!-- Spring -->
-						<td colspan="4" style="text-align:center;"  class="bold-left-border">#NumberFormat(DecimalFormat(SpringNoOfDays-SpringNoOfDaysOver),'_._')#</td>
+						<td colspan="4" style="text-align:center;"  class="bold-left-border">#NumberFormat(Replace(DecimalFormat(SpringNoOfDays-SpringNoOfDaysOver),',',''),'_._')#</td>
 						<td class="no-border"></td>
 						<td class="no-border"></td>
 						<td class="no-border"></td>
@@ -245,19 +228,29 @@
 		} );
 
 		function setUpTable(){
-			$('#dt_table').DataTable( {
+			$('#dt_table').dataTable( {
 		    	dom: '<"top"iBf>rt<"bottom"lp>',
 		    	// order by lastname
 		    	order:1,
 		    	bSort:false,
+		        scrollY: "400px",
+		        scrollX: true,
+		        scrollCollapse: true,
+		        paging: false,
+        		fixedColumns:true,
 				//print button
 		        buttons: [
+		         {text:'print2',
+		         	action: function(){
+		         		window.open('ReportTermPrintTable.cfm');
+		         	}
+		         },
 		          {	extend:'print',
 		            autoPrint:false,
 		            header:true,
 		            footer:true,
 		            //all columns but first GNumber column
-		            exportOptions: { columns: [1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19]},
+		            //exportOptions: { columns: [1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19]},
 		            orientation:'landscape',
 
 		            // Set up some custom HTML for printing
@@ -268,34 +261,26 @@
 		                        .css('font-family', 'Times New Roman');
 
 						//sets same fonts for the table
-		                $(win.document.body).find( 'table' )
+		            	$(win.document.body).find( 'table' )
 		                        .css( 'font-size', 'inherit' );
 
-						//reset the name column so that the breaks are put in properly - does not format right
-						//automatically
-						$(win.document.body).find('td').each(function(){
-																if(this.cellIndex == 0){
-																	this.style.textAlign='left';
-																	this.style.columnWidth = '150px';
-																	this.innerHTML = this.innerHTML.replace('\t\t\t','<br>');
-																}
-															});
+		            	var dt_table = $('#dt_table').html();
+		              	var printTable = '';
+		              	$.ajax({
+				            type: 'get',
+				            url: 'ReportTermPrintTable.cfm',
+							async: false,
+				            success: function (data, textStatus, jqXHR) {
+				            	printTable = data;
+							},
+				            error: function (xhr, textStatus, thrownError) {
+								 handleAjaxError(xhr, textStatus, thrownError);
+							}
+		            	});
+		              	$(win.document.body).find('table').replaceWith(printTable);
 
-						 //default is only the last row of the table header - adding back in first row
-						 var firstHeader = $('#dt-header').html();
-						 var firstCol = '<th rowspan=\"1\" colspan=\"1\">G</th>';
-						 firstHeader = firstHeader.substring(firstCol.length, firstHeader.length);
-		     			 $(win.document.body).find( 'thead' ).prepend('<tr>' + firstHeader + '</tr>');
-
-						//default is only the first row of the table footer - adding back in the last row
-						var footer1 =  $('#dt-footer1').html();
-						footer1 = footer1.substring(firstCol.length-1, footer1.length);
-						var footer2 = $('#dt-footer2').html();
-						footer2 = footer2.substring(firstCol.length-1, footer2.length);
-		     			 $(win.document.body).find( 'tfoot' ).replaceWith('<tfoot><tr>' + footer1 + '</tr><tr>' + footer2 + '</tr></tfoot>');
-
-						//adding in the document header
-		     			 $(win.document.body).find('h1').replaceWith('<style> .no-border{border-style:none !important} .bottom-border{ 	border-top-style:none;	border-left-style:none; border-right-style:none; border-bottom-style:solid; } </style><div class="row">' + $('#tableheader').html() + '</div><br><br>');
+						//remove document header
+						$(win.document.body).find('h1').replaceWith('');
 		            } //end customize
 		        } //end print button definition
 		    ] //end buttons
@@ -304,18 +289,13 @@
 		} //end setup table
 
 		function goToBillingRecord(billingStudentId){
-			window.open('billingStudentRecord.cfm?billingStudentId='+billingStudentId,'_blank');
+			sessionStorage.setItem('returnToReport', '<cfoutput>#cgi.script_name#?#cgi.query_string#</cfoutput>');
+			var data = $.param({data:encodeURIComponent(JSON.stringify(sessionStorage))});
+			$.post("SaveSession.cfm", data, function(){
+				window.location = 'billingStudentRecord.cfm?billingStudentId='+billingStudentId;
+			});
 		}
 
-		function goToDetail(term, bannerGNumber){
-			sessionStorage.setItem('bannerGNumber', bannerGNumber);
-			sessionStorage.setItem('term', term);
-			sessionStorage.setItem('showNext', false);
-			var data = $.param({data:encodeURIComponent(JSON.stringify(sessionStorage))});
-	 			$.post("SaveSession.cfm", data, function(){
-	 				window.open('programStudentDetail.cfm','_blank');
-	 			});
-			}
 
 	</script>
 	</cfsavecontent>

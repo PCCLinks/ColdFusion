@@ -1,7 +1,7 @@
 
 <!---<cfinclude template="includes/header.cfm">--->
 
-<cfinvoke component="ProgramBilling" method="attendanceReportDetail" returnvariable="data">
+<cfinvoke component="Report" method="attendanceReportDetail" returnvariable="data">
 	<cfinvokeargument name="billingStudentId" value="#url.billingStudentId#">
 </cfinvoke>
 <!---
@@ -44,7 +44,7 @@
 			<td>#inter#</td>
 			<td>#large#</td>
 			<td>#ind+small+inter+large#</td>
-			<td>#billingScenarioName#</td>
+			<td>#Scenario#</td>
 			<td>#IndPercent#</td>
 			<td>#SmallPercent#</td>
 			<td>#InterPercent#</td>
