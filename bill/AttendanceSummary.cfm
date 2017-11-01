@@ -2,7 +2,7 @@
 <cfif StructKeyExists(form, "billingStartDate")>
 	<cfset billingStartDate = "#form.billingStartDate#">
 <cfelse>
-	<cfinvoke component="ProgramBilling" method="getLatestDateAttendanceMonth"  returnvariable="attendanceMonth"></cfinvoke>
+	<cfinvoke component="LookUp" method="getLatestDateAttendanceMonth"  returnvariable="attendanceMonth"></cfinvoke>
 	<cfset billingStartDate = "#attendanceMonth#">
 </cfif>
 <cfinvoke component="ProgramBilling" method="getAttendanceClassesForMonth"  returnvariable="data">

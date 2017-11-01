@@ -1,7 +1,7 @@
 <cfinclude template="includes/header.cfm" />
 
 
-<cfinvoke component="ProgramBilling" method="getLatestDateAttendanceMonth"  returnvariable="attendanceMonth"></cfinvoke>
+<cfinvoke component="LookUp" method="getLatestDateAttendanceMonth"  returnvariable="attendanceMonth"></cfinvoke>
 <cfparam name="billingStartDate" default = #attendanceMonth# >
 <cfif structKeyExists(url, "billingStartDate")>
 	<cfset Variables.billingStartDate = url.billingStartDate>

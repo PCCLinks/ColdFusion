@@ -2,6 +2,8 @@
 
 <cfinvoke component="LookUp" method="getPrograms" returnvariable="programs"></cfinvoke>
 <cfinvoke component="LookUp" method="getSchools" returnvariable="schools"></cfinvoke>
+<cfinvoke component="LookUp" method="getProgramYear" returnvariable="programyear"></cfinvoke>
+<cfinvoke component="LookUp" method="getCurrentProgramYear" returnvariable="currentyear"></cfinvoke>
 <!-- Filter -->
 <div class="row">
 	<div class="small-2 columns">
@@ -24,7 +26,16 @@
 			</select>
 		</label>
 	</div>
-	<div class="small-7 columns">
+	<div class="small-3 columns">
+		<label for="ProgramYear">Year:
+			<select name="programyear" id="programyear">
+				<cfoutput query="programyear">
+					<option value="#ProgramYear#" <cfif programyear EQ currentyear>selected</cfif> > #ProgramYear# </option>
+				</cfoutput>
+			</select>
+		</label>
+	</div>
+	<div class="small-4 columns">
 	</div>
 </div> <!-- end Filter row -->
 <table id="dt_table">
@@ -36,37 +47,11 @@
 			<th>Grade</th>
 			<th>Entry Date</th>
 			<th>Exit Date</th>
-			<th>Exit Status</th>
 			<th>Program</th>
 			<th>District</th>
+			<th>Exit Status</th>
 		</tr>
-		<!---<tr id="searchRow">
-			<th><input type="text" placeholder="Last Name"></th>
-			<th><input type="text" placeholder="First Name" /></th>
-			<th><input type="text" placeholder="DOB" /></th>
-			<th><input type="text" placeholder="Grade" /></th>
-			<th><input type="text" placeholder="Entry Date" /></th>
-			<th><input type="text" placeholder="Exit Date" /></th>
-			<th><input type="text" placeholder="Exit Status" /></th>
-			<th><input type="text" placeholder="Program" /></th>
-			<th><input type="text" placeholder="District" /></th>
-		</tr>--->
 	</thead>
-	<tbody>
-		<!---<cfoutput query="data">
-		<tr>
-			<td>#lastname#</td>
-			<td>#firstname#</td>
-			<td>#dob#</td>
-			<td>#grade#</td>
-			<td>#entrydate#</td>
-			<td>#exitdate#</td>
-			<td>#exitreason#</td>
-			<td>#program#</td>
-			<td>#schooldistrict#</td>
-		</tr>
-		</cfoutput>--->
-	</tbody>
 </table>
 
 
@@ -78,12 +63,12 @@
 		    $('#dt_table').DataTable({
 		    	processing:true,
 				ajax:{
-					url: 'report.cfc?method=exitStatusReport&term=201703',
+					url: 'report.cfc?method=exitStatusReport',
 					data: getParameters,
 					dataSrc:'DATA',
-					//error: function (xhr, textStatus, thrownError) {
-					//        handleAjaxError(xhr, textStatus, thrownError);
-					//	}
+					error: function (xhr, textStatus, thrownError) {
+					        handleAjaxError(xhr, textStatus, thrownError);
+					}
 				},
 				dom: '<"top"iB>rt<"bottom"flp>',
 				language:{ processing: "Loading data..."},
@@ -112,6 +97,7 @@
 				param = param + '&districtid=' + $('#district').val();
 			if($('#program').val() != null)
 				param = param + '&program=' + $('#program').val();
+			param = param + '&programyear=' + $('#programyear').val();
 		 	return param;
 		}
 

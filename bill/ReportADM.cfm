@@ -2,14 +2,20 @@
 
 <cfinvoke component="LookUp" method="getPrograms" returnvariable="programs"></cfinvoke>
 <cfinvoke component="LookUp" method="getSchools" returnvariable="schools"></cfinvoke>
-<cfinvoke component="ProgramBilling" method="getLatestDateAttendanceMonth" returnvariable="latestMonth"></cfinvoke>
+<cfinvoke component="LookUp" method="getAttendanceBillingStartDates" returnvariable="billingDates"></cfinvoke>
+<cfinvoke component="LookUp" method="getLatestDateAttendanceMonth" returnvariable="latestMonth"></cfinvoke>
 <!-- Filter -->
 <div class="row">
-	<div class="small-3 columns">
-			<label>Month Start Date:<br/>
-				<cfoutput><input name="billingStartDate" id="billingStartDate" type="text" value='#DateFormat(latestMonth,"m/d/yyyy")#' /></cfoutput>
-			</label>
-		</div>
+	<div class="small-2 columns">
+		<label for="billingStartDate">Month Start Date:
+			<select name="billingStartDate" id="billingStartDate">
+				<option disabled selected value="" > --Select Month Start Date-- </option>
+			<cfoutput query="billingDates">
+				<option value="#billingStartDate#" <cfif billingStartDate EQ latestMonth> selected </cfif>  > #DateFormat(billingStartDate,'mm-dd-yy')# </option>
+			</cfoutput>
+			</select>
+		</label>
+	</div>
 	<div class="small-2 columns">
 		<label for="District">District:
 			<select name="district" id="district">
@@ -78,14 +84,6 @@
 
 <cfsavecontent variable="pcc_scripts">
 	<script>
-		$('#billingStartDate').fdatepicker({
-				format: 'mm-dd-yyyy',
-				disableDblClickSelection: true,
-				leftArrow:'<<',
-				rightArrow:'>>',
-				closeIcon:'X',
-				closeButton: true
-		});
 		$(document).ready(function() {
 		    $('#dt_table').DataTable({
 		    	processing:true,
@@ -93,9 +91,9 @@
 					url: 'report.cfc?method=admReport',
 					data: getParameters,
 					dataSrc:'DATA',
-					//error: function (xhr, textStatus, thrownError) {
-					//        handleAjaxError(xhr, textStatus, thrownError);
-					//	}
+					error: function (xhr, textStatus, thrownError) {
+					        handleAjaxError(xhr, textStatus, thrownError);
+					}
 				},
 				dom: '<"top"iB>rt<"bottom"flp>',
 				language:{ processing: "Loading data..."},

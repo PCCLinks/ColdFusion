@@ -12,7 +12,7 @@
 <cfoutput query="qryBillingStudentRecord">
 
 <cfset readonly = false>
-<cfif BillingStatus EQ 'COMPLETE'><cfset readonly = true></cfif>
+<cfif BillingStatus EQ 'BILLED'><cfset readonly = true></cfif>
 
 <cfoutput><div><a href='#session.returnToReport#' class="button">Return to report</a> </div></cfoutput>
 <div class="callout">

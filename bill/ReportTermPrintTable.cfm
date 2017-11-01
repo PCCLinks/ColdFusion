@@ -45,72 +45,6 @@
 			border-bottom-style:none;
 		}
 
-
-/*		thead {display: table-header-group;}
-		header nav, footer{ display:none;}
-		table{
-			margin:0px;
-			border-spacing:0px;
-		}
-		table tbody td, table tfoot td{
-			text-align:left;
-		}
-		table thead th, table tbody td, table tfoot td {
-			border-color:black;
-			border-style:solid solid none none;
-			border-width: 0.5px;
-			background-color:white;
-		}
-		.no-border{
-			border-color:none;
-			border-style:none;
-			border-width: 0px;
-		}
-		.bold-left-border{
-			border-left-style:solid;
-			border-left-width:2px;
-		}
-		.bold-right-border{
-			border-right-width:1px;
-			border-right-style:solid;
-		}
-		.border-no-bottom{
-			border-bottom-style:none;
-		}
-		.border-no-top{
-			border-top-style:none;
-		}
-		.border-no-right{
-			border-right-style:none;
-		}
-		.border-no-left{
-			border-left-style:none;
-		}
-		.border-bottom-only{
-			border-bottom-style:1px;
-			border-top-style:none;
-			border-left-style:none;
-			border-right-style:none;
-		}
-
-		.dataTables_wrapper .dataTables_processing{
-			top: 70% !important;
-			height: 50px !important;
-			background-color: lightGray;
-		}
-		.dataTables_info{
-			margin-right:10px !important;
-		}
-		select {
-			width:auto !important;
-		}
-		input{
-			display:inline-block !important;
-			width:auto !important;
-		}
-		*
-		* */
-
 	</style>
 
 <table id="printtable" >
@@ -126,8 +60,8 @@
 			<tr><th colspan="19" class="no-border"></th></tr>
 			<tr>
 				<th class="no-border" style="text-align:center" colspan="19">
-					<h3>College Quarterly Credit - Equivalent Instructional Days</h3>
-					<cfoutput><b>All Students at <cfif data.Program EQ "gtc">PCC/HSC<cfelse>#data.Program#</cfif> for #data.reportingStartDate# and #data.reportingEndDate#</b></cfoutput>
+					<h3 style="margin:0px">College Quarterly Credit - Equivalent Instructional Days</h3>
+					<cfoutput><b>All Students at <cfif data.Program EQ "gtc">PCC/HSC<cfelse>#data.Program#</cfif> for #data.BillingStartDate# and #data.BillingEndDate#</b></cfoutput>
 				</th>
 			</tr></cfoutput>
 		<tr id="dt-header">

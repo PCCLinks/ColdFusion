@@ -1,7 +1,7 @@
 <cfinclude template="includes/header.cfm">
 
 <cfinvoke component="LookUp" method="getMaxTerm"  returnvariable="maxTerm"></cfinvoke>
-<cfinvoke component="ProgramBilling" method="getLatestDateAttendanceMonth"  returnvariable="maxBillDate"></cfinvoke>
+<cfinvoke component="LookUp" method="getLatestDateAttendanceMonth"  returnvariable="maxBillDate"></cfinvoke>
 <cfinvoke component="ProgramBilling" method="getAttendanceCRNForTerm"  returnvariable="crnData">
 	<cfinvokeargument name="term" value="#maxTerm#">
 	<cfinvokeargument name="billingStartDate" value="#maxBillDate#">

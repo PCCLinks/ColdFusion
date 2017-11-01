@@ -163,7 +163,6 @@
 	</cffunction>
 
 
-
 	<cffunction name="isAjaxCall" returntype="boolean">
 		<cfset Variables.reqData = getHTTPRequestData() >
     	<cfif structKeyExists(Variables.reqData.headers,"X-Requested-With")

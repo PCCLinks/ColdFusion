@@ -64,6 +64,7 @@
 					<th id="FYTotalNoOfCredits">FY Total Credits</th>
 					<th id="CurrentTermNoOfCredits">Current Term Credits</th>
 					<th id="BillingStatus">Billing Status</th>
+					<th id="BillingStudentId"></th>
 				</tr>
 				<tr id="searchRow">
 					<th><input type="text" placeholder="Coach"></th>
@@ -78,6 +79,7 @@
 					<th><input type="text" placeholder="FY Total Credits" /></th>
 					<th><input type="text" placeholder="Current Term Credits" /></th>
 					<th><input type="text" placeholder="Billing Status" /></th>
+					<th></th>
 				</tr>
 			</thead>
 			<tbody>
@@ -89,7 +91,7 @@
 <cfsavecontent variable="pcc_scripts">
 	<script>
 		var indexOfGNumber = 1;
-		var indexOfTerm = 8;
+		var indexOfBillingStudentId = 12;
 		var table;
 		$.fn.dataTable.ext.errMode = 'throw';
 		$(document).ready(function() {
@@ -117,9 +119,10 @@
 				columnDefs:[
 	                {	targets: indexOfGNumber,
 	                	render: function ( data, type, row ) {
-                  				return '<a href="javascript:goToDetail(\'' + row[indexOfGNumber] + '\', \'' + row[indexOfTerm] + '\');" >' + row[indexOfGNumber] + '</a>';
+                  				return '<a href="javascript:goToDetail(' + row[indexOfBillingStudentId] + ');" >' + row[indexOfGNumber] + '</a>';
              					}
-         				}
+         				},
+         				{targets: indexOfBillingStudentId, visible: false}
          			]
 			});
 			//hide main filter
@@ -138,15 +141,14 @@
 		function getParameters(){
 		 	return { term: $('#term').val(), program: $('#program').val()};
 		}
-		function goToDetail(bannerGNumber, term){
+		function goToDetail(billingStudentId){
+			sessionStorage.setItem("showNext", true);
 			var dt = $('#dt_table').DataTable();
-			var gList = dt.columns({search:'applied'}).data()[indexOfGNumber];
-			sessionStorage.setItem("gList", gList);
-			sessionStorage.setItem('bannerGNumber', bannerGNumber);
-			sessionStorage.setItem('term', term);
+			var billingStudentList = dt.columns({search:'applied'}).data()[indexOfBillingStudentId];
+			sessionStorage.setItem("billingStudentList", billingStudentList);
 			var data = $.param({data:encodeURIComponent(JSON.stringify(sessionStorage))});
   			$.post("SaveSession.cfm", data, function(){
-  				window.location	='programStudentDetail.cfm';
+  				window.location	='programStudentDetail.cfm?billingStudentId='+billingStudentId;
   			});
 		}
 

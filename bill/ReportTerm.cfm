@@ -6,7 +6,7 @@
 <cfset Variables.term="#url.term#" >
 
 <cfinvoke component="LookUp" method = "getProgramYearTerms" term="#Variables.term#" returnvariable="terms"></cfinvoke>
-<cfinvoke component="Report" method="billingReport" returnvariable="qryData">
+<cfinvoke component="Report" method="termReport" returnvariable="qryData">
 	<cfinvokeargument name="program" value="#Variables.program#">
 	<cfinvokeargument name="schooldistrict" value="#Variables.schooldistrict#">
 	<cfinvokeargument name="term" value="#Variables.term#">
@@ -15,17 +15,18 @@
 <cfinvoke component="LookUp" method="getProgramYearTerms" value="terms"></cfinvoke>
 <style>
 
-		table tbody td, table tfoot td{
+		/*table tbody td, table tfoot td{
 			text-align:right;
 			padding:4x;
 		}
 		table thead th, table tbody td, table tfoot td {
-			border-color:black;
+			border-color:lightgray;
 			border-style:solid solid none none;
 			border-width: 0.5px;
-			background-color:white;
 		}
-
+		table{
+			border-collapse: collapse;
+		}
 		.no-border{
 			border-color:none;
 			border-style:none;
@@ -34,10 +35,12 @@
 		.bold-left-border{
 			border-left-width:2px;
 			border-left-style:solid;
+			border-left-color:black;
 		}
 		.bold-right-border{
 			border-right-width:1px;
 			border-right-style:solid;
+			border-right-color:black;
 		}
 		.border-no-bottom{
 			border-bottom-style:none;
@@ -61,16 +64,31 @@
 			display:inline-block !important;
 			width:auto !important;
 		}
+		*/
+
 
 	</style>
 
-
-	<div class="callout primary">
-	<cfoutput>Credit Report for Term: <b>#term#</b>, District <b>#SchoolDistrict#</b>,  Program <b>#Program#</b> for #qryData.reportingStartDate# and #qryData.reportingEndDate#</cfoutput>
+	<div class="row" id="tableheader">
+		<table width="100%" style="border-style:none;" >
+			<tr>
+				<td style="text-align:left; font-size:8px; border-style:none;">
+					<cfoutput>#url.schooldistrict#</cfoutput>
+				</td>
+				<td class="bottom-border" style="text-align:right; font-size:8px; border-style:none;">
+					Alternative Education Program
+				</td>
+			</tr>
+			<tr>
+				<td colspan="2" class="no-border" style="text-align:center; font-size:12px; border-style:none;">
+					<h4>College Quarterly Credit - Equivalent Instructional Days</h4>
+					<cfoutput><b>All Students at #Program# between #qryData.BillingStartDate# and #qryData.BillingEndDate#</b></cfoutput>
+				</td>
+			</tr>
+		</table>
 	</div>
 
-
-	<table id="dt_table" class="compact">
+	<table id="dt_table" class="stripe hover">
 			<cfoutput>
 	            <thead >
 	                <tr>
@@ -120,7 +138,7 @@
 	                    <tr>
 	                        <td ><b>#LASTNAME#,&nbsp;#FIRSTNAME#</b></td>
 							<td>#bannerGNumber#</td>
-	                        <td>#EnrolledDate# <cfif ExitDate NEQ "">-#ExitDate#</cfif></td>
+	                        <td>#EntryDate# <cfif ExitDate NEQ "">-#ExitDate#</cfif></td>
 							<!-- SUMMER -->
 							<cfif billingStudentIdSummer GT 0><cfset link = true><cfelse><cfset link = false></cfif>
 							<td class="bold-left-border"><cfif link><a href='javascript:goToBillingRecord(#billingStudentIdSummer#);'></cfif>#NumberFormat(SummerNoOfCredits,'_._')#<cfif link></a></cfif></td>
@@ -201,8 +219,7 @@
 					</tr>
 					<tr id="dt-footer2">
 						<td></td>
-						<td></td>
-						<td>Max Billing</td>
+						<td colspan="2">Max Billing</td>
 						<!-- Summer -->
 						<td colspan="2" style="text-align:center;"  class="bold-left-border">#NumberFormat(Replace(DecimalFormat(SummerNoOfDays),',',''),'_._')#</td>
 						<!-- Fall -->
@@ -235,66 +252,31 @@
 		    	bSort:false,
 		        scrollY: "400px",
 		        scrollX: true,
-		        scrollCollapse: true,
+		        //scrollCollapse: true,
 		        paging: false,
         		fixedColumns:true,
 				//print button
 		        buttons: [
-		         {text:'print2',
+		         {text:'print',
 		         	action: function(){
 		         		window.open('ReportTermPrintTable.cfm');
 		         	}
-		         },
-		          {	extend:'print',
-		            autoPrint:false,
-		            header:true,
-		            footer:true,
-		            //all columns but first GNumber column
-		            //exportOptions: { columns: [1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19]},
-		            orientation:'landscape',
-
-		            // Set up some custom HTML for printing
-		            customize: function ( win ) {
-		            	//set body font size and type
-		            	$(win.document.body)
-		                        .css( 'font-size', '8pt' )
-		                        .css('font-family', 'Times New Roman');
-
-						//sets same fonts for the table
-		            	$(win.document.body).find( 'table' )
-		                        .css( 'font-size', 'inherit' );
-
-		            	var dt_table = $('#dt_table').html();
-		              	var printTable = '';
-		              	$.ajax({
-				            type: 'get',
-				            url: 'ReportTermPrintTable.cfm',
-							async: false,
-				            success: function (data, textStatus, jqXHR) {
-				            	printTable = data;
-							},
-				            error: function (xhr, textStatus, thrownError) {
-								 handleAjaxError(xhr, textStatus, thrownError);
-							}
-		            	});
-		              	$(win.document.body).find('table').replaceWith(printTable);
-
-						//remove document header
-						$(win.document.body).find('h1').replaceWith('');
-		            } //end customize
-		        } //end print button definition
+		         }
 		    ] //end buttons
 
 		    } ); //end data table
 		} //end setup table
 
 		function goToBillingRecord(billingStudentId){
+			sessionStorage.clear();
 			sessionStorage.setItem('returnToReport', '<cfoutput>#cgi.script_name#?#cgi.query_string#</cfoutput>');
+			sessionStorage.setItem("showNext", true);
 			var data = $.param({data:encodeURIComponent(JSON.stringify(sessionStorage))});
 			$.post("SaveSession.cfm", data, function(){
-				window.location = 'billingStudentRecord.cfm?billingStudentId='+billingStudentId;
+				window.open('programStudentDetail.cfm?billingStudentId='+billingStudentId);
 			});
 		}
+
 
 
 	</script>

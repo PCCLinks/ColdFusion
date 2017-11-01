@@ -43,6 +43,23 @@
 		</cfquery>
 		<cfreturn data>
 	</cffunction>
+	<cffunction name="getProgramYear" access="remote">
+		<cfquery name="data" datasource="pcclinks">
+			select distinct ProgramYear
+			from bannerCalendar
+			where termBeginDate >= date_add(now(), INTERVAL - 1 YEAR)
+			order by term
+		</cfquery>
+		<cfreturn data>
+	</cffunction>
+	<cffunction name="getCurrentProgramYear" access="remote" returntype="string">
+		<cfquery name="data">
+			SELECT distinct ProgramYear
+			FROM bannerCalendar
+			WHERE termBeginDate <= now() and termEndDate >= now()
+		</cfquery>
+		<cfreturn data.ProgramYear>
+	</cffunction>
 	<cffunction name="getFilteredTerm" access="remote" >
 		<cfargument name="term">
 		<cfargument name="displayField">
@@ -136,7 +153,7 @@
 		</cfquery>
 		<cfreturn maxTermQuery.Term>
 	</cffunction>
-	<cffunction name="getProgramYear" access="remote" returntype="string">
+	<cffunction name="getProgramYearForTerm" access="remote" returntype="string">
 		<cfargument name="term" required="true">
 		<cfquery name="programYearQuery">
 			SELECT ProgramYear
@@ -168,6 +185,32 @@
 				SELECT * FROM billingStudentExitReason
 		</cfquery>
 		<cfreturn data>
+	</cffunction>
+	<cffunction  name="getAttendanceBillingStartDates" access="remote"  >
+		<cfquery name="data" >
+				SELECT distinct billingStartDate
+				FROM billingStudent
+				WHERE program like '%attendance%'
+				ORDER BY billingStartDate desc
+		</cfquery>
+		<cfreturn data>
+	</cffunction>
+	<cffunction name="getLatestDateAttendanceMonth" access="remote" returntype="date">
+		<cfquery name="data">
+			select max(billingStartDate) lastAttendanceBillDate
+			from billingStudent
+			where program like '%attendance%'
+		</cfquery>
+		<cfreturn data.lastAttendanceBillDate>
+	</cffunction>
+	<cffunction name="getMaxBillingStartDateForTerm" access="remote" returnType="date">
+		<cfargument name="term" required="true">
+		<cfquery name="data">
+			select max(billingStartDate) maxBillingStartDate
+			from billingStudent
+			where term = <cfqueryparam value="#arguments.term#">
+		</cfquery>
+		<cfreturn data.maxBillingStartDate>
 	</cffunction>
 
 </cfcomponent>

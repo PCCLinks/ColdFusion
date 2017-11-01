@@ -7,6 +7,7 @@
 <cfinvoke component="LookUp" method="getPrograms" returnvariable="programs"></cfinvoke>
 <cfinvoke component="LookUp" method="getSchools" returnvariable="schools"></cfinvoke>
 <cfinvoke component="LookUp" method="getTerms" returnvariable="qryTerms"></cfinvoke>
+<cfinvoke component="LookUp" method="getAttendanceBillingStartDates" returnvariable="billingDates"></cfinvoke>
 
 
 <div class="callout primary">
@@ -43,8 +44,13 @@
 		</div>
 		<cfif url.type EQ "attendance">
 		<div class="small-3 columns">
-			<label>Month Start Date:<br/>
-				<input name="billingStartDate" id="billingStartDate1" type="text" />
+			<label for="billingStartDate">Month Start Date:
+				<select name="billingStartDate" id="billingStartDate">
+					<option disabled selected value="" > --Select Month Start Date-- </option>
+				<cfoutput query="billingDates">
+					<option value="#billingStartDate#"  > #DateFormat(billingStartDate,'mm-dd-yy')# </option>
+				</cfoutput>
+				</select>
 			</label>
 		</div>
 		<div class="small-3 columns">
@@ -79,8 +85,13 @@
 		</div>
 		<cfif url.type EQ 'attendance'>
 			<div class="small-3 columns">
-				<label>Month Start Date:<br/>
-					<input name="billingStartDate" id="billingStartDate2" type="text" />
+				<label for="billingStartDate">Month Start Date:
+					<select name="billingStartDate" id="billingStartDate">
+						<option disabled selected value="" > --Select Month Start Date-- </option>
+					<cfoutput query="billingDates">
+						<option value="#billingStartDate#"  > #DateFormat(billingStartDate,'mm-dd-yy')# </option>
+					</cfoutput>
+					</select>
 				</label>
 			</div>
 			<div class="small-3 columns">

@@ -34,7 +34,7 @@
 
 <cfoutput query="qryStudent">
 	<cfset varBillingStatus = #BillingStatus#>
-	<div class=<cfif #BillingStatus# EQ 'COMPLETE'>"callout alert"<cfelse>"callout primary"</cfif> >
+	<div class=<cfif #BillingStatus# EQ 'BILLED'>"callout alert"<cfelse>"callout primary"</cfif> >
 	<form name="billingStatus">
 		<input type="hidden" name="StudentBillingID" value='#CurrentStudentBillingID#'>
 		<input  type="hidden" name="BillingStatus" value='#BillingStatus#'>

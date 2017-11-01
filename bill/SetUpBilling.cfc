@@ -59,8 +59,7 @@
 		<cfargument name = "contactRow"  type="struct" required="true">
 		<cfargument name= "term" required="true">
 		<cfargument name = "billingStartDate" type="date" required="true">
-		<cfargument name="reportingStartDate" type="date" required="true">
-		<cfargument name="reportingEndDate" type="date" required="true">
+		<cfargument name="billingEndDate" type="date" required="true">
 
 		<cfset appObj.logEntry(value="FUNCTION getBillingStudent #Now()#", level=3) >
 		<cfset appObj.logDump(label="arguments", value = arguments, level=3) >
@@ -149,7 +148,7 @@
 			<cfset appObj.logDump(label="qry", value=qry, level=3) >
 			<cftry>
 				<cfquery name="doInsertBillingStudent" result="resultBillingstudent" >
-					insert into billingStudent(contactid, bannerGNumber, PIDM, districtid, term, program, enrolleddate, exitdate, billingStartDate, reportingStartDate, reportingEndDate, billingstatus, includeflag, datecreated, datelastupdated, createdby, lastupdatedby)
+					insert into billingStudent(contactid, bannerGNumber, PIDM, districtid, term, program, enrolleddate, exitdate, billingStartDate, billingEndDate, billingstatus, includeflag, datecreated, datelastupdated, createdby, lastupdatedby)
 					<cfoutput>
 						values('#arguments.contactRow.contactid#'
 								,'#arguments.contactRow.bannerGNumber#'
@@ -160,8 +159,7 @@
 								,'#arguments.contactRow.enrolleddate#'
 								,<cfqueryparam value="#arguments.contactRow.exitdate#" null="#not len(arguments.contactRow.exitdate)#">
 								,<cfqueryparam value="#DateFormat(arguments.billingStartDate,'yyyy-mm-dd')#">
-								,<cfqueryparam value="#DateFormat(arguments.reportingStartDate,'yyyy-mm-dd')#">
-								,<cfqueryparam value="#DateFormat(arguments.reportingEndDate,'yyyy-mm-dd')#">
+								,<cfqueryparam value="#DateFormat(arguments.billingEndDate,'yyyy-mm-dd')#">
 								,'IN PROGRESS'
 								,1
 								,Now()
@@ -185,8 +183,8 @@
 		<cfelse>
 			<cfquery name="update">
 				UPDATE billingStudent
-				SET reportingStartDate = <cfqueryparam value="#DateFormat(arguments.reportingStartDate,'yyyy-mm-dd')#">,
-					reportingEndDate = <cfqueryparam value="#DateFormat(arguments.reportingEndDate,'yyyy-mm-dd')#">
+				SET billingStartDate = <cfqueryparam value="#DateFormat(arguments.billingStartDate,'yyyy-mm-dd')#">,
+					billingEndDate = <cfqueryparam value="#DateFormat(arguments.billingEndDate,'yyyy-mm-dd')#">
 				WHERE billingStudentId = <cfqueryparam value="#qry.billingstudentid#" >
 			</cfquery>
 			<cfset local.billingstudentid = #qry.billingstudentid#>
@@ -404,9 +402,8 @@
 		<cfargument name="termBeginDate" type="date" required="true">
 		<cfargument name="term" required="true">
 		<cfargument name="billingStartDate" type="date" required="true">
+		<cfargument name="billingEndDate" type="date" required="true">
 		<cfargument name="termDropDate"type="date" required="true">
-		<cfargument name="reportingStartDate" type="date" required="true">
-		<cfargument name="reportingEndDate" type="date" required="true">
 		<cfargument name="reconcilePreviousTerm" default="false">
 		<!---<cfargument name="type" required="true">--->
 
@@ -450,7 +447,7 @@
 
 				<!--- get the billing student record and the banner classes --->
 				<cfset local.returnArray = getBillingStudent(contactrow=#GetQueryRow(studentQry, CURRENTROW)#, billingStartDate=#arguments.billingStartDate#,
-																reportingStartDate=#arguments.reportingStartDate#, reportingEndDate=#arguments.reportingEndDate#, term=#local.term#) >
+																billingEndDate=#arguments.billingEndDate#, term=#local.term#) >
 				<cfset local.billingStudentId = returnArray[1]>
 				<cfset local.bannerClasses = returnArray[2]>
 
@@ -492,8 +489,7 @@
 		<cfargument name="termBeginDate" type="date" required="true">
 		<cfargument name="term" required="true">
 		<cfargument name="billingStartDate" type="date" required="true">
-		<cfargument name="reportingStartDate" type="date" required="true">
-		<cfargument name="reportingEndDate" type="date" required="true">
+		<cfargument name="billingEndDate" type="date" required="true">
 		<cfargument name="termDropDate"type="date" required="true">
 
 		<cfquery name="attendanceClasses">
@@ -519,7 +515,7 @@
 				<cfset contactrow=#GetQueryRow(studentQry, 1)#>
 				<!--- get the billing student record and the banner classes --->
 				<cfset local.returnArray = getBillingStudent(contactrow=#contactrow#, billingStartDate=#arguments.billingStartDate#,
-																reportingStartDate=#arguments.reportingStartDate#, reportingEndDate=#arguments.reportingEndDate#, term=#arguments.term#) >
+																billingEndDate=#arguments.billingEndDate#, term=#arguments.term#) >
 				<cfset local.billingStudentId = returnArray[1]>
 				<cfset local.bannerClasses = returnArray[2]>
 				<cfset appObj.logDump(label="billingStudentId", value="#billingStudentId#", level=5)>

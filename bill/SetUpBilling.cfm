@@ -45,22 +45,17 @@
 		<div class="small-3 columns"></div>
 	</div>
 	<div class="row">
-		<div class="small-3 columns">
-			<label><cfif url.type EQ "term">Term Enrollment Date<cfelse>Month Start Date</cfif>:<br/>
+		<div class="small-4 columns">
+			<label>Billing Start Date:<br/>
 				<input name="billingStartDate" id="billingStartDate" type="text" />
 			</label>
 		</div>
-		<div class="small-3 columns">
-			<label>Reporting Start Date:<br/>
-				<input name="reportingStartDate" id="reportingStartDate" type="text" />
+		<div class="small-4 columns">
+			<label>Billing End Date:<br/>
+				<input name="billingEndDate" id="billingEndDate" type="text" />
 			</label>
 		</div>
-		<div class="small-3 columns">
-			<label>Reporting End Date:<br/>
-				<input name="reportingEndDate" id="reportingEndDate" type="text" />
-			</label>
-		</div>
-		<div class="small-3 columns">
+		<div class="small-4 columns">
 			<label><br/><input class="button" type="submit" name="submit" value="Generate Billing" /></label>
 		</div>
 	</div>
@@ -85,13 +80,7 @@
 		rightArrow:'>>',
 		closeIcon:'X',
 		closeButton: true });
-	$('#reportingStartDate').fdatepicker({ format: 'mm/dd/yy',
-		disableDblClickSelection: true,
-		leftArrow:'<<',
-		rightArrow:'>>',
-		closeIcon:'X',
-		closeButton: true });
-	$('#reportingEndDate').fdatepicker({ format: 'mm/dd/yy',
+	$('#billingEndDate').fdatepicker({ format: 'mm/dd/yy',
 		disableDblClickSelection: true,
 		leftArrow:'<<',
 		rightArrow:'>>',

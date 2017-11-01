@@ -1,27 +1,72 @@
 <cfset data = Session.reportAttendancePrintTable>
 
 
-<cfset Variables.count = 0>
-<cfset Variables.jan = 0>
-<cfset Variables.feb = 0>
-<cfset Variables.mar = 0>
-<cfset Variables.apr = 0>
-<cfset Variables.may = 0>
-<cfset Variables.jun = 0>
-<cfset Variables.jul = 0>
-<cfset Variables.aug = 0>
-<cfset Variables.sept = 0>
-<cfset Variables.oct = 0>
-<cfset Variables.nov = 0>
-<cfset Variables.dec = 0>
-<cfset Variables.attnd = 0>
-<cfset Variables.enrl = 0>
+<style>
+
+		table thead th, table tbody td {
+			padding:4px;
+		}
+		table{
+			margin:0px;
+			border-collapse: collapse;
+		}
+		.bold-left-border{
+			border-left-style:solid;
+			border-left-width:2px;
+		}
+		.bold-right-border{
+			border-right-width:1px;
+			border-right-style:solid;
+		}
+
+		.border-bottom-only{
+			border-bottom-style:solid;
+			border-bottom-width:1px;
+			border-top-style:none;
+			border-left-style:none;
+			border-right-style:none;
+		}
+		.no-border{
+			border-color:none;
+			border-style:none;
+			border-width: 0px;
+		}
+		.border-no-top{
+			border-top-style:none;
+		}
+		.max-billing{
+			text-align:center;
+			border-left-style:none;
+			border-right-style:none;
+			border-bottom-style:none;
+		}
+		.tdmonth{
+			width:45px;
+			text-align:right;
+		}
+
+	</style>
 
 <table id="printtable">
-	<thead>
+<thead ><cfoutput>
+			<tr>
+				<th class="border-bottom-only" style="text-align:left; font-size:x-small" colspan="9">
+					<cfoutput>#data.schooldistrict#</cfoutput>
+				</th>
+				<th class="border-bottom-only" style="text-align:right; font-size:x-small" colspan="10">
+					Alternative Education Program
+				</th>
+			</tr>
+			<tr><th colspan="16" class="no-border"></th></tr>
+			<tr>
+				<th class="no-border" style="text-align:center" colspan="19">
+					<h3 style="margin:0px">Monthly Attendance And Days Enrolled - Public School Days</h3>
+					<cfoutput><b>All Students at <cfif data.Program EQ "gtc">PCC/HSC<cfelse>#data.Program#</cfif> Between #data.BillingStartDate# and #data.BillingEndDate#</b></cfoutput>
+				</th>
+			</tr></cfoutput>
 		<tr>
 			<th colspan="6" style="text-align:left">Student</th>
-			<th colspan="2" style="text-align:left">Apprv. Status</th>
+			<th colspan="2" style="text-align:left">Apprv.&nbsp;Status</th>
 			<th colspan="2" style="text-align:left">DOB</th>
 			<th colspan="2" style="text-align:left">Entry Date</th>
 			<th colspan="2" style="text-align:left">Exit Date</th>
@@ -30,90 +75,83 @@
 		<tr>
 			<th style="border-bottom-style:solid"></th>
 			<th style="border-bottom-style:solid"></th>
-			<th style="border-bottom-style:solid">Jun</th>
-			<th style="border-bottom-style:solid">Jul</th>
-			<th style="border-bottom-style:solid">Aug</th>
-			<th style="border-bottom-style:solid">Sept</th>
-			<th style="border-bottom-style:solid">Oct</th>
-			<th style="border-bottom-style:solid">Nov</th>
-			<th style="border-bottom-style:solid">Dec</th>
-			<th style="border-bottom-style:solid">Jan</th>
-			<th style="border-bottom-style:solid">Feb</th>
-			<th style="border-bottom-style:solid">Mar</th>
-			<th style="border-bottom-style:solid">Apr</th>
-			<th style="border-bottom-style:solid">May</th>
-			<th style="border-bottom-style:solid">Attend</th>
-			<th style="border-bottom-style:solid">Enrl</th>
+			<th style="border-bottom-style:solid" class="tdmonth">Jun</th>
+			<th style="border-bottom-style:solid" class="tdmonth">Jul</th>
+			<th style="border-bottom-style:solid" class="tdmonth">Aug</th>
+			<th style="border-bottom-style:solid" class="tdmonth">Sept</th>
+			<th style="border-bottom-style:solid" class="tdmonth">Oct</th>
+			<th style="border-bottom-style:solid" class="tdmonth">Nov</th>
+			<th style="border-bottom-style:solid" class="tdmonth">Dec</th>
+			<th style="border-bottom-style:solid" class="tdmonth">Jan</th>
+			<th style="border-bottom-style:solid" class="tdmonth">Feb</th>
+			<th style="border-bottom-style:solid" class="tdmonth">Mar</th>
+			<th style="border-bottom-style:solid" class="tdmonth">Apr</th>
+			<th style="border-bottom-style:solid" class="tdmonth">May</th>
+			<th style="border-bottom-style:solid" class="tdmonth">Attend</th>
+			<th style="border-bottom-style:solid" class="tdmonth">Enrl</th>
 		</tr>
 		<tr>
-			<th colspan="16">No Plan Assigned</th>
+			<th colspan="16" style="text-align:left">No Plan Assigned</th>
 		</tr>
 	</thead>
 	<tbody>
 	<cfoutput query="data">
-		<tr>
-			<td colspan="6" style="text-align:left"><a href='attendanceReportDetail.cfm?billingStudentId=#billingStudentId#' target='_blank'>#name#</a></td>
-			<td colspan="2" style="text-align:left">Approved</td>
-			<td colspan="2" style="text-align:left">#DateFormat(dob,"m/d/y")#</td>
-			<td colspan="2" style="text-align:left">#DateFormat(enrolleddate,"m/d/y")#</td>
-			<td colspan="2" style="text-align:left">#DateFormat(exitdate,"m/d/y")#</td>
-			<td colspan="2"></td>
-		</tr>
-		<tr>
-			<td colspan="2"></td>
-			<td>#Jun#</td>
-			<td>#Jul#</td>
-			<td>#Aug#</td>
-			<td>#Sept#</td>
-			<td>#Oct#</td>
-			<td>#Nov#</td>
-			<td>#Dec#</td>
-			<td>#Jan#</td>
-			<td>#Feb#</td>
-			<td>#Mar#</td>
-			<td>#Apr#</td>
-			<td>#May#</td>
-			<td>#Attnd#</td>
-			<td>#Enrl#</td>
-		</tr>
-
-		<cfset Variables.count = Variables.count+1>
-		<cfset Variables.jan = Variables.jan+#jan#>
-		<cfset Variables.feb = Variables.feb+#feb#>
-		<cfset Variables.mar = Variables.mar+#mar#>
-		<cfset Variables.apr = Variables.apr+#apr#>
-		<cfset Variables.may = Variables.may+#may#>
-		<cfset Variables.jun = Variables.jun+#jun#>
-		<cfset Variables.jul = Variables.jul+#jul#>
-		<cfset Variables.aug = Variables.aug+#aug#>
-		<cfset Variables.sept = Variables.sept+#sept#>
-		<cfset Variables.oct = Variables.oct+#oct#>
-		<cfset Variables.nov = Variables.nov+#nov#>
-		<cfset Variables.dec = Variables.dec+#dec#>
-		<cfset Variables.attnd = Variables.attnd+#attnd#>
-		<cfset Variables.enrl = Variables.enrl+#enrl#>
+		<tr><td colspan="16">
+		<table style= "page-break-inside: avoid;">
+			<tr>
+				<td colspan="8" style="text-align:left">#name#</td>
+				<td colspan="2" style="text-align:left">#DateFormat(dob,"m/d/y")#</td>
+				<td colspan="2" style="text-align:left">#DateFormat(enrolleddate,"m/d/y")#</td>
+				<td colspan="2" style="text-align:left">#DateFormat(exitdate,"m/d/y")#</td>
+				<td colspan="2"></td>
+			</tr>
+			<tr>
+				<td colspan="2" style="width:60px"></td>
+				<td class="tdmonth">#Jun#</td>
+				<td class="tdmonth">#Jul#</td>
+				<td class="tdmonth">#Aug#</td>
+				<td class="tdmonth">#Sept#</td>
+				<td class="tdmonth">#Oct#</td>
+				<td class="tdmonth">#Nov#</td>
+				<td class="tdmonth">#Dcm#</td>
+				<td class="tdmonth">#Jan#</td>
+				<td class="tdmonth">#Feb#</td>
+				<td class="tdmonth">#Mar#</td>
+				<td class="tdmonth">#Apr#</td>
+				<td class="tdmonth">#May#</td>
+				<td class="tdmonth">#Attnd#</td>
+				<td class="tdmonth">#Enrl#</td>
+			</tr>
+		</table>
+		</td></tr>
 	</cfoutput>
-	</tbody>
-	<tfoot>
-		<cfoutput>
+	<tr>
+		<cfquery dbtype="query" name="totals">
+				select count(*) cnt, sum(Jun) Jun, sum(Jul) Jul, sum(Aug) Aug,
+					sum(Sept) Sept, sum(Oct) Oct, sum(Nov) Nov, sum(Dcm) Dcm,
+					sum(Jan) Jan, sum(Feb) Feb, sum(Mar) Mar, sum(Apr) Apr,
+					sum(May) May,
+					sum(attnd) Attnd, sum(enrl) enrl
+				from data
+		</cfquery>
+		<cfoutput query="totals">
 		<tr>
-			<td style="border-top-style:">Total:</td>
-			<td style="border-top-style:solid">#Variables.count#</td>
-			<td style="border-top-style:solid">#Variables.Jun#</td>
-			<td style="border-top-style:solid">#Variables.Jul#</td>
-			<td style="border-top-style:solid">#Variables.Aug#</td>
-			<td style="border-top-style:solid">#Variables.Sept#</td>
-			<td style="border-top-style:solid">#Variables.Oct#</td>
-			<td style="border-top-style:solid">#Variables.Nov#</td>
-			<td style="border-top-style:solid">#Variables.Dec#</td>
-			<td style="border-top-style:solid">#Variables.Jan#</td>
-			<td style="border-top-style:solid">#Variables.Feb#</td>
-			<td style="border-top-style:solid">#Variables.Mar#</td>
-			<td style="border-top-style:solid">#Variables.Apr#</td>
-			<td style="border-top-style:solid">#Variables.May#</td>
-			<td style="border-top-style:solid">#Variables.Attnd#</td>
-			<td style="border-top-style:solid">#Variables.Enrl#</td>
+			<td style="border-top-style:solid;width:30px" >Total:</td>
+			<td style="border-top-style:solid;width:18px" >#cnt#</td>
+			<td style="border-top-style:solid" class="tdmonth">#Jun#</td>
+			<td style="border-top-style:solid" class="tdmonth">#Jul#</td>
+			<td style="border-top-style:solid" class="tdmonth">#Aug#</td>
+			<td style="border-top-style:solid" class="tdmonth">#Sept#</td>
+			<td style="border-top-style:solid" class="tdmonth">#Oct#</td>
+			<td style="border-top-style:solid" class="tdmonth">#Nov#</td>
+			<td style="border-top-style:solid" class="tdmonth">#Dcm#</td>
+			<td style="border-top-style:solid" class="tdmonth">#Jan#</td>
+			<td style="border-top-style:solid" class="tdmonth">#Feb#</td>
+			<td style="border-top-style:solid" class="tdmonth">#Mar#</td>
+			<td style="border-top-style:solid" class="tdmonth">#Apr#</td>
+			<td style="border-top-style:solid" class="tdmonth">#May#</td>
+			<td style="border-top-style:solid" class="tdmonth">#Attnd#</td>
+			<td style="border-top-style:solid" class="tdmonth">#Enrl#</td>
 		</tr>
 		</cfoutput>
-	</tfoot>
 </table>

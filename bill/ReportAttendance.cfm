@@ -1,6 +1,6 @@
 
 <cfinclude template="includes/header.cfm">
-<cfinvoke component="ProgramBilling" method="getLatestDateAttendanceMonth"  returnvariable="attendanceMonth"></cfinvoke>
+<cfinvoke component="LookUp" method="getLatestDateAttendanceMonth"  returnvariable="attendanceMonth"></cfinvoke>
 <cfinvoke component="Report" method="attendanceReport" returnvariable="data">
 	<cfinvokeargument name="monthStartDate" value="#attendanceMonth#">
 	<cfinvokeargument name="term" value="#url.term#">
@@ -26,46 +26,35 @@
 		display:inline-block !important;
 		width:auto !important;
 	}
+	table.dataTable tbody td, table.dataTable tfoot td {
+		text-align:right;
+		padding-right:10px;
+	}
 </style>
 	<div class="row" id="tableheader">
 		<table width="100%" style="border-style:none;">
 			<tr>
-				<td class="bottom-border" style="text-align:left; font-size:8px">
+				<td class="bottom-border" style="text-align:left; font-size:12px">
 					<cfoutput>#url.schooldistrict#</cfoutput>
 				</td>
-				<td class="bottom-border" style="text-align:right; font-size:8px">
+				<td class="bottom-border" style="text-align:right; font-size:12px">
 					Alternative Education Program
 				</td>
 			</tr>
 			<tr>
 				<td colspan="2" class="no-border" style="text-align:center; font-size:12px">
 					<h4>Monthly Attendance And Days Enrolled - Public School Days</h4>
-					<cfoutput><b>All Students at #url.Program# between #data.ReportingStartDate# and #data.ReportingEndDate#</b></cfoutput>
+					<cfoutput><b>All Students at #url.Program# between #data.BillingStartDate# and #data.BillingEndDate#</b></cfoutput>
 				</td>
 			</tr>
 		</table>
 	</div>
 
-<cfset Variables.count = 0>
-<cfset Variables.jan = 0>
-<cfset Variables.feb = 0>
-<cfset Variables.mar = 0>
-<cfset Variables.apr = 0>
-<cfset Variables.may = 0>
-<cfset Variables.jun = 0>
-<cfset Variables.jul = 0>
-<cfset Variables.aug = 0>
-<cfset Variables.sept = 0>
-<cfset Variables.oct = 0>
-<cfset Variables.nov = 0>
-<cfset Variables.dec = 0>
-<cfset Variables.attnd = 0>
-<cfset Variables.enrl = 0>
-
-<table id="dt_table" class="hover">
+<table id="dt_table" class="hover stripe">
 	<thead>
 		<tr>
 			<th style="border-bottom-style:solid">Student</th>
+			<th style="border-bottom-style:solid">G</th>
 			<th style="border-bottom-style:solid">DOB</th>
 			<th style="border-bottom-style:solid">Entry Date</th>
 			<th style="border-bottom-style:solid">Exit Date</th>
@@ -84,14 +73,12 @@
 			<th style="border-bottom-style:solid">Attend</th>
 			<th style="border-bottom-style:solid">Enrl</th>
 		</tr>
-		<tr>
-			<th colspan="18">No Plan Assigned</th>
-		</tr>
 	</thead>
 	<tbody>
 	<cfoutput query="data">
 		<tr>
 			<td style="text-align:left">#name#</td>
+			<td style="text-align:left">#bannerGNumber#</td>
 			<td style="text-align:left">#DateFormat(dob,"m/d/y")#</td>
 			<td style="text-align:left">#DateFormat(enrolleddate,"m/d/y")#</td>
 			<td style="text-align:left">#DateFormat(exitdate,"m/d/y")#</td>
@@ -101,7 +88,7 @@
 			<td><cfif SeptbillingStudentId GT 0><a href='javascript:goToDetail(#SeptbillingStudentId#);'>#Sept#</a><cfelse>0</cfif></td>
 			<td><cfif OctbillingStudentId GT 0><a href='javascript:goToDetail(#OctbillingStudentId#);'>#Oct#</a><cfelse>0</cfif></td>
 			<td><cfif NovbillingStudentId GT 0><a href='javascript:goToDetail(#NovbillingStudentId#);'>#Nov#</a><cfelse>0</cfif></td>
-			<td><cfif DecbillingStudentId GT 0><a href='javascript:goToDetail(#DecbillingStudentId#);'>#Dec#</a><cfelse>0</cfif></td>
+			<td><cfif DecbillingStudentId GT 0><a href='javascript:goToDetail(#DecbillingStudentId#);'>#Dcm#</a><cfelse>0</cfif></td>
 			<td><cfif JanbillingStudentId GT 0><a href='javascript:goToDetail(#JanbillingStudentId#);'>#Jan#</a><cfelse>0</cfif></td>
 			<td><cfif FebbillingStudentId GT 0><a href='javascript:goToDetail(#FebbillingStudentId#);'>#Feb#</a><cfelse>0</cfif></td>
 			<td><cfif MarbillingStudentId GT 0><a href='javascript:goToDetail(#MarbillingStudentId#);'>#Mar#</a><cfelse>0</cfif></td>
@@ -110,45 +97,35 @@
 			<td>#Attnd#</td>
 			<td>#Enrl#</td>
 		</tr>
-
-		<cfset Variables.count = Variables.count+1>
-		<cfset Variables.jan = Variables.jan+#jan#>
-		<cfset Variables.feb = Variables.feb+#feb#>
-		<cfset Variables.mar = Variables.mar+#mar#>
-		<cfset Variables.apr = Variables.apr+#apr#>
-		<cfset Variables.may = Variables.may+#may#>
-		<cfset Variables.jun = Variables.jun+#jun#>
-		<cfset Variables.jul = Variables.jul+#jul#>
-		<cfset Variables.aug = Variables.aug+#aug#>
-		<cfset Variables.sept = Variables.sept+#sept#>
-		<cfset Variables.oct = Variables.oct+#oct#>
-		<cfset Variables.nov = Variables.nov+#nov#>
-		<cfset Variables.dec = Variables.dec+#dec#>
-		<cfset Variables.attnd = Variables.attnd+#attnd#>
-		<cfset Variables.enrl = Variables.enrl+#enrl#>
 	</cfoutput>
 	</tbody>
 	<tfoot>
-		<cfoutput>
+		<cfquery dbtype="query" name="totals">
+			select count(*) cnt, sum(Jun) Jun, sum(Jul) Jul, sum(Aug) Aug,
+				sum(Sept) Sept, sum(Oct) Oct, sum(Nov) Nov, sum(Dcm) Dcm,
+				sum(Jan) Jan, sum(Feb) Feb, sum(Mar) Mar, sum(Apr) Apr,
+				sum(May) May,
+				sum(attnd) Attnd, sum(enrl) enrl
+			from data
+		</cfquery>
+		<cfoutput query="totals">
 		<tr>
-			<td style="border-top-style:">Total:#Variables.count#</td>
-			<td></td>
-			<td></td>
-			<td></td>
-			<td style="border-top-style:solid">#Variables.Jun#</td>
-			<td style="border-top-style:solid">#Variables.Jul#</td>
-			<td style="border-top-style:solid">#Variables.Aug#</td>
-			<td style="border-top-style:solid">#Variables.Sept#</td>
-			<td style="border-top-style:solid">#Variables.Oct#</td>
-			<td style="border-top-style:solid">#Variables.Nov#</td>
-			<td style="border-top-style:solid">#Variables.Dec#</td>
-			<td style="border-top-style:solid">#Variables.Jan#</td>
-			<td style="border-top-style:solid">#Variables.Feb#</td>
-			<td style="border-top-style:solid">#Variables.Mar#</td>
-			<td style="border-top-style:solid">#Variables.Apr#</td>
-			<td style="border-top-style:solid">#Variables.May#</td>
-			<td style="border-top-style:solid">#Variables.Attnd#</td>
-			<td style="border-top-style:solid">#Variables.Enrl#</td>
+			<td style="border-top-style:">Total:#cnt#</td>
+			<td colspan="4"></td>
+			<td style="border-top-style:solid">#Jun#</td>
+			<td style="border-top-style:solid">#Jul#</td>
+			<td style="border-top-style:solid">#Aug#</td>
+			<td style="border-top-style:solid">#Sept#</td>
+			<td style="border-top-style:solid">#Oct#</td>
+			<td style="border-top-style:solid">#Nov#</td>
+			<td style="border-top-style:solid">#Dcm#</td>
+			<td style="border-top-style:solid">#Jan#</td>
+			<td style="border-top-style:solid">#Feb#</td>
+			<td style="border-top-style:solid">#Mar#</td>
+			<td style="border-top-style:solid">#Apr#</td>
+			<td style="border-top-style:solid">#May#</td>
+			<td style="border-top-style:solid">#Attnd#</td>
+			<td style="border-top-style:solid">#Enrl#</td>
 		</tr>
 		</cfoutput>
 	</tfoot>
@@ -167,48 +144,17 @@
 			$('#dt_table').DataTable( {
 		    	dom: '<"top"iBf>rt<"bottom"lp>',
 		    	bSort:false,
-		    	stateSave: true,
+		        scrollY: "400px",
+		        scrollX: true,
+		        scrollCollapse: true,
+		        paging: false,
+        		fixedColumns:true,
 			    buttons: [
-		          {	extend:'print',
-		            autoPrint:false,
-		            header:true,
-		            footer:true,
-		            orientation:'portrait',
-		           // Set up some custom HTML for printing
-		            customize: function ( win ) {
-		            	//set body font size and type
-		            	$(win.document.body)
-		                        .css( 'font-size', '8pt' )
-		                        .css('font-family', 'Times New Roman');
-
-						//sets same fonts for the table
-		                $(win.document.body).find( 'table' )
-		              			.css( 'font-size', 'inherit' );
-
-		              	var dt_table = $('#dt_table').html();
-		              	var printTable = '';
-		              	$.ajax({
-				            type: 'get',
-				            url: 'ReportAttendancePrintTable.cfm',
-							async: false,
-				            success: function (data, textStatus, jqXHR) {
-				            	printTable = data;
-							},
-				            error: function (xhr, textStatus, thrownError) {
-								 handleAjaxError(xhr, textStatus, thrownError);
-							}
-				          });
-		              	$(win.document.body).find('table').replaceWith(printTable);
-
-						$(win.document.body).find('a').each(function(){
-																	this.outerHTML = this.innerHTML;
-															});
-
-
-						//adding in the document header
-		     			 $(win.document.body).find('h1').replaceWith('<style> .no-border{border-style:none !important} .bottom-border{ 	border-top-style:none;	border-left-style:none; border-right-style:none; border-bottom-style:solid; } </style><div class="row">' + $('#tableheader').html() + '</div><br><br>');
-		            } //end customize
-		        } //end print button definition
+		        	{text:'print',
+		         		action: function(){
+		         		window.open('ReportAttendancePrintTable.cfm');
+		         	}
+		         }
 		    ] //end buttons
 			});
 		}
@@ -227,11 +173,13 @@
           });
 	}
 	function goToDetail(billingStudentId){
+		sessionStorage.clear();
 		sessionStorage.setItem('returnToReport', '<cfoutput>#cgi.script_name#?#cgi.query_string#</cfoutput>');
+		sessionStorage.setItem("showNext", true);
 		var data = $.param({data:encodeURIComponent(JSON.stringify(sessionStorage))});
 		$.post("SaveSession.cfm", data, function(){
-	  		window.location='billingStudentRecord.cfm?billingStudentId='+billingStudentId;
-  		});
+			window.open('programStudentDetail.cfm?billingStudentId='+billingStudentId);
+		});
 	}
 
 	</script>

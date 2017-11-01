@@ -1,37 +1,35 @@
 
-<!---<cfinclude template="includes/header.cfm">--->
-
 <cfinvoke component="Report" method="attendanceReportDetail" returnvariable="data">
-	<cfinvokeargument name="billingStudentId" value="#url.billingStudentId#">
+	<cfinvokeargument name="billingStudentId" value="#attributes.billingStudentId#">
 </cfinvoke>
-<!---
-<div class="callout primary">
-<div class="row">
-<cfoutput>
-	<div class="small-4 columns">#data.firstname#&nbsp;#data.lastname#&nbsp;(#data.bannerGNumber#)</div>
-	<div class="small-8 columns">
-		<label>Month Start Date:#DateFormat(data.billingStartDate,'m/d/y')#</label>
-	</div>
-</cfoutput>
-</div>
-</div>
---->
-<b>Attendance Details<b><br>
-<table>
+
+<style>
+
+table.attendance thead, table.attendance thead th, table.attendance tbody td, table.attendance tfoot td{
+	padding:4px;
+	background-color:white;
+	border-style:solid;
+	border-width:1px;
+	border-color:lightgray;
+	margin:0px;
+	border-collapse: collapse;
+}
+table.attendance{
+	border-collapse: collapse;
+}
+</style>
+
+<b>Attendance Details</b><br>
+<table class="attendance" >
 	<thead>
 		<tr>
 			<th>CRN</th>
-			<th>Attendance</th>
+			<th>Attnd</th>
 			<th>Ind</th>
 			<th>Small</th>
 			<th>Inter</th>
 			<th>Large</th>
-			<th>Total</th>
-			<th>Scenario</th>
-			<th>Ind %</th>
-			<th>Small %</th>
-			<th>Inter %</th>
-			<th>Large %</th>
+			<th>CM</th>
 		</tr>
 	</thead>
 	<tbody>
@@ -43,20 +41,17 @@
 			<td>#small#</td>
 			<td>#inter#</td>
 			<td>#large#</td>
-			<td>#ind+small+inter+large#</td>
-			<td>#Scenario#</td>
-			<td>#IndPercent#</td>
-			<td>#SmallPercent#</td>
-			<td>#InterPercent#</td>
-			<td>#LargePercent#</td>
+			<td>#attendance*.3#</td>
 		</tr>
 	</cfoutput>
 	</tbody>
 	<tfoot>
 		<tr>
 			<cfquery dbtype="query" name="dataTotal">
-				select sum(attendance) attendance, sum(ind) ind, sum(small) small, sum(inter) inter, sum(large) large, sum(ind+small+inter+large) total
+				select SmGroupPercent, InterGroupPercent, LargeGroupPercent, CMPercent, GeneratedBilledAmount, GeneratedOverageAmount,
+					sum(attendance) attendance, sum(ind) ind, sum(small) small, sum(inter) inter, sum(large) large, sum(attendance*.3) CM
 				from data
+				group by SmGroupPercent, InterGroupPercent, LargeGroupPercent, CMPercent, GeneratedBilledAmount, GeneratedOverageAmount
 			</cfquery>
 			<cfoutput query="dataTotal">
 			<td></td>
@@ -65,37 +60,62 @@
 			<td>#small#</td>
 			<td>#inter#</td>
 			<td>#large#</td>
-			<td>#total#</td>
-			<td colspan="5"></td>
+			<td>#cm#</td>
 			</cfoutput>
 		</tr>
 	</tfoot>
 </table>
-
-<table>
+<table class="attendance" >
 	<thead>
 		<tr>
-			<th>Indiv</th>
-			<th>Small * 0.333</th>
-			<th>Inter * 0.222</th>
-			<th>Large * 0.167</th>
-			<th>CM Total * 0.0167</th>
-			<th>PPS Days</th>
+			<th>CRN</th>
+			<th>Scnrio</th>
+			<th>Ind %</th>
+			<th>Small %</th>
+			<th>Inter %</th>
+			<th>Large %</th>
 		</tr>
+	</thead>
+	<tbody>
+	<cfoutput query="data">
+		<tr>
+			<td>#crn#</td>
+			<td>#Scenario#</td>
+			<td>#IndPercent#</td>
+			<td>#SmallPercent#</td>
+			<td>#InterPercent#</td>
+			<td>#LargePercent#</td>
+		</tr>
+	</cfoutput>
+	</tbody>
+</table>
+<table class="attendance" >
+	<thead><cfoutput query="dataTotal">
+		<tr>
+			<th>Indiv</th>
+			<th>Small * #SmGroupPercent#</th>
+			<th>Inter * #InterGroupPercent#</th>
+			<th>Large * #LargeGroupPercent#</th>
+			<th>CM Total * #CMPercent#</th>
+			<th>Total</th>
+			<th>Ovrg</th>
+			<th>PPS Days</th>
+		</tr></cfoutput>
 	</thead>
 	<tbody>
 		<tr>
 		<cfoutput query="dataTotal">
 			<td>#Ind#</td>
-			<td>#Small*0.333#</td>
-			<td>#Inter*0.222#</td>
-			<td>#Large*0.167#</td>
-			<td>#(Ind+Small+Inter+Large)*0.0167#</td>
-			<td>#NumberFormat(Ind + Small*0.333 + Inter*0.222 + Large*0.167 + (Ind+Small+Inter+Large)*0.0167,'9.99')#</td>
+			<td>#Small*SmGroupPercent#</td>
+			<td>#Inter*InterGroupPercent#</td>
+			<td>#Large*LargeGroupPercent#</td>
+			<td>#(Ind+Small+Inter+Large)*CMPercent#</td>
+			<td>#NumberFormat(GeneratedBilledAmount+GeneratedOverageAmount,'9.99')#</td>
+			<td>#GeneratedOverageAmount#</td>
+			<td>#GeneratedBilledAmount#</td>
 		</cfoutput>
 		</tr>
 	</tbody>
 </table>
 
-
-<!---<cfinclude template="includes/footer.cfm">--->
+<!-- ending page -->

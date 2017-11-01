@@ -1,5 +1,5 @@
 <cfcomponent displayname="FC">
-<cfinclude template="/pcclinks/includes/logfunctions.cfm">
+<!---<cfinclude template="pcclinks.includes.logfunctions.cfm">--->
 <!------- NOTES -------
 Queries with bannerpcclinks datasource are views from the Banner system
 Banner views have an ATTS attribute that identify what program a student is in.  Since overtime, a student may be in more than one program
@@ -7,6 +7,7 @@ all the banner queries need to force a distinct by PIDM
 --->
 
 	<cfobject name="mscbCFC" component="pcclinks.includes.multiSelectCheckbox">
+	<cfobject name="appObj" component="application">
 
 	<cffunction name="getTermByStudent" returntype="query" access="remote" >
 		<cfargument name="bannerGNumber" type="string" required="no" default="">
@@ -100,7 +101,7 @@ all the banner queries need to force a distinct by PIDM
 	<cffunction name="getMaxTermData" returntype="query" >
 		<cfargument name="bannerGNumber" type="string" required="no" default="">
 		<cfargument name="bannerPop" type="query" required="yes" default="">
-		<cfset logEntry(value="starting getMaxTermData")>
+		<cfset appObj.logEntry(value="starting getMaxTermData")>
 		<!--- Banner Prod is having performance issues unless it is done that way - might be able to change back in the future --->
 		<!---<cfquery name="maxData" datasource="bannerpcclinks" cachedWithin="#createTimeSpan( 0, 1, 0, 0 )#">
 			SELECT STU_ID, MAX(TERM) AS maxTerm
@@ -132,7 +133,7 @@ all the banner queries need to force a distinct by PIDM
                 ,rank() over (partition by stu_id order by term desc) as rnk
 			FROM swvlinks_term
 		</cfquery>
-		<cfset logEntry(value="finished termData")>
+		<cfset appObj.logEntry(value="finished termData")>
 		<cfquery name="MaxTermDataUnion" dbType="query" cachedWithin="#createTimeSpan( 0, 1, 0, 0 )#">
 			SELECT termData.STU_ID
 				, termData.TERM
@@ -166,7 +167,7 @@ all the banner queries need to force a distinct by PIDM
 				, ''
 			FROM bannerPop
 		</cfquery>--->
-		<cfset logEntry(value="finished MaxTermDataUnion")>
+		<cfset appObj.logEntry(value="finished MaxTermDataUnion", level=2)>
 		<cfquery name="MaxTermData" dbType="query" cachedWithin="#createTimeSpan( 0, 1, 0, 0 )#">
 			SELECT STU_ID
 				, MAX(TERM) Term
@@ -176,7 +177,7 @@ all the banner queries need to force a distinct by PIDM
 			FROM MaxTermDataUnion
 			GROUP BY STU_ID
 		</cfquery>
-		<cfset logEntry(value="finished MaxTermData")>
+		<cfset appObj.logEntry(value="finished MaxTermData", level=2)>
 		<!---<cfquery name="MaxTermData" datasource="bannerpcclinks" cachedWithin="#createTimeSpan( 0, 1, 0, 0 )#">
 			SELECT distinct swvlinks_term.STU_ID
 				, TERM
@@ -252,7 +253,7 @@ all the banner queries need to force a distinct by PIDM
 			</cfif>
 		</cfif>
 
-		<cfset logEntry(value="doUpdate = " & Local.doUpdate & ", syncSessionObject=" & Local.syncSessionObject, label=2)>
+		<cfset appObj.logEntry(value="doUpdate = " & Local.doUpdate & ", syncSessionObject=" & Local.syncSessionObject, level=2)>
 		<cfif Local.doUpdate>
 			<cfquery name="create" >
 				UPDATE futureConnect SET
@@ -308,14 +309,14 @@ all the banner queries need to force a distinct by PIDM
 				AND tableName = 'futureConnect'
 		</cfquery>
 		<cfset lookupTableIdsToDelete = mscbCFC.getValuesToDelete(existingLookupEntries, Variables.checkedIds)>
-		<cfset logEntry(label="lookupTableIdsToDelete", value="#lookupTableIdsToDelete#", level=3)>
+		<cfset appObj.logEntry(label="lookupTableIdsToDelete", value="#lookupTableIdsToDelete#", level=3)>
 		<cfquery name="deleteEntry">
 			DELETE FROM enrichmentProgramContact
 			WHERE enrichmentProgramID IN (<cfqueryparam value="#lookupTableIdsToDelete#" cfsqltype="CF_SQL_INTEGER" list="yes" >)
 				and contactid = <cfqueryparam value="#Variables.contactId#">
 		</cfquery>
 		<cfset lookupTableIdsToInsert = mscbCFC.getValuesToInsert(existingLookupEntries, Variables.checkedIds)>
-		<cfset logEntry(label="lookupTableIdsToInsert", value="#lookupTableIdsToInsert#", level=3)>
+		<cfset appObj.logEntry(label="lookupTableIdsToInsert", value="#lookupTableIdsToInsert#", level=3)>
 		<cfquery name="insertEntry">
 			insert into enrichmentProgramContact(contactID, enrichmentProgramID, tableName, createdBy, dateCreated, lastUpdatedBy, dateLastUpdated)
 			select <cfqueryparam value="#Variables.contactID#">, enrichmentProgramID, 'futureConnect', '#Session.username#', current_timestamp, '#Session.username#', current_timestamp
@@ -335,14 +336,14 @@ all the banner queries need to force a distinct by PIDM
 				AND tableName = 'futureConnect'
 		</cfquery>
 		<cfset lookupTableIdsToDelete = mscbCFC.getValuesToDelete(existingLookupEntries, Variables.checkedIds)>
-		<cfset logEntry(label="lookupTableIdsToDelete", value="#lookupTableIdsToDelete#", level=3)>
+		<cfset appObj.logEntry(label="lookupTableIdsToDelete", value="#lookupTableIdsToDelete#", level=3)>
 		<cfquery name="deleteEntry">
 			DELETE from householdContact
 			WHERE householdID IN (<cfqueryparam value="#lookupTableIdsToDelete#" cfsqltype="CF_SQL_INTEGER" list="yes" >)
 				and contactid = <cfqueryparam value="#Variables.contactId#">
 		</cfquery>
 		<cfset lookupTableIdsToInsert = mscbCFC.getValuesToInsert(existingLookupEntries, Variables.checkedIds)>
-		<cfset logEntry(label="lookupTableIdsToInsert", value="#lookupTableIdsToInsert#", level=3)>
+		<cfset appObj.logEntry(label="lookupTableIdsToInsert", value="#lookupTableIdsToInsert#", level=3)>
 		<cfquery name="insertEntry">
 			insert into householdContact(contactID, householdID, tableName, createdBy, dateCreated, lastUpdatedBy, dateLastUpdated)
 			select <cfqueryparam value="#Variables.contactId#">, householdID, 'futureConnect', '#Session.username#', current_timestamp, '#Session.username#', current_timestamp
@@ -355,24 +356,24 @@ all the banner queries need to force a distinct by PIDM
 		<cfargument name="data" required="true">
 		<cfset Variables.contactID = trim(arguments.data.contactID)>
 		<cfset Variables.checkedIds = mscbCFC.getCheckedCollection(data=arguments.data, idFieldName="livingSituationId")>
-		<cfset logEntry(value = "Starting saveLivingSituationData", level=3)>
-		<cfset logDump(label="arguments", value="#arguments#", level=3)>
+		<cfset appObj.logEntry(value = "Starting saveLivingSituationData", level=3)>
+		<cfset appObj.logDump(label="arguments", value="#arguments#", level=3)>
 		<cfquery name="existingLookupEntries">
 			SELECT livingSituationId LookUpTableId
 			FROM livingSituationContact
 			WHERE contactID = <cfqueryparam value="#Variables.contactId#">
 				AND tableName = 'futureConnect'
 		</cfquery>
-		<cfset logDump(label="existingLookupEntries", value=#existingLookupEntries#, level=3)>
+		<cfset appObj.logDump(label="existingLookupEntries", value=#existingLookupEntries#, level=3)>
 		<cfset lookupTableIdsToDelete = mscbCFC.getValuesToDelete(existingLookupEntries, Variables.checkedIds)>
-		<cfset logEntry(label="lookupTableIdsToDelete", value="#lookupTableIdsToDelete#", level=3)>
+		<cfset appObj.logEntry(label="lookupTableIdsToDelete", value="#lookupTableIdsToDelete#", level=3)>
 		<cfquery name="deleteEntry">
 			DELETE from livingSituationContact
 			WHERE livingSituationID IN (<cfqueryparam value="#lookupTableIdsToDelete#" cfsqltype="CF_SQL_INTEGER" list="yes" >)
 				and contactID = <cfqueryparam value="#Variables.contactId#">
 		</cfquery>
 		<cfset lookupTableIdsToInsert = mscbCFC.getValuesToInsert(existingLookupEntries, Variables.checkedIds)>
-		<cfset logEntry(label="lookupTableIdsToInsert", value="#lookupTableIdsToInsert#", level=3)>
+		<cfset appObj.logEntry(label="lookupTableIdsToInsert", value="#lookupTableIdsToInsert#", level=3)>
 		<cfquery name="insertEntry">
 			insert into livingSituationContact(contactID, livingSituationId, tableName, createdBy, dateCreated, lastUpdatedBy, dateLastUpdated)
 			select <cfqueryparam value="#Variables.contactId#">, livingSituationId, 'futureConnect', '#Session.username#', current_timestamp, '#Session.username#', current_timestamp
@@ -397,7 +398,7 @@ all the banner queries need to force a distinct by PIDM
 		<!---------------------------------->
 		<!------- Banner Person Data ------->
 		<!---------------------------------->
-		<cfset logEntry(value="starting getCaseload")>
+		<cfset appObj.logEntry(value="starting getCaseload", level=2)>
 		<cfquery datasource="bannerpcclinks" name="BannerPopulation" cachedWithin="#createTimeSpan( 0, 1, 0, 0 )#">
 			SELECT distinct PIDM
 			, STU_ID
@@ -423,7 +424,7 @@ all the banner queries need to force a distinct by PIDM
 				and PIDM = <cfqueryparam  value="#arguments.pidm#">
 			</cfif>
 		</cfquery>
-		<cfset logEntry(value="finished BannerPopulation")>
+		<cfset appObj.logEntry(value="finished BannerPopulation", level=2)>
 		<!---- end Banner Person Data ---->
 
 		<!---------------------------------->
@@ -487,7 +488,7 @@ all the banner queries need to force a distinct by PIDM
 				and futureConnect.bannerGNumber = <cfqueryparam  value="#BannerPopulation.stu_id#">
 			</cfif>
 		</cfquery>
-		<cfset logEntry(value="finished fcTbl")>
+		<cfset appObj.logEntry(value="finished fcTbl", level=2)>
 
 		<!--- if getting a single person, store future connect data in session to use when comparing on update --->
 		<cfif len(arguments.pidm) gt 0>
@@ -503,14 +504,14 @@ all the banner queries need to force a distinct by PIDM
 			FROM fcTbl, BannerPopulation
 			WHERE fcTbl.bannerGNumber = BannerPopulation.STU_ID
 		</cfquery>
-		<cfset logEntry(value="finished futureConnect_bannerPerson")>
+		<cfset appObj.logEntry(value="finished futureConnect_bannerPerson", level=2)>
 
 		<cfif len(#arguments.pidm#) gt 0>
 			<cfset maxTermData = getMaxTermData(bannerGNumber=#BannerPopulation.stu_id#, bannerPop = #BannerPopulation#)>
 		<cfelse>
 			<cfset maxTermData = getMaxTermData(bannerPop = #BannerPopulation#)>
 		</cfif>
-		<cfset logEntry(value="finished maxTermData")>
+		<cfset appObj.logEntry(value="finished maxTermData", level=2)>
 
 		<!--- merge in maxTermData --->
 		<cfquery dbtype="query" name="caseload_banner" >
@@ -557,7 +558,7 @@ all the banner queries need to force a distinct by PIDM
 				and futureConnect_bannerPerson.PIDM = <cfqueryparam  value="#arguments.pidm#">
 			</cfif>
 		</cfquery>
-		<cfset logEntry(value="finished caseload_banner")>
+		<cfset appObj.logEntry(value="finished caseload_banner", level=2)>
 
 		<cfreturn caseload_banner>--->
 	</cffunction>
@@ -661,5 +662,6 @@ all the banner queries need to force a distinct by PIDM
 			WHERE contactid = <cfqueryparam value="#arguments.contactid#">
 		</cfquery>
 	</cffunction>
+
 
 </cfcomponent>
