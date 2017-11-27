@@ -13,6 +13,7 @@
 <cfparam name="pcc_source" default='/pcclinks' />
 
 	<cfset This.name = "PCC Links" />
+	<cfset This.application = "" />
 	<cfset This.sessionManagement = True />
 	<cfset This.clientmanagement = "yes" />
 	<cfset This.setclientcookies = "yes" />
@@ -73,7 +74,8 @@
 
 		<cfset logEntry(value="username=" & session.username, level=2)>
 		<cfset logEntry(value="sessionid=" & session.sessionid, level=2)>
-	 	<cfif not len(trim(session.username)) or session.authorized EQ 0>
+	 	<cfif not len(trim(session.username)) or session.authorized NEQ 1
+	 		or (This.application NEQ 'Billing' and This.application NEQ 'FutureConnect')>
 		 	<cfset isAjax = isAjaxCall()>
 		 	<cfif isAjax>
 			 	<cfset logEntry(value="Ajax call", level=2)>
@@ -93,8 +95,9 @@
 
 		<cfset var errortext = "">
 
-		<cfset logentry(value="-------------BEGIN ENTRY------------") >
-		<cfset logentry(value="#arguments.exception#") >
+		<cfset logEntry(value="-------------BEGIN ENTRY------------") >
+		<cfset logEntry(label="USER:", value="#Session.username#") >
+		<cfset logEntry(value="#arguments.exception#") >
 		<cfif StructkeyExists(arguments.exception, "cause")>
 		    <cfset logEntry(label="Message", value="#arguments.exception.cause.message#")>
 		    <cfset msg = arguments.exception.cause.message>

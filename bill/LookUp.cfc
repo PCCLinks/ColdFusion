@@ -36,7 +36,12 @@
 	</cffunction>
 	<cffunction name="getTerms" access="remote">
 		<cfquery name="data" datasource="pcclinks">
-			select Term
+			select Term,
+				concat(Term, case right(Term,1)
+								when 1 then '-Winter'
+								when 2 then '-Spring'
+			                    when 3 then '-Summer'
+			                    when 4 then '-Fall' end) TermDescription
 			from bannerCalendar
 			where termBeginDate >= date_add(now(), INTERVAL - 1 YEAR)
 			order by term
@@ -74,7 +79,12 @@
 	</cffunction>
 	<cffunction name="getCurrentYearTerms" access="remote" >
 		<cfquery name="data" >
-			select c.Term
+			select c.Term,
+				concat(c.Term, case right(c.Term,1)
+								when 1 then '-Winter'
+								when 2 then '-Spring'
+			                    when 3 then '-Summer'
+			                    when 4 then '-Fall' end) TermDescription
 			from bannerCalendar c
 				join bannerCalendar c1 on c.ProgramYear = c1.ProgramYear
 			where c1.Term = (select max(Term) from billingStudent)
@@ -212,5 +222,29 @@
 		</cfquery>
 		<cfreturn data.maxBillingStartDate>
 	</cffunction>
+	<cffunction name="getAttendanceCRN" access="remote" returnFormat="json">
+		<cfargument name="billingStartDate" required="true">
+		<cfquery name="data" >
+			select distinct CRN
+			from billingStudent bs
+				join billingStudentItem bsi on bs.billingStudentID = bsi.billingStudentId
+			where billingStartDate = <cfqueryparam value="#DateFormat(arguments.billingStartDate,'yyyy-mm-dd')#">
+				and bs.program like '%attendance%'
+			order by CRN
+		</cfquery>
+		<cfreturn data>
+	</cffunction>
 
+	<cffunction name="getLatestDates" access="remote">
+		<cfquery name="data">
+			select max(billingStartDate) billingStartDate
+				,max(bs.Term) Term
+			    ,max(billingEndDate) billingEndDate
+			    ,max(termBeginDate) TermBeginDate
+			    ,max(termDropDate) TermDropDate
+			from billingStudent bs
+				join bannerCalendar bc on bs.term = bc.Term
+		</cfquery>
+		<cfreturn data>
+	</cffunction>
 </cfcomponent>

@@ -1,5 +1,5 @@
 
-<cfinvoke component="Report" method="attendanceReportDetail" returnvariable="data">
+<cfinvoke component="pcclinks.bill.Report" method="attendanceReportDetail" returnvariable="data">
 	<cfinvokeargument name="billingStudentId" value="#attributes.billingStudentId#">
 </cfinvoke>
 
@@ -35,7 +35,7 @@ table.attendance{
 	<tbody>
 	<cfoutput query="data">
 		<tr>
-			<td><a href='AttendanceDetail.cfm?crn=#crn#&billingStartDate=#billingStartDate#'>#crn#</a></td>
+			<td><a href='AttendanceEntry.cfm?crn=#crn#&billingStartDate=#billingStartDate#' target="_blank">#crn#</a></td>
 			<td>#attendance#</td>
 			<td>#ind#</td>
 			<td>#small#</td>

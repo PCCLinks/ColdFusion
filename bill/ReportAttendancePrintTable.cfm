@@ -1,4 +1,4 @@
-<cfset data = Session.reportAttendancePrintTable>
+<cfset data = Session.reportAttendanceData>
 
 
 <style>

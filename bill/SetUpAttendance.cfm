@@ -14,7 +14,7 @@
 						--Select Term--
 					</option>
 					<cfoutput query="qryTerms">
-					<option  value="#term#" >#term#</option>
+					<option  value="#term#" >#termDescription#</option>
 					</cfoutput>
 				</select>
 			</label>

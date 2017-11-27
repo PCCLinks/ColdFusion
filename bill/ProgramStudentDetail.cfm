@@ -1,32 +1,38 @@
 <cfinclude template="includes/header.cfm" />
 
-<cfparam name="showNext" default=true>
-<cfif IsDefined("session.showNext")>
-	<cfset showNext = session.showNext>
+
+<!---  ---------------- INITIAL SETUP ---------------- --->
+<cfparam name="showNext" default=false>
+<cfif IsDefined("url.showNext")>
+	<cfset showNext = url.showNext>
 </cfif>
+
 
 <cfinvoke component="ProgramBilling" method="getProgramStudent"  returnvariable="qryStudent">
 	<cfinvokeargument name="billingStudentId" value="#url.billingStudentId#">
 </cfinvoke>
 
-
-<!--- Get Page Header Data --->
-<!--- Current Status --->
-
 <cfset Variables.isAttendance = false>
 <cfif qryStudent.program CONTAINS "attendance" >
 	<cfset Variables.isAttendance = true>
-	<cfinvoke component="Lookup" method="getMaxBillingStartDateForTerm" returnvariable="maxDate">
-		<cfinvokeargument name="term" value="#qryStudent.Term#">
-	</cfinvoke>
 </cfif>
 
-<!--- Previous Statuses for Year --->
+<!--- Other Statuses for Year --->
 <cfinvoke component="ProgramBilling" method="getOtherBilling"  returnvariable="qryOtherBilling">
 	<cfinvokeargument name="contactId" value="#qryStudent.contactId#">
 	<cfinvokeargument name="term" value="#qryStudent.term#">
 	<cfinvokeargument name="billingStartDate" value="#qryStudent.billingStartDate#">
 </cfinvoke>
+
+<!--- Header Tabs for Term/Billing Date  --->
+<cfquery dbtype="query" name="qryOtherTabHeaders">
+	select term, billingStartDate
+	from qryOtherBilling
+	group by term, billingStartDate
+</cfquery>
+
+
+<!--   START OF UI  -->
 
 <!--- Next and Previous Buttons --->
 <cfif showNext>
@@ -40,18 +46,26 @@
 </div>
 </cfif>
 
-<!-- Header Tabs for Term/Billing Date  -->
-<cfquery dbtype="query" name="otherTerms">
-	select term, billingStartDate
-	from qryOtherBilling
-	group by term, billingStartDate
-</cfquery>
+<!-- Header Tabs -->
 <ul class="tabs" data-tabs id="header-tabs" >
-	<cfif isAttendance><cfset currentKey =#DateFormat(qryStudent.billingStartDate,'m-d-yy')#><cfelse><cfset currentKey = qryStudent.Term></cfif>
-	<cfoutput><li class="tabs-title is-active"><a href="###currentKey#" aria-selected="true">#currentKey#</a></li></cfoutput>
-	<cfoutput query="otherTerms" >
-	<cfif isAttendance><cfset key = DateFormat(billingStartDate,'m-d-yy')><cfelse><cfset key = Term></cfif>
-	<li class="tabs-title"><a href="###key#">#key#</a></li>
+	<!--- Attendance shows full date, term programs just show term --->
+	<cfset currentKey = DateFormat(qryStudent.billingStartDate,'m-d-yy')>
+
+	<!--- Active tab based on url billingStudentId date --->
+	<cfoutput>
+		<li class="tabs-title is-active">
+			<a href="###currentKey#" aria-selected="true">
+				#DateFormat(qryStudent.billingStartDate,'m-d-yy')#<br><span style="color:gray">#qryStudent.Term#</span>
+			</a>
+		</li>
+	</cfoutput>
+	<!--- Remaining tabs based on the dates in the other query --->
+	<cfoutput query="qryOtherTabHeaders" >
+		<li class="tabs-title">
+			<a href="###DateFormat(billingStartDate,'m-d-yy')#">
+				#DateFormat(billingStartDate,'m-d-yy')#<br><span style="color:gray">#Term#</span>
+			</a>
+		</li>
 	</cfoutput>
 </ul>
 
@@ -65,8 +79,7 @@
 
 	<!-- Previous Term Content Container -->
 	<cfoutput query="qryOtherBilling">
-	<cfif isAttendance><cfset key = DateFormat(billingStartDate,'m-d-yy')><cfelse><cfset key = Term></cfif>
-	<div class= "tabs-panel" id="#key#">
+	<div class= "tabs-panel" id="#DateFormat(billingStartDate,'m-d-yy')#">
 		<div class=<cfif #BillingStatus# EQ 'COMPLETE'>"callout alert"<cfelse>"callout primary"</cfif> >
 			<div class="row">
 				<div class="small-2 columns"><b>Program</b></div>
@@ -75,8 +88,7 @@
 				<div class="small-1 columns"><b>Term</b></div>
 				<div class="small-2 columns"><b>Month</b></div>
 				<div class="small-2 columns"><b>School</b></div>
-				<div class="small-1 columns"><b>Status</b></div>
-				<div class="small-1 columns"></div>
+				<div class="small-2 columns"><b>Status</b></div>
 			</div>
 			<div class="row">
 				<div class="small-2 columns">#program#</div>
@@ -85,8 +97,10 @@
 				<div class="small-1 columns">#term#</div>
 				<div class="small-2 columns">#DateFormat(billingStartDate,"m/d/yy")#</div>
 				<div class="small-2 columns">#schooldistrict#</div>
-				<div class="small-1 columns">#billingstatus#</div>
-				<div class="small-1 columns" style="color:red">#ErrorMessage#</div>
+				<div class="small-2 columns">#billingstatus#</div>
+			</div>
+			<div class="row">
+				<div class="small-12 columns" style="color:red">#ErrorMessage#</div>
 			</div>
 		</div> <!-- end header data -->
 	</div> <!-- end tab content -->
@@ -108,7 +122,9 @@
 			Billing Adjustments
 			<cfmodule template="includes/billingStudentTabInclude.cfm"
 				contactid = "#qryStudent.contactid#"
-				term="#qryStudent.term#">
+				term="#qryStudent.term#"
+				currentKey = "#currentKey#"
+				isAttendance = "#isAttendance#">
 		</div><!-- end billing adjustments -->
 
 	</div> <!-- end column -->
@@ -128,15 +144,10 @@
 <cfsavecontent variable="pcc_scripts">
 <script>
 	var billingStudentId = <cfoutput>#url.BillingStudentID#</cfoutput>;
+
 	$(document).ready(function() {
-		$('#exitDate').fdatepicker({ format: 'mm/dd/yy',
-			disableDblClickSelection: true,
-			leftArrow:'<<',
-			rightArrow:'>>',
-			closeIcon:'X',
-			closeButton: true });
 
-
+/*
 		//setup for billing table
 	    $('#dt_billed').DataTable({
 	    	searching:false,
@@ -230,48 +241,21 @@
 			$.unblockUI();
 		}); //end save checkbox changes
 
+*/
+
 		// save review with coach checkbox changes
-	   	 $('#reviewWithCoachFlag').click(function(){
-			var reviewWithCoachFlag = $(this)[0].checked ? 1 : 0;
-			$.blockUI({ message: 'Just a moment...' });
-			$.ajax({
-				url: "programbilling.cfc?method=updateStudentReviewWithCoachFlag",
-				type: "POST",
-				async: false,
-				data: { billingStudentId: billingStudentId, reviewWithCoachFlag:reviewWithCoachFlag },
-				error: function (jqXHR, exception) {
-			        handleAjaxError(jqXHR, exception);
-				}
-			});
-			$.unblockUI();
-		}); //end save checkbox changes
 
-
-		// save include in billing checkbox changes
-	   	 $('#includeFlag').click(function(){
-			var includeFlag = $(this)[0].checked ? 1 : 0;
-			$.blockUI({ message: 'Just a moment...' });
-			$.ajax({
-				url: "programbilling.cfc?method=updateStudentIncludeFlag",
-				type: "POST",
-				async: false,
-				data: { billingStudentId: billingStudentId, includeFlag:includeFlag },
-				error: function (jqXHR, exception) {
-			        handleAjaxError(jqXHR, exception);
-				}
-			});
-			$.unblockUI();
-		}); //end save checkbox changes
 
 		$('#nextStudent').button().click(function (){
 			billingStudentId = setNextBillingStudentId(1);
-			window.location.href = 'programStudentDetail.cfm?billingStudentId=' + billingStudentId;
+			window.location.href = 'programStudentDetail.cfm?billingStudentId=' + billingStudentId + '&showNext=true';
 		});
 
 		$('#prevStudent').button().click(function (){
 			bannerGNumber = setNextBillingStudentId(0);
-			window.location.href = 'programStudentDetail.cfm?billingStudentId=' + billingStudentId;
+			window.location.href = 'programStudentDetail.cfm?billingStudentId=' + billingStudentId + '&showNext=true';
 		});
+
 	});
 
 	function getAttendanceDetail(crn){
@@ -300,4 +284,6 @@
 
  </script>
 </cfsavecontent>
+
+
 <cfinclude template="includes/footer.cfm" />

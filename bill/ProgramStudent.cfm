@@ -27,7 +27,7 @@
 			<select name="term" id="term">
 				<option value="" > --Select All Terms-- </option>
 			<cfoutput query="terms">
-				<option value="#term#" <cfif Variables.MaxTerm EQ #term#> selected </cfif> > #term# </option>
+				<option value="#term#" <cfif Variables.MaxTerm EQ #term#> selected </cfif> > #termDescription# </option>
 			</cfoutput>
 			</select>
 		</label>
@@ -142,13 +142,12 @@
 		 	return { term: $('#term').val(), program: $('#program').val()};
 		}
 		function goToDetail(billingStudentId){
-			sessionStorage.setItem("showNext", true);
 			var dt = $('#dt_table').DataTable();
 			var billingStudentList = dt.columns({search:'applied'}).data()[indexOfBillingStudentId];
 			sessionStorage.setItem("billingStudentList", billingStudentList);
 			var data = $.param({data:encodeURIComponent(JSON.stringify(sessionStorage))});
   			$.post("SaveSession.cfm", data, function(){
-  				window.location	='programStudentDetail.cfm?billingStudentId='+billingStudentId;
+  				window.location	='programStudentDetail.cfm?billingStudentId='+billingStudentId+'&showNext=true';
   			});
 		}
 

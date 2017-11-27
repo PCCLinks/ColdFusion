@@ -24,24 +24,11 @@
 	</div>
 </div>
 
-<!--- CLOSE BILLING CYCLE --->
+<!-- CLOSE BILLING CYCLE -->
 <div class="callout" id="closeBillingCycle">
-<!--- query parameters --->
 <form id="frmCloseBillingCycle" action="report.cfc?method=closeBillingCycle" method="post">
 	<input type="hidden" name="billingType" id="billingType" value=<cfoutput>"#url.type#"</cfoutput>>
 	<div class="row">
-		<div class="small-3 columns">
-			<label>Term:<br/>
-				<select name="term" id="term" >
-					<option disabled selected value="" >
-						--Select Term--
-					</option>
-					<cfoutput query="qryTerms">
-					<option  value="#term#" >#term#</option>
-					</cfoutput>
-				</select>
-			</label>
-		</div>
 		<cfif url.type EQ "attendance">
 		<div class="small-3 columns">
 			<label for="billingStartDate">Month Start Date:
@@ -53,24 +40,7 @@
 				</select>
 			</label>
 		</div>
-		<div class="small-3 columns">
 		<cfelse>
-		<div class="small-6 columns">
-		</cfif>
-			<div id="saveMessagefrmCloseBillingCycle">&nbsp;</div>
-			<input class="button" value="Close Billing Cycle" onClick='javascript:saveValues("frmCloseBillingCycle");' />
-		</div>
-	</div>
-</form>
-</div>
-<!----END CLOSE BILLING CYCLE -------------------------------->
-
-<!--- CALCULATE BILLING ---------------------------------->
-<div class="callout" id="calculateBilling">
-<!--- query parameters --->
-<form id="frmCalculateBilling" action="report.cfc?method=calculateBilling" method="post">
-	<input type="hidden" name="billingType" id="billingType" value=<cfoutput>"#url.type#"</cfoutput>>
-	<div class="row">
 		<div class="small-3 columns">
 			<label>Term:<br/>
 				<select name="term" id="term" >
@@ -78,13 +48,30 @@
 						--Select Term--
 					</option>
 					<cfoutput query="qryTerms">
-					<option  value="#term#" >#term#</option>
+					<option  value="#term#" >#termDescription#</option>
 					</cfoutput>
 				</select>
 			</label>
 		</div>
+		</cfif>
+		<div class="small-6 columns">
+			<div id="saveMessagefrmCloseBillingCycle">&nbsp;</div>
+			<input class="button" value="Close Billing Cycle" onClick='javascript:saveValues("frmCloseBillingCycle");' />
+			<input class="button secondary" value="Cancel" onClick='javascript:closeForm();' />
+		</div>
+	</div>
+</form>
+</div>
+<!-- END CLOSE BILLING CYCLE -->
+
+<!-- CALCULATE BILLING -->
+<div class="callout" id="calculateBilling">
+<!--- query parameters --->
+<form id="frmCalculateBilling" action="report.cfc?method=calculateBilling" method="post">
+	<input type="hidden" name="billingType" id="billingType" value=<cfoutput>"#url.type#"</cfoutput>>
+	<div class="row">
 		<cfif url.type EQ 'attendance'>
-			<div class="small-3 columns">
+			<div class="small-4 columns">
 				<label for="billingStartDate">Month Start Date:
 					<select name="billingStartDate" id="billingStartDate">
 						<option disabled selected value="" > --Select Month Start Date-- </option>
@@ -95,24 +82,38 @@
 				</label>
 			</div>
 			<div class="small-3 columns">
-				<label># of Max Days for Month: <input name="maxDaysPerMonth" id="maxDaysPerMonth" type="text" /></label>
+				<label># of Max Days for Billing Period: <input name="maxDaysPerBillingPeriod" id="maxDaysPerBillingPeriod" type="text" /></label>
 			</div>
 		<cfelse>
+			<div class="small-2 columns">
+				<label>Term:<br/>
+					<select name="term" id="term" >
+						<option disabled selected value="" >
+							--Select Term--
+						</option>
+						<cfoutput query="qryTerms">
+						<option  value="#term#" >#termDescription#</option>
+						</cfoutput>
+					</select>
+				</label>
+			</div>
 			<div class="small-3 columns">
 				<label># of Max Credits Per Term: <input name="maxCreditsPerTerm" id="maxCreditsPerTerm" type="text" value="36"/></label>
 			</div>
-			<div class="small-3 columns">
+			<div class="small-2 columns">
 				<label># of Max Days Per Year: <input name="maxDaysPerYear" id="maxDaysPerYear" type="text" value="175"/></label>
 			</div>
 		</cfif>
-		<div class="small-3 columns">
+		<div class="small-5 columns">
 			<div id="saveMessagefrmCalculateBilling">&nbsp;</div>
-			<input class="button" value="Calculate Billing" onClick='javascript:saveValues("frmCalculateBilling");' />
+				<input class="button" value="Calculate Billing" onClick='javascript:saveValues("frmCalculateBilling");' />
+				<input class="button secondary" value="Cancel" onClick='javascript:closeForm();' />
+			</div>
 		</div>
 	</div>
 </form>
 </div>
-<!--- END CALCULATE BILLING ---------------------------------->
+<!-- END CALCULATE BILLING  -->
 
 
 <div class="row">
@@ -187,21 +188,6 @@
 
 <cfsavecontent variable="pcc_scripts">
 <script type="text/javascript">
-	$('#billingStartDate1').fdatepicker({
-			format: 'mm-dd-yyyy',
-			disableDblClickSelection: true,
-			leftArrow:'<<',
-			rightArrow:'>>',
-			closeIcon:'X',
-			closeButton: true });
-	$('#billingStartDate2').fdatepicker({
-			format: 'mm-dd-yyyy',
-			disableDblClickSelection: true,
-			leftArrow:'<<',
-			rightArrow:'>>',
-			closeIcon:'X',
-			closeButton: true });
-
 	$(document).ready(function() {
 		$('#calculateBilling').hide();
 		$('#closeBillingCycle').hide();
@@ -218,6 +204,10 @@
          	]
 		});
 	});
+	function closeForm(){
+		$('#calculateBilling').hide();
+		$('#closeBillingCycle').hide();
+	}
 	function goToBillingReport(schooldistrict, program){
 		var url = 'ReportTerm.cfm';
 		if(program.indexOf('Attendance')>0)
@@ -278,26 +268,7 @@
   		}
   		return $time;
 	}
-	/*
-	$('#billingStartDate').datepicker({ dateFormat: 'mm/dd/yy' });
-	function closeBillingCycle(){
-		var r = confirm("Are you sure you want to close this billing cycle?");
-		if(r){
-			var $form = $('#pageForm');
-		    $.ajax({
-		       	url: 'programBilling.cfc?method=closeBillingCycle',
-		       	type: 'POST',
-		       	data: $form.serialize(),
-		       	success: function (data, textStatus, jqXHR) {
-		        	var d = new Date();
-					$('#savemessage').html('<br>Billing cycle closed.');
-		    	},
-				error: function (jqXHR, exception) {
-		      		handleAjaxError(jqXHR, exception);
-				}
-		    });
-		}
-	}*/
+
 	</script>
 </cfsavecontent>
 

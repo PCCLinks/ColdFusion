@@ -13,19 +13,19 @@
 </style>
 
 <div class="callout primary">
-
+<h4><cfoutput>Set Up #url.type# Billing</h4></cfoutput>
 <!--- query parameters --->
 <form id="pageForm" action="javascript:setUpBilling();" method="post">
 	<cfoutput><input type="hidden" name="type" value="#url.type#"></cfoutput>
 	<div class="row">
 		<div class="small-3 columns">
 			<label>Term:<br/>
-				<select name="term" id="term"/>
+				<select name="term" id="term" >
 					<option disabled selected value="" >
 						--Select Term--
 					</option>
 					<cfoutput query="qryTerms">
-					<option  value="#term#" >#term#</option>
+					<option  value="#term#" >#termDescription#</option>
 					</cfoutput>
 				</select>
 			</label>
@@ -47,12 +47,12 @@
 	<div class="row">
 		<div class="small-4 columns">
 			<label>Billing Start Date:<br/>
-				<input name="billingStartDate" id="billingStartDate" type="text" />
+				<input name="billingStartDate" id="billingStartDate" type="text" class="fdatepicker" />
 			</label>
 		</div>
 		<div class="small-4 columns">
 			<label>Billing End Date:<br/>
-				<input name="billingEndDate" id="billingEndDate" type="text" />
+				<input name="billingEndDate" id="billingEndDate" type="text" class="fdatepicker" />
 			</label>
 		</div>
 		<div class="small-4 columns">
@@ -73,21 +73,6 @@
 
 <cfsavecontent variable="pcc_scripts">
 <script type="text/javascript">
-	$('#billingStartDate').fdatepicker({
-		format: 'mm-dd-yyyy',
-		disableDblClickSelection: true,
-		leftArrow:'<<',
-		rightArrow:'>>',
-		closeIcon:'X',
-		closeButton: true });
-	$('#billingEndDate').fdatepicker({ format: 'mm/dd/yy',
-		disableDblClickSelection: true,
-		leftArrow:'<<',
-		rightArrow:'>>',
-		closeIcon:'X',
-		closeButton: true });
-	var selectedTerm;
-
 	$(document).ready(function(){
 		function setDate(term, displayField, idName){
 			selectedTerm = term;

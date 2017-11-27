@@ -1,4 +1,4 @@
-<cfset data = Session.reportTermPrintTable>
+<cfset data = Session.reportTermData>
 <style>
 
 		table thead th, table tbody td, table tfoot td {
@@ -104,7 +104,7 @@
 	    <tr>
 	        <td style="text-align:left">
 		        <div style="white-space: nowrap;"><div><b>#LASTNAME#, #FIRSTNAME#</b></div>
-						&nbsp;&nbsp;&nbsp;#EnrolledDate# <cfif ExitDate NEQ "">- #ExitDate#</cfif></div>
+						&nbsp;&nbsp;&nbsp;#EntryDate# <cfif ExitDate NEQ "">- #ExitDate#</cfif></div>
 			</td>
 			<!-- SUMMER -->
 			<td class="bold-left-border">#NumberFormat(SummerNoOfCredits,'_._')#</td>

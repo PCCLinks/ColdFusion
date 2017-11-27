@@ -6,42 +6,39 @@
 
 <div class= "callout display">
 	<div class="row">
-		<div class="small-3 columns">
+		<div class="small-4 medium-4 columns">
 			<label>Term:<br/>
 				<select name="term" id="term" onchange="getScenarios()"/>
 					<option disabled selected value="" >
 						--Select Term--
 					</option>
 					<cfoutput query="qryTerms">
-					<option  value="#term#" >#term#</option>
+					<option  value="#term#" >#termDescription#</option>
 					</cfoutput>
 				</select>
 			</label>
 		</div>
-		<div id="linkToShowAddScenario" class="small-2 columns">
-			<br>
-			<a href="javascript:showAddScenario();">Add Scenario</a>
+		<div id="btnToShowAddScenario" class="small-4 medium-2 columns">
+			<br><input type="button" class="button" onClick="javascript:show('add scenario');" value="Add Scenario">
 		</div>
-		<div id="linkToShowEditScenario" class="small-2 columns">
-			<br>
-			<a href="javascript:showEditScenario();">Edit Scenario</a>
+		<div id="btnToShowEditScenario" class="small-4 medium-2 columns">
+			<br><input type="button" class="button" onClick="javascript:show('edit scenario');" value="Edit Scenario">
 		</div>
-		<div id="linkToShowClassScenarios" class="small-2 columns">
-			<br>
-			<a href="javascript:showClassScenario();">Show Class Scenarios</a>
+		<div id="btnToShowClassScenarios" class="small-4 medium-2 columns">
+			<br><input type="button" class="button" onClick="javascript:show('add class to scenario');" value="Show Class Scenarios">
 		</div>
-		<div class="small-4 columns"></div>
+		<div class="small-4 medium-2 columns"></div>
 </div>
 <br>
 <div class= "callout display" id="addScenarioDisplay">
 	<div class="row">
-		<div class="small-2 columns"><label>Scenario: <input id="billingScenarioName"></label></div>
-		<div class="small-1 columns"><label>Ind %: <input id="indPercent" style="width:50px;"></label></div>
-		<div class="small-1 columns"><label>Small %: <input id="smallPercent" style="width:50px;"></label></div>
-		<div class="small-1 columns"><label>Inter %: <input id="interPercent" style="width:50px;"></label></div>
-		<div class="small-1 columns"><label>Large %: <input id="largePercent" style="width:50px;"></label></div>
+		<div class="small-2 columns"><label>Scenario: <input id="billingScenarioName" type="text"></label></div>
+		<div class="small-1 columns"><label>Ind %: <input id="indPercent" style="width:50px;" type="text"></label></div>
+		<div class="small-1 columns"><label>Small %: <input id="smallPercent" style="width:50px;" type="text"></label></div>
+		<div class="small-1 columns"><label>Inter %: <input id="interPercent" style="width:50px;" type="text"></label></div>
+		<div class="small-1 columns"><label>Large %: <input id="largePercent" style="width:50px;" type="text"></label></div>
 		<div class="small-6 columns">
-			<input type="button" value="Add Scenario" id="addScenario" onClick="javascript:addScenario();">
+			<br><input type="button" class="button" value="Save" id="addScenario" onClick="javascript:addScenario();">
 		</div>
 	</div>
 </div>
@@ -60,12 +57,12 @@
 				</select>
 			</label>
 		</div>
-		<div class="small-1 columns"><label>Ind %: <input id="indPercentEdit" style="width:50px;"></label></div>
-		<div class="small-1 columns"><label>Small %: <input id="smallPercentEdit" style="width:50px;"></label></div>
-		<div class="small-1 columns"><label>Inter %: <input id="interPercentEdit" style="width:50px;"></label></div>
-		<div class="small-1 columns"><label>Large %: <input id="largePercentEdit" style="width:50px;"></label></div>
+		<div class="small-1 columns"><label>Ind %: <input id="indPercentEdit" style="width:50px;" type="text"></label></div>
+		<div class="small-1 columns"><label>Small %: <input id="smallPercentEdit" style="width:50px;" type="text"></label></div>
+		<div class="small-1 columns"><label>Inter %: <input id="interPercentEdit" style="width:50px;" type="text"></label></div>
+		<div class="small-1 columns"><label>Large %: <input id="largePercentEdit" style="width:50px;" type="text"></label></div>
 		<div class="small-5 columns">
-			<br><input type="button" value="Save Scenario" id="saveScenario" onClick="javascript:saveScenario();">
+			<br><input type="button" class="button" value="Save" id="saveScenario" onClick="javascript:saveScenario();">
 		</div>
 	</div>
 </div>
@@ -80,35 +77,39 @@
 <script>
 
 	$(document).ready(function() {
-		showClassScenario();
+		show('add class to scenario');
 	});
-	function showAddScenario(){
-		$('#addScenarioDisplay').show();
-		$('#addClassToScenario').hide();
-		$('#editScenarioDisplay').hide();
+	function show(group){
+		if(group == "add scenario"){
+			$('#addScenarioDisplay').show();
+			$('#editScenarioDisplay').hide();
+			$('#addClassToScenario').hide();
 
-		$('#linkToShowAddScenario').hide();
-		$('#linkToShowEditScenario').show();
-		$('#linkToShowClassScenarios').show();
-	}
-	function showClassScenario(){
-		$('#addClassToScenario').show();
-		$('#addScenarioDisplay').hide();
-		$('#editScenarioDisplay').hide();
+			$('#btnToShowClassScenarios').show();
+			$('#btnToShowAddScenario').hide();
+			$('#btnToShowEditScenario').hide();
+		}
+		if(group == "edit scenario"){
+			$('#editScenarioDisplay').show();
+			$('#addScenarioDisplay').hide();
+			$('#addClassToScenario').hide();
 
-		$('#linkToShowClassScenarios').hide();
-		$('#linkToShowAddScenario').show();
-		$('#linkToShowEditScenarios').show();
-	}
-	function showEditScenario(){
-		$('#editScenarioDisplay').show();
-		$('#addScenarioDisplay').hide();
-		$('#addClassToScenario').hide();
+			$('#btnToShowClassScenarios').show();
+			$('#btnToShowAddScenario').hide();
+			$('#btnToShowEditScenario').hide();
+		}
+		if(group == "add class to scenario"){
+			$('#addClassToScenario').show();
+			$('#editScenarioDisplay').hide();
+			$('#addScenarioDisplay').hide();
 
-		$('#linkToShowEditScenarios').hide();
-		$('#linkToShowAddScenario').show();
-		$('#linkToShowClassScenarios').show();
+			$('#btnToShowClassScenarios').hide();
+			$('#btnToShowAddScenario').show();
+			$('#btnToShowEditScenario').show();
+		}
+
 	}
+
 	function addScenario(){
 		var billingScenarioName = $('#billingScenarioName').val();
 		var indPercent = $('#indPercent').val();
@@ -122,7 +123,7 @@
             datatype:'json',
             success: function(){
             	getScenarios();
-            	showClassScenario();
+            	show('add class to scenario');
             },
             error: function (jqXHR, exception) {
 				handleAjaxError(jqXHR, exception);
@@ -151,7 +152,7 @@
 		var term = $('#term').val();
 		$.ajax({
             type: 'get',
-            url: 'AddClassToScenario.cfm?term=' + term,
+            url: 'includes/AddClassToScenarioInclude.cfm?term=' + term,
             success: function (data, textStatus, jqXHR) {
 				$('#dataTable').html(data);
 			},
@@ -160,13 +161,13 @@
 			}
           });
 	}
-	function enterScenario(crn){
+	function enterScenario(crn,billingScenarioByCourseId){
 			var billingScenarioId = $('#' + crn + 'Select').val();
 			var term = $('#term').val();
 			$.ajax({
 	            type: 'post',
 	            url: 'programBilling.cfc?method=saveClassScenario',
-	            data: {term: term, crn: crn, billingScenarioId: billingScenarioId},
+	            data: {term: term, crn: crn, billingScenarioId: billingScenarioId, billingScenarioByCourseId: billingScenarioByCourseId},
 	            error: function (xhr, textStatus, thrownError) {
 					 handleAjaxError(xhr, textStatus, thrownError);
 				}
@@ -191,46 +192,7 @@
 				}
 	          });
 	}
-	function  insertItem(billingStudentID)
-	{
-		var crn = '99999';
-		var subj = 'TUT';
-		var crse = '99999';
-		var title = 'Tutor Roll';
-		var typecode = 'ATTENDANCE'
-		$.ajax({
-            type: 'post',
-            url: 'programBilling.cfc?method=insertClass',
-            data: {billingStudentId: billingStudentID, crn: crn, subj: subj, crse: crse, title: title, typecode: typecode, isAjax:'true'},
-            datatype:'json',
-            success: function(billingStudentItemID){
-            	$('#' + billingStudentID).parent().html('<a href="javascript:removeItem(' + billingStudentItemID + ');" id=' + billingStudentID + '>Remove Entry</a>');
-            },
-            error: function (jqXHR, exception) {
-				handleAjaxError(jqXHR, exception);
-			}
-        });
-	}
 
-	function  removeItem(billingStudentItemID, billingStudentID)
-	{
-		var response = window.confirm('Are you sure you want to remove this item?');
-		if(response)
-		{
-			$.ajax({
-	            type: 'post',
-	            url: 'programBilling.cfc?method=removeItem',
-	            data: {billingStudentItemID: billingStudentItemID, isAjax:'true'},
-	            datatype:'json',
-	            success: function(){
-	            	$('#' + billingStudentID).parent().html('<input type="checkbox" id=' + billingStudentID + ' onclick="javascript:insertItem(' + billingStudentID + ');">');
-	            },
-	            error: function (jqXHR, exception) {
-					handleAjaxError(jqXHR, exception);
-				}
-        });
-		}
-	}
 
 </script>
 </cfsavecontent>

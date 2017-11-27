@@ -62,17 +62,17 @@
 		<cfargument name="term" required="true">
 		<cfargument name="billingStartDate" required="true">
 		<cfquery name="data">
-		SELECT bs.BillingStudentId, bs.PIDM, schooldistrict
+			SELECT bs.BillingStudentId, bs.PIDM, schooldistrict
 				,Date_Format(bs.enrolledDate, '%m/%d/%Y') EnrolledDate
 				,Date_Format(bs.exitDate, '%m/%d/%Y') ExitDate
 				,bs.billingstatus, bs.Program, bs.billingStartDate, bs.ErrorMessage, bs.term
 			FROM billingStudent bs
-    			JOIN bannerCalendar on bs.term = bannerCalendar.Term
+	    		JOIN bannerCalendar on bs.term = bannerCalendar.Term
 					and bannerCalendar.ProgramYear = (select ProgramYear from bannerCalendar where term = <cfqueryparam value="#arguments.term#">)
- 				JOIN keySchoolDistrict sd on bs.districtid = sd.keyschooldistrictid
-		WHERE bs.contactId = <cfqueryparam value="#arguments.contactId#">
-			and bs.billingStartDate != <cfqueryparam value="#DateFormat(arguments.billingStartDate,'yyyy-mm-dd')#">
-		ORDER BY bs.term desc
+	 			JOIN keySchoolDistrict sd on bs.districtid = sd.keyschooldistrictid
+			WHERE bs.contactId = <cfqueryparam value="#arguments.contactId#">
+				and bs.billingStartDate != <cfqueryparam value="#DateFormat(arguments.billingStartDate,'yyyy-mm-dd')#">
+			ORDER BY bs.term desc
 		</cfquery>
 		<cfreturn data>
 	</cffunction>
@@ -331,11 +331,21 @@
 		</cfif>
 		<!--- main query --->
 		<cfquery name="data">
-			select *
+			select bs.billingStudentId, bs.Program, bs.Term, bs.billingStatus
+				,bsi.billingStudentItemId, bsi.TakenPreviousTerm, bsi.IncludeFlag, bsi.CRN, bsi.Subj, bsi.Title, bsi.Credits
+				,sum(bsiAttend.Attendance) AttendanceToDate
 			from billingStudentItem bsi
 				join billingStudent bs on bsi.BillingStudentId=bs.BillingStudentId
-				join contact c on bs.contactid = c.contactid
+				join billingStudent bsAttend on bs.contactId = bsAttend.contactID
+					and bs.billingStartDate <= bsAttend.billingStartDate
+				join bannerCalendar cal on bs.term = cal.term
+					and bsAttend.billingStartDate between cal.termbegindate and cal.termEndDate
+				join billingStudentItem bsiAttend on bsAttend.billingStudentId = bsiAttend.billingStudentId
+					and bsi.CRN = bsiAttend.CRN
 			where bs.billingstudentid = <cfqueryparam value="#arguments.billingstudentid#">
+            group by bs.billingStudentId, bs.Program, bs.Term, bs.billingStatus,
+				bsi.TakenPreviousTerm, bsi.IncludeFlag,
+				bsi.CRN, bsi.Subj, bsi.Title, bsi.Credits
 		</cfquery>
 		<cfreturn data>
 	</cffunction>
@@ -583,7 +593,7 @@
 		<cfquery name="data">
 			SELECT bs.Program, sd.schoolDistrict, bs.term
 				,SUM(CASE WHEN bs.BillingStatus = 'IN PROGRESS' THEN 1 ELSE 0 END) StudentsStillBeingReviewed
-				,SUM(CASE WHEN bs.BillingStatus = 'COMPLETED' THEN 1 ELSE 0 END) StudentsReviewed
+				,SUM(CASE WHEN bs.BillingStatus != 'COMPLETED' THEN 1 ELSE 0 END) StudentsReviewed
 			from billingStudent bs
 			    join keySchoolDistrict sd on bs.DistrictID = sd.keySchoolDistrictID
 			where bs.term = (select max(term) from billingStudent)
@@ -707,7 +717,7 @@
 	<cffunction name="updateAttendanceDetail" access="remote" returnformat="json">
 		<cfargument name="billingStudentItemId" required="true">
 		<cfargument name="detailValues" required="true">
-		<cfset appObj.logDump(label="arguments", value=#arguments#)>
+		<cfset appObj.logDump(label="arguments", value=#arguments#, level=3)>
 		<cfquery name="detailInsert" result="detailResult">
 			DELETE
 			FROM billingStudentItemDetail
@@ -715,24 +725,25 @@
 		</cfquery>
 		<cfset attendance = 0>
 		<cfset numberOfDays = 0>
-		<cfset dv = replace(arguments.detailValues,chr(9),"|^","ALL")>
-		<cfset appObj.logDump(label="dv", value=#dv#)>
+		<cfset dv = replace(arguments.detailValues,chr(9)," |^","ALL")>
+		<cfset appObj.logDump(label="dv", value=#dv#, level=3)>
 		<cfloop index="record" list="#dv#" delimiters="|^">
 			<!---<cfset record = REPLACE(record,'\','\\')>--->
-			<cfset appObj.logDump(label="record", value="#record#")>
+			<cfset appObj.logDump(label="record", value="#record#", level=3)>
 			<cfquery name="detailInsert" result="detailResult">
 				INSERT INTO billingStudentItemDetail(billingStudentItemID, billingStudentItemDetailValue)
 				VALUES(#arguments.billingStudentItemId#, <cfqueryparam value="#replace(record,"^","")#">)
 			</cfquery>
 			<cfif UCASE(record) NEQ "N/A" and UCASE(record) NEQ "HOL">
 				<cfset numberOfDays = numberOfDays + 1	>
-				<cfif IsNumeric(record) and record GT 0>
+				<cfif (IsNumeric(record) and record GT 0)
+					OR UCase(record) CONTAINS 'X'>
 					<cfset attendance = attendance + 1>
 				</cfif>
 			</cfif>
-			<cfset appObj.logEntry(label="numberOfDays", value="#numberOfDays#")>
-			<cfset appObj.logEntry(label="attendance", value="#attendance#")>
-			<cfset appObj.logDump(label="detailResult", value=#detailResult#)>
+			<cfset appObj.logEntry(label="numberOfDays", value="#numberOfDays#", level=3)>
+			<cfset appObj.logEntry(label="attendance", value="#attendance#", level=3)>
+			<cfset appObj.logDump(label="detailResult", value="#detailResult#", level=3)>
 		</cfloop>
 		<cfquery name="updateItem">
 			UPDATE billingStudentItem
@@ -773,7 +784,7 @@
 	<cffunction name="getClassAttendanceForMonth" access="remote" returnFormat="json">
 		<cfargument name="billingStartDate" type="date" required="true">
 		<cfargument name="crn" required="true">
-		<cfquery name="data" result="dataResult">
+		<cfquery name="data" >
 			select c.firstName, c.lastName, c.bannerGNumber
 				,crn, crse, subj, title
 				,bsi.attendance, bsi.billingStudentItemId
@@ -783,17 +794,16 @@
 	    		join contact c on bs.contactId = c.contactId
 	    		join bannerCalendar cal1 on <cfqueryparam value="#DateFormat(arguments.billingStartDate,'yyyy-mm-dd')#"> between cal1.TermBeginDate and cal1.TermEndDate
 	    		join bannerCalendar cal2 on bs.term = cal2.term and cal2.ProgramYear = cal1.ProgramYear
-			where bsi.crn = <cfqueryparam value="#arguments.crn#">
+			where bsi.includeFlag = 1
+				and bsi.crn = <cfqueryparam value="#arguments.crn#">
 				and bs.billingStartDate = <cfqueryparam value="#DateFormat(arguments.billingStartDate,'yyyy-mm-dd')#">
 			order by c.lastname, c.firstname
 		</cfquery>
-		<cfset appObj.logDump("dataResult",data) >
 		<cfreturn data>
 	</cffunction>
 
 
-	<cffunction name="getAttendanceStudentsForTerm" access="remote" returnFormat="json">
-		<cfargument name="term" required="true">
+	<cffunction name="getAttendanceStudentsForCRN" access="remote" returnFormat="json">
 		<cfargument name="billingStartDate" type="date" required="true">
 		<cfargument name="crn" required="true">
 		<cfquery name="data" >
@@ -802,20 +812,22 @@
 				join billingStudent bs on c.contactID = bs.contactID
 				left outer join billingStudentItem bsi on bs.billingStudentId = bsi.billingStudentId
 					and bsi.crn = <cfqueryparam value="#arguments.crn#">
-			where term = <cfqueryparam value="#arguments.term#">
-				and bs.billingStartDate = <cfqueryparam value="#DateFormat(arguments.billingStartDate,'yyyy-mm-dd')#">
+			where bs.billingStartDate = <cfqueryparam value="#DateFormat(arguments.billingStartDate,'yyyy-mm-dd')#">
 				and bs.program like '%attendance%'
+			order by case when isnull(bsi.billingStudentItemID) or bsi.includeFlag = 0 then 0 else 1 end desc
+				, lastname, firstname
 		</cfquery>
 		<cfreturn data>
 	</cffunction>
-	<cffunction name="getAttendanceCRNForTerm" access="remote" returnFormat="json">
-		<cfargument name="term" required="true">
+	<cffunction name="getAttendanceStudentsForBillingStartDate" access="remote" returnFormat="json">
+		<cfargument name="billingStartDate" type="date" required="true">
 		<cfquery name="data" >
-			select distinct CRN
-			from billingStudent bs
-				join billingStudentItem bsi on bs.billingStudentID = bsi.billingStudentId
-			where term = <cfqueryparam value="#arguments.term#">
+			select distinct c.firstname, c.lastname, c.bannerGNumber, bs.billingStudentId, 0 billingStudentItemId, 0 includeFlag
+			from contact c
+				join billingStudent bs on c.contactID = bs.contactID
+			where bs.billingStartDate = <cfqueryparam value="#DateFormat(arguments.billingStartDate,'yyyy-mm-dd')#">
 				and bs.program like '%attendance%'
+			order by lastname, firstname
 		</cfquery>
 		<cfreturn data>
 	</cffunction>
@@ -854,6 +866,7 @@
 		<cfargument name="billingScenarioId" required="true">
 		<cfargument name="crn" required="true">
 		<cfargument name="term" required="true">
+		<cfargument name="billingScenarioByCourseId">
 		<cfquery name="checkIfExists">
 			select count(*) cnt
 			from billingScenarioByCourse
@@ -867,11 +880,48 @@
 		<cfelse>
 			<cfquery name="doUpdate">
 				update billingScenarioByCourse
-				set billingScenarioId = <cfqueryparam value="#argments.billingScenarioId#">,
+				set billingScenarioId = <cfqueryparam value="#arguments.billingScenarioId#">,
 					crn = <cfqueryparam value="#arguments.crn#">,
 					term = <cfqueryparam value="#arguments.term#">
 				where billingScenarioByCourseId = <cfqueryparam value="#arguments.billingScenarioByCourseId#">
 			</cfquery>
+		</cfif>
+	</cffunction>
+	<cffunction name="addStudentToClass" access="remote" returnformat="json" returntype="numeric">
+		<cfargument name="billingStudentId" required="true">
+		<cfargument name="crn" required="true">
+		<cfargument name="billingStudentItemId" default="0">
+		<cfif arguments.billingStudentItemId GT 0>
+			<cfquery name="updateData" >
+				update billingStudentItem
+				set  includeFlag = 1
+				where billingStudentItemId = <cfqueryparam value="#arguments.billingstudentitemid#">
+			</cfquery>
+			<cfreturn #arguments.billingstudentitemid#>
+		<cfelse>
+			<cfquery name="termInfo">
+				select term
+				from billingStudent
+				where billingStudentId = <cfqueryparam value="#arguments.billingStudentId#">
+			</cfquery>
+			<cfquery name="classInfo" datasource="bannerpcclinks">
+				select crn, crse, subj, title
+				from swvlinks_course
+				where crn = <cfqueryparam value="#arguments.crn#">
+					and term = <cfqueryparam value="#termInfo.term#">
+			</cfquery>
+			<cfquery name="insertdata" result="resultBillingStudentItem">
+				insert into billingStudentItem(billingstudentid, crn, crse, subj, Title, includeflag, credits, datecreated, datelastupdated, createdby, lastupdatedby)
+				values(<cfqueryparam value="#arguments.billingstudentid#">,
+						<cfqueryparam value="#arguments.crn#">,
+						<cfqueryparam value="#classInfo.crse#">,
+						<cfqueryparam value="#classInfo.subj#">,
+						<cfqueryparam value="#classInfo.title#">,
+						1, 0, current_timestamp, current_timestamp,
+						<cfqueryparam value="#Session.username#">,
+						<cfqueryparam value="#Session.username#">)
+			</cfquery>
+			<cfreturn #resultBillingStudentItem.GENERATED_KEY#>
 		</cfif>
 	</cffunction>
 	<cffunction name="insertClass" access="remote" returnformat="json" returntype="numeric">
@@ -902,6 +952,38 @@
 			</cfquery>
 			<cfreturn #resultBillingStudentItem.GENERATED_KEY#>
 		</cfif>
+	</cffunction>
+	<cffunction name="addLab" access="remote" returnformat="plain" returntype="string">
+		<cfargument name="crn" required="true">
+		<cfargument name="billingStartDate" required="true">
+		<cfquery name="termInfo">
+			select distinct term
+			from billingStudent
+			where billingStartDate = <cfqueryparam value="#DateFormat(arguments.billingStartDate,'yyyy-mm-dd')#">
+		</cfquery>
+		<cfquery name="classInfo" datasource="bannerpcclinks">
+			select crn, crse, subj, title
+			from swvlinks_course
+			where crn = <cfqueryparam value="#arguments.crn#">
+				and term = <cfqueryparam value="#termInfo.term#">
+		</cfquery>
+		<cfset newCRN = classInfo.crn & '-LAB'>
+		<cfquery name="insertdata" result="resultBillingStudentItem">
+			insert into billingStudentItem(billingstudentid, crn, crse, subj, Title, includeflag, credits, datecreated, datelastupdated, createdby, lastupdatedby)
+			select bs.billingStudentId, <cfqueryparam value="#newCRN#">,
+						<cfqueryparam value="#classInfo.crse#">,
+						<cfqueryparam value="#classInfo.subj#">,
+						<cfqueryparam value="#classInfo.title#">,
+						1, 0, current_timestamp, current_timestamp,
+						<cfqueryparam value="#Session.username#">,
+						<cfqueryparam value="#Session.username#">
+			from billingStudent bs
+				join billingStudentItem bsi on bs.billingStudentId = bsi.billingStudentId
+			where bs.billingStartDate = <cfqueryparam value="#DateFormat(arguments.billingStartDate,'yyyy-mm-dd')#">
+				and bsi.crn = <cfqueryparam value="#arguments.crn#">
+				and bsi.includeFlag = 1
+		</cfquery>
+		<cfreturn #newCRN#>
 	</cffunction>
 
 	<cffunction name="removeItem" access="remote" >
@@ -948,6 +1030,18 @@
 		<cfreturn data>
 	</cffunction>
 
+	<cffunction name="getBillingStudentByBillingStartDate" returnformat="json" access="remote">
+		<cfargument name="billingStartDate" required="true">
+		<cfquery name="data">
+			select c.firstName, c.lastName, c.bannerGNumber, bs.Program, Date_Format(bs.exitDate,'%m/%d/%y') exitdate
+				,er.billingStudentExitReasonDescription, bs.billingStudentId
+			from billingStudent bs
+				join contact c on bs.contactId = c.contactId
+				left join billingStudentExitReason er on bs.billingStudentExitReasonCode = er.billingStudentExitReasonCode
+			where billingStartDate =  <cfqueryparam value="#DateFormat(arguments.billingStartDate,'yyyy-mm-dd')#">
+		</cfquery>
+		<cfreturn data>
+	</cffunction>
 
 
 </cfcomponent>

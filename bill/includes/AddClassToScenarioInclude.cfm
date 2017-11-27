@@ -1,6 +1,6 @@
-<cfinvoke component="LookUp" method="getScenarios" returnvariable="qryScenario"></cfinvoke>
+<cfinvoke component="pcclinks.bill.LookUp" method="getScenarios" returnvariable="qryScenario"></cfinvoke>
 
-<cfinvoke component="programBilling" method="getScenarioCourses" returnvariable="data">
+<cfinvoke component="pcclinks.bill.programBilling" method="getScenarioCourses" returnvariable="data">
 	<cfinvokeargument name="term" value="#url.term#">
 </cfinvoke>
 
@@ -9,7 +9,7 @@
 	border-bottom-style:solid;
 	border-bottom-width:1px;
 	border-bottom-color:lightgray;
-	width:
+	width:auto;
 }
 select{
 	margin-bottom:0px;
@@ -28,7 +28,7 @@ select{
 			<tr >
 				<td class="scenario"><input id="#CRN#" value="#CRN#" style="border-style:none"></td>
 				<td class="scenario">
-					<select id="#CRN#Select" onchange="javascript:enterScenario('#CRN#');">
+					<select id="#CRN#Select" onchange="javascript:enterScenario('#CRN#','#billingScenarioByCourseId#');">
 						<option disabled selected value="" >
 							--Select Scenario--
 						</option>
@@ -51,15 +51,6 @@ select{
 				paging:false,
 				searching:false
 			});
-		/*function enterScenario(crn){
-			var billingScenarioId = $('#' + crn).val();
-			$.ajax({
-	            type: 'get',
-	            url: 'saveClassScenario.cfm?term=' + term + '&crn=' + crn + '&billingScenarioByCourseId='+billingScenarioByCourseId,
-	            error: function (xhr, textStatus, thrownError) {
-					 handleAjaxError(xhr, textStatus, thrownError);
-				}
-	          });
-		}*/
+
 	});
 	</script>

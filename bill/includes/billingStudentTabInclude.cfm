@@ -3,33 +3,22 @@
 	<cfinvokeargument name="contactid" value="#attributes.contactid#">
 </cfinvoke>
 
+<cfparam name="currentKey" default="#attributes.currentKey#">
+<cfparam name="isAttendance" default="#attributes.isAttendance#" type="boolean">
 
-<cfset Variables.isAttendance = false>
-<cfset currentKey = attributes.term>
-<cfif data.program CONTAINS "attendance" >
-	<cfset Variables.isAttendance = true>
-	<cfinvoke component="Lookup" method="getMaxBillingStartDateForTerm" returnvariable="currentKey">
-		<cfinvokeargument name="term" value="#attributes.Term#">
-	</cfinvoke>
-</cfif>
+<!-- Start of UI -->
 
+<!-- Billing Tabs -->
 <ul class="tabs" data-tabs id="billing-tabs">
 	<cfoutput query="data">
-		<cfif isAttendance>
-			<cfset key = DateFormat(billingStartDate,'m-d-yy')>
-		<cfelse>
-			<cfset key = term>
-		</cfif>
-		<cfif key EQ currentKey>
-  			<li class="tabs-title is-active"><a href="###billingStudentId#" aria-selected="true">#key#</a></li>
-		<cfelse>
-			<li class="tabs-title"><a href="###billingStudentId#">#key#</a></li>
-		</cfif>
+		<cfset key = DateFormat(billingStartDate,'m-d-yy')>
+		<cfset liClass = "tabs-title">
+		<cfif key EQ currentKey><cfset liClass = liClass & " is-active"></cfif>
+  		<li class="#liClass#"><a href="###billingStudentId#" aria-selected="true">#key#<br><span style="color:gray">#term#</span></a></li>
 	</cfoutput>
-
 </ul>
 
-
+<!-- billing tab content -->
 <div class="tabs-content" data-tabs-content="billing-tabs">
 <cfoutput query="data">
   	<div class= "tabs-panel<cfif term EQ attributes.term> is-active</cfif>" id="#billingStudentId#">
@@ -40,7 +29,6 @@
 
 
 <script>
-
 	function saveValues(frmId){
 	 	var $form = $('#'+frmId);
 	    $.ajax({
@@ -56,40 +44,32 @@
 			}
 	    });
 	}
-	function updateCorrectedBilledAmount(maxNumberOfCreditsPerTerm, maxNumberOfDaysPerYear){
-		var correctedBilledUnits = $('#correctedBilledUnits').val();
-		var r = confirm("Update Corrected Billed Amount?");
-		if(r == true){
-			if(correctedBilledUnits == ""){
-				$('#correctedBilledAmount').val("");
-			}else{
-				$('#correctedBilledAmount').val(correctedBilledUnits/maxNumberOfCreditsPerTerm*maxNumberOfDaysPerYear);
-			}
+	function updateCorrectedBilledAmount(maxNumberOfCreditsPerTerm, maxNumberOfDaysPerYear, id){
+		var correctedBilledUnits = $('#correctedBilledUnits' + id).val();
+		if(correctedBilledUnits == ""){
+			$('#correctedBilledAmount' + id).val("");
+		}else{
+			$('#correctedBilledAmount' + id).val(correctedBilledUnits/maxNumberOfCreditsPerTerm*maxNumberOfDaysPerYear);
 		}
+		saveValues('frm' + id);
 	}
-	function updateCorrectedOverageAmount(maxNumberOfCreditsPerTerm, maxNumberOfDaysPerYear){
-		var correctedOverageUnits = $('#correctedOverageUnits').val();
-		var r = confirm("Update Corrected Overage Amount?");
-		if(r == true){
-			if(correctedOverageUnits == ""){
-				$('#correctedOverageAmount').val("");
-			}else{
-				$('#correctedOverageAmount').val(correctedOverageUnits/maxNumberOfCreditsPerTerm*maxNumberOfDaysPerYear);
-			}
+	function updateCorrectedOverageAmount(maxNumberOfCreditsPerTerm, maxNumberOfDaysPerYear, id){
+		var correctedOverageUnits = $('#correctedOverageUnits' + id).val();
+		if(correctedOverageUnits == ""){
+			$('#correctedOverageAmount' + id).val("");
+		}else{
+			$('#correctedOverageAmount' + id).val(correctedOverageUnits/maxNumberOfCreditsPerTerm*maxNumberOfDaysPerYear);
 		}
+		saveValues('frm' + id);
 	}
-	function updateBilledAmountAttendance(){
-		var adjustedDaysPerMonth = $('#adjustedDaysPerMonth').val();
-		//if(adjustedDaysPerMonth == 0 || !adjustedDaysPerMonth){
-		//	var maxDaysPerMonth = $('#maxDaysPerMonth').val();
-		//	$('#correctedBilledAmount').val("");
-		//}else{
-			if($('#generatedBilledAmount').val() > adjustedDaysPerMonth){
-				$('#correctedBilledAmount').val(adjustedDaysPerMonth);
-			}else{
-				$('#correctedBilledAmount').val("");
-			}
-		//}
+	function updateBilledAmountAttendance(id){
+		var adjustedDaysPerMonth = $('#adjustedDaysPerMonth' + id).val();
+		if($('#generatedBilledAmount' + id).val() > adjustedDaysPerMonth){
+			$('#correctedBilledAmount' + id).val(adjustedDaysPerMonth);
+		}else{
+			$('#correctedBilledAmount' + id).val("");
+		}
+		saveValues('frm' + id);
 	}
 
 	function goToDetail(bannerGNumber, term){
@@ -102,10 +82,4 @@
 		});
 	}
 
-	function addZero($time) {
-	  if ($time < 10) {
-	    $time = "0" + $time;
-	  }
-	  return $time;
-	}
 </script>

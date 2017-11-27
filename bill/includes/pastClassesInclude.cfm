@@ -42,3 +42,23 @@
 		</cfoutput>
 	</tbody>
 </table>
+
+<script type="text/javascript"> 
+
+//source page: pastClassesInclude.cfm
+$(document).ready(function() {
+    // grouping for the classes table
+	$('#dt_classes').DataTable({
+		searching: false,
+		paging: false,
+		info: false,
+		columns:[{data:'Term'},{data:'CRSE'},{data:'SUBJ'},{data:'Title'},{data:'Credits'},{data:'Grade'},{data:'TakenPreviousTerm'},{data:'IncludeFlag'}],
+		orderFixed:([0, 'desc']),
+    	rowGroup: {
+    		dataSrc: 'Term'
+    	}
+    });
+    
+});
+	    
+</script>

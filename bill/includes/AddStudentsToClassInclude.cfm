@@ -1,12 +1,11 @@
-<cfinvoke component="ProgramBilling" method="getAttendanceStudentsForTerm"  returnvariable="data">
-	<cfinvokeargument name="term" value="#url.term#">
+<cfinvoke component="pcclinks.bill.ProgramBilling" method="getAttendanceStudentsForCRN"  returnvariable="data">
 	<cfinvokeargument name="billingStartDate" value="#url.billingStartDate#">
 	<cfinvokeargument name="crn" value="#url.crn#">
 </cfinvoke>
 
 
 
-	<table id="dt_table">
+	<table id="dt_table_astc">
 		<thead>
 			<th>Name</th>
 			<th>Banner G Number</th>
@@ -31,16 +30,17 @@
 	$(document).ready(function() {
 		//intialize table
 		$.fn.dataTable.ext.errMode = 'throw';
-		$('#dt_table').DataTable( );
+		$('#dt_table_astc').DataTable( {
+			order:[[2, 'desc'],[1, 'asc']]
+		});
 	});
 
 	function  insertItem(billingStudentID, billingStudentItemId)
 	{
-		setClassInfo();
 		$.ajax({
             type: 'post',
-            url: 'programBilling.cfc?method=insertClass',
-            data: {billingStudentId: billingStudentID, crn: crn, subj: subj, crse: crse, title: title, typecode: 'ATTENDANCE', billingStudentItemId:billingStudentItemId, isAjax:'true'},
+            url: 'programBilling.cfc?method=addStudentToClass',
+            data: {billingStudentId: billingStudentID, crn: crn, billingStudentItemId:billingStudentItemId, isAjax:'true'},
             datatype:'json',
             success: function(billingStudentItemID){
             	$('#' + billingStudentID).parent().html('<a href="javascript:removeItem(' + billingStudentItemID + ', billingStudentId=' + billingStudentID + ');" id=' + billingStudentID + '>Remove Entry</a>');
@@ -70,6 +70,7 @@
         });
 		}
 	}
+
 
 </script>
 

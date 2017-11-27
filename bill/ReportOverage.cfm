@@ -5,7 +5,7 @@
 </cfinvoke>
 
 <div class="callout primary">
-<cfif url.program EQ 'gtc'>GTC<cfelse>YES</cfif> Overage Report
+<cfif url.program EQ 'gtc'>GtC<cfelse>YtC</cfif> Overage Report
 </div>
 <cfif url.program EQ 'gtc'>
 	<cfset desc = 'Credits'>
@@ -72,13 +72,12 @@
 		} );
 
 		function goToDetail(billingStudentId){
-			sessionStorage.setItem("showNext", true);
 			var dt = $('#dt_table').DataTable();
 			var billingStudentList = dt.columns({search:'applied'}).data()[5];
 			sessionStorage.setItem("billingStudentList", billingStudentList);
 			var data = $.param({data:encodeURIComponent(JSON.stringify(sessionStorage))});
   			$.post("SaveSession.cfm", data, function(){
-  				window.open('programStudentDetail.cfm?billingStudentId='+billingStudentId);
+  				window.open('programStudentDetail.cfm?billingStudentId='+billingStudentId + 'showNext=true');
   			});
 		}
 

@@ -1,21 +1,43 @@
 <cfinclude template="includes/header.cfm">
+<cfinvoke component="LookUp" method="getLatestDateAttendanceMonth"  returnvariable="attendanceMonth"></cfinvoke>
+<cfparam name="selectedBillingStartDate" default = #attendanceMonth# >
+<cfif structKeyExists(url, "billingStartDate")>
+	<cfset Variables.billingStartDate = url.billingStartDate>
+</cfif>
+<cfinvoke component="LookUp" method="getAttendanceBillingStartDates" returnvariable="billingDates"></cfinvoke>
 
-<cfinvoke component="LookUp" method="getMaxTerm"  returnvariable="maxTerm"></cfinvoke>
-<cfinvoke component="LookUp" method="getLatestDateAttendanceMonth"  returnvariable="maxBillDate"></cfinvoke>
-<cfinvoke component="ProgramBilling" method="getAttendanceCRNForTerm"  returnvariable="crnData">
-	<cfinvokeargument name="term" value="#maxTerm#">
-	<cfinvokeargument name="billingStartDate" value="#maxBillDate#">
+<cfinvoke component="LookUp" method="getAttendanceCRN"  returnvariable="crnData">
+	<cfinvokeargument name="billingStartDate" value="#attendanceMonth#">
 </cfinvoke>
+<style>
+
+	.dataTables_info{
+		margin-right:10px !important;
+	}
+	select {
+		width:auto !important;
+	}
+	input{
+		display:inline-block !important;
+		width:auto !important;
+	}
+
+</style>
 
 <div class= "callout display" id="addExistingClassDisplay">
 	<div class="row">
-		<div class="medium-2 columns"><label>Select Existing CRN:
-			<select id="crnSelect">
-				<option value="" selected>--- None Selected ---</option>
-				<cfoutput query="crnData"><option value="#crn#">#crn#</option></cfoutput>
-			</select>
+		<div class="large-4 columns" >
+				<label for="billingStartDate">Month Start Date:
+				<select name="billingStartDate" id="billingStartDate" onChange="javascript:getCRN()">
+					<option disabled selected value="" > --Select Month Start Date-- </option>
+				<cfoutput query="billingDates">
+					<option value="#billingStartDate#" <cfif billingStartDate EQ attendanceMonth> selected </cfif>  > #DateFormat(billingStartDate,'mm-dd-yy')# </option>
+				</cfoutput>
+				</select>
+			</label>
 		</div>
-		<div class="medium-10 columns">
+		<div class="large-4 columns" id="crnselect"></div>
+		<div class="large-4 columns">
 			<br><input type="button" class="button" value="Add New Class" id="addClass" onClick="javascript:showNewClass();">
 			<input type="button" class="button" value="Get Student List" id="addStudents" onClick="javascript:showStudents();">
 		</div>
@@ -29,7 +51,7 @@
 		<div class="small-2 columns"><label>CRSE: <input id="crse"></label></div>
 		<div class="small-2 columns"><label>TITLE: <input id="title"></label></div>
 		<div class="small-4 columns">
-			<input type="button" class="button" value="Get Student List" onClick="javascript:showStudents();"/>
+			<input type="button" class="button" value="Get Student List" onClick="javascript:getCRNChanged();"/>
 			<input type="button" class="button" value="Add Existing Class" id="addClass" onClick="javascript:showExistingClass();">
 		</div>
 	</div>
@@ -42,18 +64,20 @@
 <cfsavecontent variable="pcc_scripts">
 <script>
 	var addingClass = false;
-	<cfoutput>
-	var term=#maxTerm#;
-	var billingDate = '#maxBillDate#';
-	var crn = '';
-	var subj = '';
-	var title = '';
-	var crse = '';
-	</cfoutput>
 	$(document).ready(function() {
+		getCRN();
 		showExistingClass();
 
 	});
+
+	function getCRN(){
+		$.ajax({
+        	url: "includes/crnForTermInclude.cfm?billingStartDate="+$('#billingStartDate').val(),
+       		cache: false
+    	}).done(function(data) {
+        	$("#crnselect").html(data);
+    	});
+	}
 	function showNewClass(){
 		addingClass = true;
 		$('#addNewClassDisplay').show();
@@ -87,11 +111,11 @@
 		var data = $.param({data:encodeURIComponent(JSON.stringify(sessionStorage))});
   		$.post("SaveSession.cfm", data);
 	}*/
-	function showStudents(){
+	function getCRNChanged(){
 		setClassInfo();
 		$.ajax({
             type: 'get',
-            url: 'AddStudentsToClass.cfm?term=' + term + '&billingStartDate=' + billingDate + '&crn='+crn,
+            url: 'AddStudentsToClass.cfm?billingStartDate=' + $('#billingStartDate').val() + '&crn='+$('#crn').val(),
             success: function (data, textStatus, jqXHR) {
             	if(addingClass){
             		addingClass=false;

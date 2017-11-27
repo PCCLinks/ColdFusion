@@ -1,26 +1,33 @@
 <cfinclude template="includes/header.cfm" />
 <cfif StructKeyExists(form, "billingStartDate")>
-	<cfset billingStartDate = "#form.billingStartDate#">
+	<cfset selectedBillingStartDate = "#form.billingStartDate#">
 <cfelse>
 	<cfinvoke component="LookUp" method="getLatestDateAttendanceMonth"  returnvariable="attendanceMonth"></cfinvoke>
-	<cfset billingStartDate = "#attendanceMonth#">
+	<cfset selectedBillingStartDate = "#attendanceMonth#">
 </cfif>
 <cfinvoke component="ProgramBilling" method="getAttendanceClassesForMonth"  returnvariable="data">
-	<cfinvokeargument name="billingStartDate" value="#Variables.billingStartDate#">
+	<cfinvokeargument name="billingStartDate" value="#Variables.selectedBillingStartDate#">
 </cfinvoke>
+<cfinvoke component="LookUp" method="getAttendanceBillingStartDates" returnvariable="billingDates"></cfinvoke>
+
 
 <div class="callout primary">
 <div class="row">
-<cfoutput>
 <form name="frm" action="AttendanceSummary.cfm" method="post">
 	<div class="small-4 columns">
-		<label>Month Start Date:&nbsp;<input name="billingStartDate" id="billingStartDate" value="#DateFormat(Variables.billingStartDate,'m/d/yyyy')#"></label>
+		<label for="billingStartDate">Month Start Date:
+			<select name="billingStartDate" id="billingStartDate">
+				<option disabled selected value="" > --Select Month Start Date-- </option>
+			<cfoutput query="billingDates">
+				<option value="#billingStartDate#" <cfif billingStartDate EQ selectedBillingStartDate> selected </cfif>  > #DateFormat(billingStartDate,'mm-dd-yy')# </option>
+			</cfoutput>
+			</select>
+		</label>
 	</div>
 	<div class="small-8 columns">
-		<input class="button" type="submit" name="submit" value="Get List of Classes" />
+		<br/><input class="button" type="submit" name="submit" value="Get List of Classes" />
 	</div>
 </form>
-</cfoutput>
 </div>
 </div>
 

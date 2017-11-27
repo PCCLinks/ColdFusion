@@ -28,6 +28,12 @@
 				select *
 				from applicationUser
 				where username = <cfqueryparam value="#username#">
+				<cfif This.application EQ 'Billing'>
+					and hasBillAccess = 1
+				</cfif>
+				<cfif This.application EQ 'FC'>
+					and hasFCAccess = 1
+				</cfif>
 			</cfquery>
 			<!--- find the user as an authorized user --->
 			<cfif qryUser.recordcount EQ 1>
@@ -73,6 +79,12 @@
 			select *
 			from applicationUser
 			where username = <cfqueryparam value="#username#">
+			<cfif This.application EQ 'Billing'>
+				and hasBillAccess = 1
+			</cfif>
+			<cfif This.application EQ 'FC'>
+				and hasFCAccess = 1
+			</cfif>
 		</cfquery>
 		<!---<cfset logEntry(value="Search results from CAS did not provide key information")>
 		<cfset Session.Error = "Search results from CAS did not provide key information">--->
@@ -87,7 +99,7 @@
 </cfif>
 </cfif>  <!--- end if not localhost --->
 
-<cfif Session.authorized EQ 0>
+<cfif Session.authorized NEQ 1>
 	<cfset logEntry(value = "Unauthorized session for " & session.username)>
 	<cflocation url="../UnauthorizedError.cfm">
 </cfif>

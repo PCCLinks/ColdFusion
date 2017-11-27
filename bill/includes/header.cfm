@@ -25,8 +25,7 @@
 		 <li><a>Attendance Billing</a>
 			<ul class="menu">
 				<li><a href="SetUpBilling.cfm?type=Attendance">Set Up Billing</a></li>
-		 		<li><a href="AttendanceSummary.cfm">Enter Attendance</a></li>
-		 		<li><a href="AddClass.cfm">Add Class</a></li>
+		 		<li><a href="AttendanceEntry.cfm">Enter Attendance</a></li>
 		 		<li><a href="AddScenario.cfm">Scenarios</a></li>
 				<li><a href="ReportSummary.cfm?type=Attendance">Reporting</a></li>
 			</ul>
@@ -34,10 +33,11 @@
 		<li><a href="ProgramStudent.cfm">Review Billing</a></li>
 		<li><a>Additional Reports</a>
 			<ul class="menu">
+				<li><a href="ExitDate.cfm">Set Exit Reason</a></li>
 				<li><a href="ReportExitStatus.cfm">Exit Status Report</a></li>
 				<li><a href="ReportADM.cfm">ADM Report</a></li>
-				<li><a href="ReportOverage.cfm?program=gtc">GTC Overage Report</a></li>
-				<li><a href="ReportOverage.cfm?program=ytc">YES Overage Report</a></li>
+				<li><a href="ReportOverage.cfm?program=GtC">GtC Overage Report</a></li>
+				<li><a href="ReportOverage.cfm?program=YtC">YtC Overage Report</a></li>
 			</ul>
 		</li>
 		 <!---<li><a href="Reconcile.cfm">Reconcile Previous Billing</a></li>--->

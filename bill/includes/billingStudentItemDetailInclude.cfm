@@ -7,7 +7,7 @@
 		<cfthrow message="billingStudentItemDetail.cfm missing url or attribute value for billingStudentItemId">
 	</cfif>
 </cfif>
-<cfinvoke component="ProgramBilling" method="getBillingStudentItemDetail" returnvariable="data">
+<cfinvoke component="pcclinks.bill.ProgramBilling" method="getBillingStudentItemDetail" returnvariable="data">
 	<cfinvokeargument name="billingStudentItemId" value="#Variables.billingStudentItemId#">
 </cfinvoke>
 

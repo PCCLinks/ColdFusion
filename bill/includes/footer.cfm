@@ -16,19 +16,36 @@
 
 <script>
 $(document).foundation();
+
+$(document).ready(function(){
+	$('.fdatepicker').fdatepicker({
+		format: 'mm-dd-yyyy',
+		disableDblClickSelection: true,
+		leftArrow:'<<',
+		rightArrow:'>>',
+		closeIcon:'X',
+		closeButton: true
+	});
+})
+function addZero($time) {
+	 if ($time < 10) {
+	   $time = "0" + $time;
+	 }
+	 return $time;
+}
 function handleAjaxError(jqXHR, exception, thrownError){
-		msg = encodeURIComponent(jqXHR.statusText + ' ' + jqXHR.responseText);
-		data = {error: msg, exception: exception, throwError: thrownError, errorType: 'ajax'};
-		$.post("Error.cfm", data, function(){
-		  		window.location	='Error.cfm';
-	  	});
+	msg = encodeURIComponent(jqXHR.statusText + ' ' + jqXHR.responseText);
+	data = {error: msg, exception: exception, throwError: thrownError, errorType: 'ajax'};
+	$.post("Error.cfm", data, function(){
+	  		window.location	='Error.cfm';
+  	});
 }
 
 //generic function to save client session object to server session
 function saveClientSessionToServer(){
-	  	var data = $.param({data:encodeURIComponent(JSON.stringify(sessionStorage))});
-  		$.post("saveSession.cfm", data);
-	}
+  	var data = $.param({data:encodeURIComponent(JSON.stringify(sessionStorage))});
+ 	$.post("saveSession.cfm", data);
+}
 </script>
 
 <!--- script content created in content pages and referenced here --->
