@@ -2,6 +2,7 @@
 
 <cfinvoke component="LookUp" method="getTerms" returnvariable="qryTerms"></cfinvoke>
 <cfinvoke component="LookUp" method="getScenarios" returnvariable="qryScenarios"></cfinvoke>
+<cfinvoke component="LookUp" method="getMaxTerm" returnvariable="maxTerm"></cfinvoke>
 
 
 <div class= "callout display">
@@ -9,11 +10,11 @@
 		<div class="small-4 medium-4 columns">
 			<label>Term:<br/>
 				<select name="term" id="term" onchange="getScenarios()"/>
-					<option disabled selected value="" >
+					<option disabled value="" >
 						--Select Term--
 					</option>
 					<cfoutput query="qryTerms">
-					<option  value="#term#" >#termDescription#</option>
+					<option  value="#term#" <cfif maxTerm EQ term>selected</cfif>>#termDescription#</option>
 					</cfoutput>
 				</select>
 			</label>
@@ -78,6 +79,7 @@
 
 	$(document).ready(function() {
 		show('add class to scenario');
+		getScenarios();
 	});
 	function show(group){
 		if(group == "add scenario"){
@@ -162,7 +164,7 @@
           });
 	}
 	function enterScenario(crn,billingScenarioByCourseId){
-			var billingScenarioId = $('#' + crn + 'Select').val();
+			var billingScenarioId = $('#' + crn.replace(" ","_") + 'Select').val();
 			var term = $('#term').val();
 			$.ajax({
 	            type: 'post',

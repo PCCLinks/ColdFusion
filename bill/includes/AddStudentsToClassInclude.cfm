@@ -3,44 +3,24 @@
 	<cfinvokeargument name="crn" value="#url.crn#">
 </cfinvoke>
 
-
-
-	<table id="dt_table_astc">
-		<thead>
-			<th>Name</th>
-			<th>Banner G Number</th>
-			<th>Add</th>
-		</thead>
-		<tbody>
-			<cfoutput query="data">
-			<tr>
-				<td>#firstname#&nbsp;#lastname#</td>
-				<td>#bannerGNumber#</td>
-				<td><cfif #includeFlag# EQ 1><a href="javascript:removeItem(#billingStudentItemID#, #billingStudentID#);" id=#billingStudentID#>Remove Entry</a>
-					<cfelse><input type="checkbox" id=#billingStudentID# onclick="javascript:insertItem(#billingStudentID#, #billingStudentItemID#);">
-					</cfif>
-				</td>
-			</tr>
-			</cfoutput>
-		</tbody>
-	</table>
+<cfmodule template="addBillingStudentsAttendanceInclude.cfm"
+	billingStartDate="#url.billingStartDate#"
+	crn = "#url.crn#"
+	dataType = "studentsForCRN"
+>
 
 
 <script>
-	$(document).ready(function() {
-		//intialize table
-		$.fn.dataTable.ext.errMode = 'throw';
-		$('#dt_table_astc').DataTable( {
-			order:[[2, 'desc'],[1, 'asc']]
+		$(document).ready(function() {
+		//createTable();
 		});
-	});
 
 	function  insertItem(billingStudentID, billingStudentItemId)
 	{
 		$.ajax({
             type: 'post',
             url: 'programBilling.cfc?method=addStudentToClass',
-            data: {billingStudentId: billingStudentID, crn: crn, billingStudentItemId:billingStudentItemId, isAjax:'true'},
+            data: {billingStudentId: billingStudentID, crn: <cfoutput>#url.crn#</cfoutput>, billingStudentItemId:billingStudentItemId, isAjax:'true'},
             datatype:'json',
             success: function(billingStudentItemID){
             	$('#' + billingStudentID).parent().html('<a href="javascript:removeItem(' + billingStudentItemID + ', billingStudentId=' + billingStudentID + ');" id=' + billingStudentID + '>Remove Entry</a>');

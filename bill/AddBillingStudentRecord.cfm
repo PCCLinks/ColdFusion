@@ -19,11 +19,50 @@
 		</tr>
 	</thead>
 </table>
-<table id="dt_banner"></table>
-<table id="dt_billing"></table>
+<table id="dt_banner"><thead>
+		<tr>
+			<td>First Name</td>
+			<td>Last Name</td>
+			<td>G</td>
+		</tr>
+	</thead>
+</table>
 
 <script>
+	var table;
+	$(document).ready(function() {
+		//intialize table
+		$.fn.dataTable.ext.errMode = 'throw';
 
+		table = $('#dt_table').DataTable( {
+			processing:true,
+			ajax:{
+				url:"setUpBilling.cfc?method=getSIDNYData",
+				type:'POST',
+				data: function(d){
+						d.firstname = $('#firstNameSearch').val();
+						d.lastname = $('#lastNameSearch').val();
+						d.bannerGNumber = $('#bannerGNumberSearch').val();
+						},
+				dataSrc:'DATA',
+				error: function (xhr, textStatus, thrownError) {
+				        handleAjaxError(xhr, textStatus, thrownError);
+					}
+			},
+			columnDefs:[{targets:2,
+			 	render: function ( data, type, row ) {
+                 			return '<a href="javascript:addStudent(\''+data+'\')">' + data + '</a>';
+            			}
+			 	}]
+		});
+		$('#addStudent').hide();
+
+		 $('body').on('change', '#term', function(e) {
+		 	termValue = $('#term').val();
+		 	setDate(termValue, 'TermBeginDate', 'termBeginDate');
+		 	setDate(termValue, 'TermDropDate', 'termDropDate');
+		 });
+	})
 
 </script>
 

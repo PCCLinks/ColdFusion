@@ -19,6 +19,7 @@
 		 <li><a>Term Billing</a>
 			<ul class="menu">
 				<li><a href="SetUpBilling.cfm?type=Term">Set Up Billing</a></li>
+		 		<li><a href="AddStudent.cfm">Add Student</a></li>
 				<li><a href="ReportSummary.cfm?type=Term">Reporting</a></li>
 			</ul>
 		</li>
@@ -26,6 +27,7 @@
 			<ul class="menu">
 				<li><a href="SetUpBilling.cfm?type=Attendance">Set Up Billing</a></li>
 		 		<li><a href="AttendanceEntry.cfm">Enter Attendance</a></li>
+		 		<li><a href="AddStudent.cfm">Add Student</a></li>
 		 		<li><a href="AddScenario.cfm">Scenarios</a></li>
 				<li><a href="ReportSummary.cfm?type=Attendance">Reporting</a></li>
 			</ul>

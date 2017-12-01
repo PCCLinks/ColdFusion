@@ -235,7 +235,7 @@
 		<cfreturn data>
 	</cffunction>
 
-	<cffunction name="getLatestDates" access="remote">
+	<cffunction name="getLatestAttendanceDates" access="remote">
 		<cfquery name="data">
 			select max(billingStartDate) billingStartDate
 				,max(bs.Term) Term
@@ -244,6 +244,7 @@
 			    ,max(termDropDate) TermDropDate
 			from billingStudent bs
 				join bannerCalendar bc on bs.term = bc.Term
+			where bs.program like '%attendance%'
 		</cfquery>
 		<cfreturn data>
 	</cffunction>

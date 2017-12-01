@@ -819,14 +819,13 @@
 		</cfquery>
 		<cfreturn data>
 	</cffunction>
-	<cffunction name="getAttendanceStudentsForBillingStartDate" access="remote" returnFormat="json">
+	<cffunction name="getStudentsForBillingStartDate" access="remote" returnFormat="json">
 		<cfargument name="billingStartDate" type="date" required="true">
 		<cfquery name="data" >
 			select distinct c.firstname, c.lastname, c.bannerGNumber, bs.billingStudentId, 0 billingStudentItemId, 0 includeFlag
 			from contact c
 				join billingStudent bs on c.contactID = bs.contactID
 			where bs.billingStartDate = <cfqueryparam value="#DateFormat(arguments.billingStartDate,'yyyy-mm-dd')#">
-				and bs.program like '%attendance%'
 			order by lastname, firstname
 		</cfquery>
 		<cfreturn data>

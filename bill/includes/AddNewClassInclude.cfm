@@ -1,67 +1,42 @@
-<cfinvoke component="pcclinks.bill.ProgramBilling" method="getAttendanceStudentsForBillingStartDate"  returnvariable="data">
-	<cfinvokeargument name="billingStartDate" value="#url.billingStartDate#">
-</cfinvoke>
+
+
 
 <div class= "callout display" id="addNewClassDisplay">
 	<div class="row">
-		<div class="small-12 columns"><b>Enter a CRN or Short Name to Identify the Class, if No CRN</b></div>
+		<div class="small-12 columns"><b>Enter a CRN or, if there is no CRN, a Short Name to Identify the Class.
+			<br>Subject, Course and Title are optional.
+			<br>Select below the students to add to the new class.
+			<br>Once all the students have been added, click &#60;Enter Attendance&#62.</b></div>
 	</div>
 	<div class="row">
-		<div class="small-2 columns"><label>CRN: <input id="crn_anc"></label></div>
+		<div class="small-2 columns"><label>CRN:* <input id="crn_anc"></label></div>
 		<div class="small-2 columns"><label>SUBJ: <input id="subj_anc"></label></div>
 		<div class="small-2 columns"><label>CRSE: <input id="crse_anc"></label></div>
 		<div class="small-2 columns"><label>TITLE: <input id="title_anc"></label></div>
 		<div class="small-4 columns">
-			<input type="button" class="button" value="Save Class" onClick="javascript:saveClass();"/>
-			<input type="button" class="button" value="Enter Attendance" onClick="javascript:showAttendance($('#crn_anc').val());"/>
+			<input id="btnEnterAttendance_anc" type="button" class="button" value="Cancel" onClick="javascript:showAttendanceParent();"/>
 		</div>
 	</div>
 </div>
 
-<div id="addStudents">
-	<h3>Select Students to Add To Class</h3>
-	<table id="dt_table_anc">
-		<thead>
-			<th>Name</th>
-			<th>Banner G Number</th>
-			<th>Add</th>
-		</thead>
-		<tbody>
-			<cfoutput query="data">
-			<tr>
-				<td>#firstname#&nbsp;#lastname#</td>
-				<td>#bannerGNumber#</td>
-				<td><cfif #includeFlag# EQ 1><a href="javascript:removeItem(#billingStudentItemID#, #billingStudentID#);" id=#billingStudentID#>Remove Entry</a>
-					<cfelse><input type="checkbox" id=#billingStudentID# onclick="javascript:insertItem(#billingStudentID#, #billingStudentItemID#);">
-					</cfif>
-				</td>
-			</tr>
-			</cfoutput>
-		</tbody>
-	</table>
-</div>
+
+<cfmodule template="addBillingStudentsAttendanceInclude.cfm"
+	billingStartDate="#url.billingStartDate#"
+	dataType = "allStudentsForBillingStartDate"
+>
 
 
 <script>
-	$(document).ready(function() {
-		//intialize table
-		$.fn.dataTable.ext.errMode = 'throw';
-		$('#dt_table_anc').DataTable( {
-			order:[[2, 'desc'],[1, 'asc']]
-		});
-		$('#addStudents').hide();
-	});
-	function saveClass(){
-		$('#addStudents').show();
-	}
+
+
 	function  insertItem(billingStudentID, billingStudentItemId)
 	{
+		var crn = $('#crn_anc').val();
 		if($('#crn_anc').val() == ''){
 			alert('Enter a CRN before adding students');
 			$('#'+billingStudentID).attr('checked', false);
 			return;
 		}
-		var crn = $('#crn_anc').val();
 		if($('#subj_anc').val() == ''){
 				$('#subj_anc').val(crn);
 		}
@@ -79,6 +54,9 @@
             datatype:'json',
             success: function(billingStudentItemID){
             	$('#' + billingStudentID).parent().html('<a href="javascript:removeItem(' + billingStudentItemID + ', billingStudentId=' + billingStudentID + ');" id=' + billingStudentID + '>Remove Entry</a>');
+            	$('#btnEnterAttendance_anc').val('Enter Attendance');
+				//selectedCRN declared in parent
+				selectedCRN = $('#crn_anc').val();
             },
             error: function (jqXHR, exception) {
 				handleAjaxError(jqXHR, exception);
@@ -105,6 +83,12 @@
         });
 		}
 	}
-
+	function showAttendanceParent(){
+		//selectedCRN declared in parent
+		if(selectedCRN != ''){
+	    	getCRN();
+		}
+	    showAttendance();
+	}
 
 </script>

@@ -13,13 +13,14 @@
 <script type="text/javascript" charset="utf8" src="<cfoutput>#pcc_source#</cfoutput>/js/vendor/jquery.blockUI.js"></script>
 <script src="<cfoutput>#pcc_source#</cfoutput>/js/vendor/jquery-ui.min.js"></script>
 <script src="<cfoutput>#pcc_source#</cfoutput>/js/vendor/foundation-datepicker.min.js"></script>
+<script src="<cfoutput>#pcc_source#</cfoutput>/js/vendor/moment.min.js"></script>
 
 <script>
 $(document).foundation();
 
 $(document).ready(function(){
 	$('.fdatepicker').fdatepicker({
-		format: 'mm-dd-yyyy',
+		format: 'mm/dd/yyyy',
 		disableDblClickSelection: true,
 		leftArrow:'<<',
 		rightArrow:'>>',

@@ -28,22 +28,11 @@
 	padding-top: 3px;
 	padding-bottom:3px;
 }
+
+
+
 </style>
 
-<!---
-<cfinvoke component="SetUpBilling" method="getClassAttendanceForEdit"  returnvariable="data">
-	<cfinvokeargument name="crn" value="#Variables.CRN#">
-	<cfinvokeargument name="term" value="#Variables.Term#">
-	<cfinvokeargument name="billingdate" value="#Variables.BillingDate#">
-</cfinvoke>
-
-
-<cfquery name="heading" dbtype="query">
-	select crn, crse, subj, title
-	from data
-	group by crn, crse, subj, title
-</cfquery>
---->
 
 <div class="callout" id="attendanceHeader">
 	<div class="row">
@@ -61,7 +50,6 @@
 		<div class="small-1 medium-5 columns"><br>
 			<input id="btnAddClass" type="button" class="button" value="Add New Class" onClick="javascript:addClass();">
 			<input id="btnAddLab" type="button" class="button" value="Add Lab" onClick="javascript:addLab();">
-			<input id="btnSaveClass" type="button" class="button" value="Save" onClick="javascript:addClass();">
 			<input id="btnShowStudent" type="button" class="button" value="Add/Remove Students" onClick="javascript:showStudents();">
 			<input id="btnShowAttendance" type="button" class="button" value="Enter Attendance" onClick="javascript:showAttendance();">
 		</div>
@@ -74,34 +62,36 @@
 
 <cfsavecontent variable="pcc_scripts">
 <script>
-	var crn = '<cfoutput>#selectedCRN#</cfoutput>';
+	var selectedCRN = '<cfoutput>#selectedCRN#</cfoutput>';
+	var addBillingStudentTable = null;
 	$(document).ready(function() {
-		getCRN(crn);
-		if(crn != ''){
-			getCRNChanged(crn);
+		getCRN();
+		if(selectedCRN != ''){
+			getCRNChanged();
 		}
-		$('#btnAddLab').hide();
-		$('#btnSaveClass').hide();
-		$('#btnShowStudent').hide();
-		$('#btnShowAttendance').hide();
+
+		//#showHideButtons(showAddClass, showAddLab, showShowStudent, showShowAttendance)
+		showHideButtons(true, false, false, false);
 
 	});
 
 	function addClass(){
+
+		$('#attendanceHeader').hide();
+		$('#attendanceEntry').hide();
+		$('#addClass').show();
+
 		$.ajax({
         	url: "includes/addNewClassInclude.cfm?billingStartDate=" + $('#billingStartDate').val(),
        		cache: false
     	}).done(function(data) {
-			$('#attendanceHeader').hide();
-			$('#attendanceEntry').hide();
-			$('#addClass').show();
         	$("#addClass").html(data);
     	});
 	}
-	function getCRN(crn){
+	function getCRN(){
 		var url = "includes/crnForTermInclude.cfm?billingStartDate=" + $('#billingStartDate').val();
-		if(crn){
-			url = url + '&crn=' + crn;
+		if(selectedCRN){
+			url = url + '&crn=' + selectedCRN;
 		}
 		$.ajax({
         	url: url,
@@ -110,21 +100,21 @@
         	$("#crnselect").html(data);
     	});
 	}
-	function getCRNChanged(crnparam){
-		crn = $('#crn').val();
-		if(crnparam){
-			crn = crnparam;
-		}
+	function getCRNChanged(){
+		selectedCRN = $('#crn').val();
+		getAttendanceEntryInclude();
+	}
+	function getAttendanceEntryInclude(){
 		$.ajax({
-        	url: "includes/attendanceEntryInclude.cfm?billingStartDate="+$('#billingStartDate').val()+'&crn='+ crn,
+        	url: "includes/attendanceEntryInclude.cfm?billingStartDate="+$('#billingStartDate').val()+'&crn='+ selectedCRN,
        		cache: false
     	}).done(function(data) {
         	$('#attendanceEntry').html(data);
 			$('#addStudent').hide();
 			$('#attendanceEntry').show();
-			$('#btnAddLab').show();
-			$('#btnShowStudent').show();
-			$('#btnShowAttendance').hide();
+
+			//#showHideButtons(showAddClass, showAddLab, showShowStudent, showShowAttendance)
+			showHideButtons(true, true, true, false);
     	});
 	}
 	function saveEntry(id){
@@ -168,42 +158,76 @@
 	function showStudents(){
 		$('#addStudent').show();
 		$('#attendanceEntry').hide();
-		$('#btnShowStudent').hide();
-		$('#btnShowAttendance').show();
-		$('#btn').val('Show Attendance');
+
+		//#showHideButtons(showAddClass, showAddLab, showShowStudent, showShowAttendance)
+		showHideButtons(false, false, false, true);
+
 		$.ajax({
-        	url: 'includes/AddStudentsToClassInclude.cfm?billingStartDate=' + $('#billingStartDate').val() + '&crn='+$('#crn').val(),
+        	url: 'includes/AddStudentsToClassInclude.cfm?billingStartDate=' + $('#billingStartDate').val() + '&crn='+selectedCRN,
        		cache: false
     	}).done(function(data) {
         	$("#addStudent").html(data);
     	});
 	}
-	function showAttendance(selectedCRN){
-		$('#attendanceHeader').show();
-		$('#attendanceEntry').show();
-		$('#addStudent').hide();
-		$('#addClass').hide();
-	    getCRN(selectedCRN);
-		getCRNChanged(selectedCRN);
+	function showAttendance(){
+		if(selectedCRN == ""){
+			$('#attendanceHeader').show();
+			$('#addStudent').hide();
+			$('#addClass').hide();
+
+			//#showHideButtons(showAddClass, showAddLab, showShowStudent, showShowAttendance)
+			showHideButtons(true, false, false, false);
+		}else{
+			$('#attendanceHeader').show();
+			$('#attendanceEntry').show();
+			$('#addStudent').hide();
+			$('#addClass').hide();
+			getAttendanceEntryInclude();
+		}
 	}
 	function addLab(){
-		var crn = $('#crn').val();
-		var response = window.confirm('Add Lab for CRN ' + crn);
+		var response = window.confirm('Add Lab for CRN ' + selectedCRN);
 		if(response)
 		{
 			$.ajax({
 	            type: 'post',
 	            url: 'programBilling.cfc?method=addLab',
-	            data: {crn: crn, billingStartDate: $('#billingStartDate').val(), isAjax:'true'},
+	            data: {crn: selectedCRN, billingStartDate: $('#billingStartDate').val(), isAjax:'true'},
 	            datatype:'text/plain',
 	            success: function(newCRN){
-	            	getCRN(newCRN);
-	            	getCRNChanged(newCRN);
+	            	selectedCRN = newCRN;
+	            	getCRN();
+	            	getCRNChanged();
 	            },
 	            error: function (jqXHR, exception) {
 					handleAjaxError(jqXHR, exception);
 				}
         });
+		}
+	}
+	function showHideButtons(showAddClass, showAddLab, showShowStudent, showShowAttendance){
+		if(showAddClass){
+			$('#btnAddClass').show();
+		}else{
+			$('#btnAddClass').hide();
+		}
+
+		if(showAddLab){
+			$('#btnAddLab').show();
+		}else{
+			$('#btnAddLab').hide();
+		}
+
+		if(showShowStudent){
+			$('#btnShowStudent').show();
+		}else{
+			$('#btnShowStudent').hide();
+		}
+
+		if(showShowAttendance){
+			$('#btnShowAttendance').show();
+		}else{
+			$('#btnShowAttendance').hide();
 		}
 	}
 </script>

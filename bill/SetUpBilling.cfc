@@ -10,7 +10,7 @@
 		<cfargument name="bannerGNumber" default="">
 
 		<cfset appObj.logEntry(value="PROCEDURE getStudentsToBill #Now()#", level=5) >
-		<!---<cflog file="pcclinks_bill" text="PROCEDURE getStudentsToBill #Now()#">--->
+		<cfset appObj.logDump(label="arguments", value="#arguments#", level=5) >
 		<cfstoredproc procedure="getStudentsToBill">
 			<cfprocparam value="#arguments.beginDate#" cfsqltype="CF_SQL_DATE">
 			<cfprocparam value="#arguments.endDate#" cfsqltype="CF_SQL_DATE">
@@ -540,17 +540,32 @@
 	</cffunction>
 
 	<cffunction name="getSIDNYData" returnformat="json" access="remote">
-		<cfargument name="bannerGNumber" default="">
-		<cfargument name="lastname" default="">
-		<cfargument name="firstname" default="">
-		<cfset students = getStudents(termDropDate = '2017-09-30', termBeginDate='2017-09-25')>
+		<cfargument name="bannerGNumber" required="true">
+		<cfset students = getStudents(beginDate = '2000-01-01', endDate='2999-12-31', bannerGNumber="#arguments.bannerGNumber#")>
+
 		<cfquery dbtype="query" name="data">
-				select firstname, lastname, bannerGNumber
+				select firstname, lastname, bannerGNumber, program, enrolledDate, exitDate, schoolDistrict, bannerGNumber as AddStudent
 				from students
-				where 1=1
-				<cfif arguments.bannerGNumber NEQ "">and bannerGNumber = <cfqueryparam value="#arguments.bannerGNumber#"></cfif>
-				<cfif arguments.lastname NEQ ""> and lastname = <cfqueryparam value="#arguments.lastname#"></cfif>
-				<cfif arguments.firstname NEQ ""> and firstname = <cfqueryparam value="#arguments.firstname#"></cfif>
+		</cfquery>
+		<cfreturn data>
+	</cffunction>
+
+	<cffunction name="getBannerPerson" returnformat="json" access="remote">
+		<cfargument name="bannerGNumber" required="true">
+		<cfquery name="data" datasource="bannerpcclinks" >
+				select distinct atts, stu_name, stu_id
+				from swvlinks_person
+				where stu_id = <cfqueryparam value="#arguments.bannerGNumber#">
+		</cfquery>
+		<cfreturn data>
+	</cffunction>
+	<cffunction name="getBannerCourse" returnformat="json" access="remote">
+		<cfargument name="bannerGNumber" required="true">
+		<cfquery name="data" datasource="bannerpcclinks" >
+				select Term, CRN, LEVL, SUBJ, CRSE, Title
+				from swvlinks_course
+				where stu_id = <cfqueryparam value="#arguments.bannerGNumber#">
+				order by Term desc
 		</cfquery>
 		<cfreturn data>
 	</cffunction>
@@ -576,7 +591,21 @@
 		<cfreturn data>
 	</cffunction>
 
+	<cffunction name="addBillingStudent" returnformat="json" returntype="numeric" access="remote">
+		<cfargument name="bannerGNumber" default="" required="true">
+		<cfargument name= "term" required="true">
+		<cfargument name = "billingStartDate" type="date" required="true">
+		<cfargument name="billingEndDate" type="date" required="true">
 
+		<cfset var studentQry = getStudents(beginDate = '2000-01-01', endDate='2999-12-31',
+													bannerGNumber = #arguments.bannerGNumber#) >
+		<cfset appObj.logDump(label="studentQry", value="#studentQry#", level=5)>
+		<cfset contactrow=#GetQueryRow(studentQry, 1)#>
+		<cfset local.returnArray = getBillingStudent(contactrow=#contactrow#, billingStartDate=#arguments.billingStartDate#,
+														billingEndDate=#arguments.billingEndDate#, term=#arguments.term#) >
+		<cfset appObj.logDump(label="returnArray", value="#local.returnArray#", level=5)>
+		<cfreturn local.returnArray[1]>
+	</cffunction>
 	<cffunction name="getInsertCount" access="remote" returnFormat = "json">
 		<cfargument name="term" required="true">
 		<cfargument name="billingStartDate" required="true">

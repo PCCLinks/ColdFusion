@@ -4,7 +4,11 @@
 </cfinvoke>
 
 <div class="callout primary">
-<cfoutput>Date: #DateFormat(url.billingStartDate,'m/d/yy')#&nbsp;Class:#data.subj#-#data.crse#&nbsp;#data.title#&nbsp;(#url.crn#)</cfoutput>
+<cfoutput>Date: #DateFormat(url.billingStartDate,'m/d/yy')#&nbsp;Class:
+	<cfif data.subj EQ url.crn>#url.crn#
+	<cfelse>#data.subj#-#data.crse#&nbsp;#data.title#&nbsp;(#url.crn#)
+	</cfif>
+</cfoutput>
 </div>
 
 

@@ -28,7 +28,7 @@ select{
 			<tr >
 				<td class="scenario"><input id="#CRN#" value="#CRN#" style="border-style:none"></td>
 				<td class="scenario">
-					<select id="#CRN#Select" onchange="javascript:enterScenario('#CRN#','#billingScenarioByCourseId#');">
+					<select id="#EncodeForHtml(Replace(CRN," ","_"))#Select" onchange="javascript:enterScenario('#EncodeForHtml(CRN)#','#billingScenarioByCourseId#');">
 						<option disabled selected value="" >
 							--Select Scenario--
 						</option>
