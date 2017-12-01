@@ -195,7 +195,7 @@
 							,"Completed Degree & Transfer","Entered the Military","Transferred"
 							,"Housing insecurity / homeless","Incarcerated","Leaving school to work"
 							,"Left without contact","Mental health barriers","Moving out of PCC district"
-							,"Parenting responsibilities"]>
+							,"Non-Clearinghouse Transfer or Completion", "Parenting responsibilities"]>
 			<cfmodule template="#pcc_source#/includes/selectOption.cfm"
 				so_values="#values#"
 				so_selectedvalue="#caseload_banner.exitReason#"
