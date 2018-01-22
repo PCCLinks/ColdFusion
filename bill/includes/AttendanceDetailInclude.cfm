@@ -41,7 +41,7 @@ table.attendance{
 			<td>#small#</td>
 			<td>#inter#</td>
 			<td>#large#</td>
-			<td>#attendance*.3#</td>
+			<td>#cm#</td>
 		</tr>
 	</cfoutput>
 	</tbody>
@@ -49,7 +49,7 @@ table.attendance{
 		<tr>
 			<cfquery dbtype="query" name="dataTotal">
 				select SmGroupPercent, InterGroupPercent, LargeGroupPercent, CMPercent, GeneratedBilledAmount, GeneratedOverageAmount,
-					sum(attendance) attendance, sum(ind) ind, sum(small) small, sum(inter) inter, sum(large) large, sum(attendance*.3) CM
+					sum(attendance) attendance, sum(ind) ind, sum(small) small, sum(inter) inter, sum(large) large, sum(cm) CM
 				from data
 				group by SmGroupPercent, InterGroupPercent, LargeGroupPercent, CMPercent, GeneratedBilledAmount, GeneratedOverageAmount
 			</cfquery>
@@ -74,6 +74,7 @@ table.attendance{
 			<th>Small %</th>
 			<th>Inter %</th>
 			<th>Large %</th>
+			<th>CM %</th>
 		</tr>
 	</thead>
 	<tbody>
@@ -85,6 +86,7 @@ table.attendance{
 			<td>#SmallPercent#</td>
 			<td>#InterPercent#</td>
 			<td>#LargePercent#</td>
+			<td>#(IndPercent + SmallPercent + InterPercent + LargePercent)/10#</td>
 		</tr>
 	</cfoutput>
 	</tbody>

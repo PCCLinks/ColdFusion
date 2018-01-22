@@ -1,5 +1,5 @@
 <!--- Get Classes to Bill --->
-<cfinvoke component="ProgramBilling" method="selectBillingEntries"  returnvariable="data">
+<cfinvoke component="pcclinks.bill.ProgramBilling" method="selectBillingEntries"  returnvariable="data">
 	<cfinvokeargument name="billingStudentId" value="#attributes.billingStudentId#">
 </cfinvoke>
 
@@ -9,21 +9,21 @@
 	<cfset Variables.programType = "attendance">
 </cfif>
 
-<b>Billed Classes</b>
-<table id="dt_billed" name="dt" class="unstriped hover compact" cellspacing="0" width="100%">
+<b>Current Classes</b>
+<table id="dt_billed" name="dt" class="unstriped hover compact" cellspacing="0" width="100%" style="font-size:14px">
 	<thead>
     	<tr>
 	    	<th style="display:none;" id="BillingStudentItemId"></th>
 	    	<th id="term">Term</th>
             <th id="CRN">CRN</th>
-            <th id="SUBJ">SUBJ</th>
+            <th id="SUBJ">CRSE</th>
             <th id="Title">Title</th>
 			<th id="TakenPreviousTerm">Taken Prev.</th>
 			<th><cfif Variables.programType EQ "attendance">Attend. To Date
 					<cfelse>Credits
 				</cfif>
 			</th>
-			<th id="IncludeFlag">Incl.</th>
+			<th id="IncludeFlag">Bill</th>
        </tr>
      </thead>
      <tbody>
@@ -32,7 +32,7 @@
 	    	<td style="display:none;">#BillingStudentItemId#</td>
 	    	<td >#term#</td>
             <td>#CRN#</td>
-            <td>#SUBJ#</td>
+            <td>#SUBJ# #CRSE#</td>
             <td>#Title#</td>
 			<td><cfif LEN(#TakenPreviousTerm#) EQ 0 OR #TakenPreviousTerm# EQ 0>No<cfelse><span style="color:red">#TakenPreviousTerm#</span></cfif></td>
 			<td><cfif programType EQ "attendance">#NumberFormat(AttendanceToDate,"0.0000")#
@@ -52,7 +52,7 @@
 </table>
 <cfif data.BillingStatus NEQ 'BILLED'>
 <div class="callout">
-	<b>Billing Reviewed:</b> <input type="checkbox" name="billingReviewed" id="billingReviewed" <cfif data.BillingStatus EQ "Complete">checked</cfif> >
+	<b>Billing Reviewed:</b> <input type="checkbox" name="billingReviewed" id="billingReviewed" <cfif data.BillingStatus EQ "Reviewed">checked</cfif> >
 </div>
 </cfif>
 

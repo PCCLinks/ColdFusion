@@ -48,6 +48,21 @@
 		</cfquery>
 		<cfreturn data>
 	</cffunction>
+		<cffunction name="getOpenTerms" access="remote">
+		<cfquery name="data" datasource="pcclinks">
+			select distinct Term,
+				concat(Term, case right(Term,1)
+								when 1 then '-Winter'
+								when 2 then '-Spring'
+			                    when 3 then '-Summer'
+			                    when 4 then '-Fall' end) TermDescription
+			from billingStudent
+			where billingStatus = 'IN PROGRESS'
+				and program not like '%attendance%'
+			order by term
+		</cfquery>
+		<cfreturn data>
+	</cffunction>
 	<cffunction name="getProgramYear" access="remote">
 		<cfquery name="data" datasource="pcclinks">
 			select distinct ProgramYear
@@ -59,9 +74,9 @@
 	</cffunction>
 	<cffunction name="getCurrentProgramYear" access="remote" returntype="string">
 		<cfquery name="data">
-			SELECT distinct ProgramYear
+			SELECT max(ProgramYear) ProgramYear
 			FROM bannerCalendar
-			WHERE termBeginDate <= now() and termEndDate >= now()
+			WHERE termBeginDate <= now()
 		</cfquery>
 		<cfreturn data.ProgramYear>
 	</cffunction>
@@ -84,7 +99,10 @@
 								when 1 then '-Winter'
 								when 2 then '-Spring'
 			                    when 3 then '-Summer'
-			                    when 4 then '-Fall' end) TermDescription
+			                    when 4 then '-Fall' end) TermDescription,
+				c.TermBeginDate,
+				c.TermDropDate,
+				c.TermEndDate
 			from bannerCalendar c
 				join bannerCalendar c1 on c.ProgramYear = c1.ProgramYear
 			where c1.Term = (select max(Term) from billingStudent)
@@ -100,8 +118,6 @@
 			select statusText
 			from keyStatus
 			where statusText like 'ytc%'
-			union
-			select 'YtC Attendance Unverified'
 		</cfquery>
 		<cfreturn data>
 	</cffunction>
@@ -118,6 +134,16 @@
 			FROM bannerCalendar c
 				JOIN (SELECT MAX(Term) Term
 					FROM billingStudent) maxTerm ON c.Term = maxTerm.Term
+		</cfquery>
+		<cfreturn data>
+	</cffunction>
+	<cffunction name="getLastTermClosed" access="remote">
+		<cfquery datasource="pcclinks" name="data">
+			SELECT ProgramQuarter, ProgramYear, maxTerm.Term MaxTerm
+			FROM bannerCalendar c
+				JOIN (SELECT MAX(Term) Term
+					FROM billingStudent
+					WHERE billingStatus = 'BILLED') maxTerm ON c.Term = maxTerm.Term
 		</cfquery>
 		<cfreturn data>
 	</cffunction>
@@ -186,13 +212,26 @@
 				SELECT * FROM billingScenario
 				<cfif len(arguments.billingScenarioName) GT 0>
 				WHERE billingScenarioName = <cfqueryparam value="#arguments.billingScenarioName#">
+				order by billingScenarioName
 				</cfif>
 		</cfquery>
 		<cfreturn data>
 	</cffunction>
 	<cffunction  name="getExitReasons" access="remote" returnformat="JSON" >
 		<cfquery name="data" >
-				SELECT * FROM billingStudentExitReason
+				SELECT *
+				FROM billingStudentExitReason
+				ORDER BY billingStudentExitReasonDescription
+		</cfquery>
+		<cfreturn data>
+	</cffunction>
+	<cffunction  name="getOpenAttendanceBillingStartDates" access="remote"  >
+		<cfquery name="data" >
+				SELECT distinct billingStartDate
+				FROM billingStudent
+				WHERE program like '%attendance%'
+					and billingStatus = 'IN PROGRESS'
+				ORDER BY billingStartDate desc
 		</cfquery>
 		<cfreturn data>
 	</cffunction>
@@ -242,6 +281,7 @@
 			    ,max(billingEndDate) billingEndDate
 			    ,max(termBeginDate) TermBeginDate
 			    ,max(termDropDate) TermDropDate
+			    ,max(termEndDate) TermEndDate
 			from billingStudent bs
 				join bannerCalendar bc on bs.term = bc.Term
 			where bs.program like '%attendance%'

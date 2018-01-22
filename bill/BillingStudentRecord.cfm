@@ -21,7 +21,7 @@
 	<!---<cfset Variables.BillingStatus = #BillingStatus#>--->
 	<div class=<cfif readonly>"callout alert"<cfelse>"callout primary"</cfif> >
 		<div class="row">
-			<div class="snall-12 columns">
+			<div class="small-12 columns">
 				<b>Billing for Period #DateFormat(billingStartDate,'m/d/y')#</b>
 			</div>
 		</div>

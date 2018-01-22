@@ -1,27 +1,28 @@
-<cfinvoke component="ProgramBilling" method="getBillingStudentForYear" returnvariable="data">
+<!---><cfinvoke component="ProgramBilling" method="getBillingStudentForYear" returnvariable="data">
 	<cfinvokeargument name="term" value="#attributes.term#">
 	<cfinvokeargument name="contactid" value="#attributes.contactid#">
-</cfinvoke>
+</cfinvoke>--->
 
-<cfparam name="currentKey" default="#attributes.currentKey#">
-<cfparam name="isAttendance" default="#attributes.isAttendance#" type="boolean">
+
+<cfparam name="selectedBillingStudentId" default="#attributes.selectedBillingStudentId#">
+<cfparam name="data" default="#attributes.data#" type="query">
 
 <!-- Start of UI -->
 
 <!-- Billing Tabs -->
 <ul class="tabs" data-tabs id="billing-tabs">
 	<cfoutput query="data">
-		<cfset key = DateFormat(billingStartDate,'m-d-yy')>
+		<cfset key = #billingStudentId# & "B">
 		<cfset liClass = "tabs-title">
-		<cfif key EQ currentKey><cfset liClass = liClass & " is-active"></cfif>
-  		<li class="#liClass#"><a href="###billingStudentId#" aria-selected="true">#key#<br><span style="color:gray">#term#</span></a></li>
+		<cfif billingStudentId EQ selectedBillingStudentId><cfset liClass = liClass & " is-active"></cfif>
+  		<li class="#liClass#"><a href="###billingStudentId#B" aria-selected="true">#DateFormat(billingStartDate,'m-d-yy')#<br><span style="color:gray">#term#</span></a></li>
 	</cfoutput>
 </ul>
 
 <!-- billing tab content -->
 <div class="tabs-content" data-tabs-content="billing-tabs">
 <cfoutput query="data">
-  	<div class= "tabs-panel<cfif term EQ attributes.term> is-active</cfif>" id="#billingStudentId#">
+  	<div class= "tabs-panel<cfif billingStudentId EQ selectedBillingStudentId> is-active</cfif>" id="#billingStudentId#B">
     	<cfmodule template="billingStudentRecordInclude.cfm" billingStudentId = #billingStudentId#>
   	</div>
 </cfoutput>

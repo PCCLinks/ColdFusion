@@ -4,7 +4,7 @@
 	<cfargument name="value" required=true>
 	<cfargument name="level" default=0>
 	<cfargument name="logfilename" default="pcclinks">
-	<cfset debuglevel = 4>
+	<cfset debuglevel = 5>
 
 	<cfif IsDefined("session") && StructKeyExists(session, "logfilename")>
 		<cfset arguments.logfilename = "#Session.logfilename#">

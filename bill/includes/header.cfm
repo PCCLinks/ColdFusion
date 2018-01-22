@@ -32,14 +32,26 @@
 				<li><a href="ReportSummary.cfm?type=Attendance">Reporting</a></li>
 			</ul>
 		</li>
-		<li><a href="ProgramStudent.cfm">Review Billing</a></li>
+		<li><a href="ProgramStudent.cfm">Review Billing</a>
+			<ul class="menu">
+				<li><a href="ProgramStudent.cfm">Review Billing</a></li>
+		 		<li><a href="ProgramReview.cfm">Coach Review</a></li>
+		 		<li><a href="Transcript.cfm">Transcript</a></li>
+			</ul>
+		</li>
 		<li><a>Additional Reports</a>
 			<ul class="menu">
-				<li><a href="ExitDate.cfm">Set Exit Reason</a></li>
 				<li><a href="ReportExitStatus.cfm">Exit Status Report</a></li>
 				<li><a href="ReportADM.cfm">ADM Report</a></li>
+				<li><a href="ReportPPS.cfm">PPS Report</a></li>
 				<li><a href="ReportOverage.cfm?program=GtC">GtC Overage Report</a></li>
 				<li><a href="ReportOverage.cfm?program=YtC">YtC Overage Report</a></li>
+			</ul>
+		</li>
+		<li><a>Set Exits</a>
+			<ul class="menu">
+				<li><a href="ExitDate.cfm">Set Exit Reason</a></li>
+				<li><a href="UpdateExitDates.cfm">Update Exit Dates</a></li>
 			</ul>
 		</li>
 		 <!---<li><a href="Reconcile.cfm">Reconcile Previous Billing</a></li>--->

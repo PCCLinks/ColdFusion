@@ -61,7 +61,7 @@
 	} //end setup table
 
 	function goToBillingRecord(billingStudentId){
-		window.open('programStudentDetail.cfm?billingStudentId='+billingStudentId+'&showNext=true');
+		window.open('programStudentDetail.cfm?billingStudentId='+billingStudentId+'&showNext=true#Billing');
 	}
 
 	function print(){

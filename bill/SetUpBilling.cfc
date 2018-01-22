@@ -9,7 +9,7 @@
 		<cfargument name="endDate" required="true">
 		<cfargument name="bannerGNumber" default="">
 
-		<cfset appObj.logEntry(value="PROCEDURE getStudentsToBill #Now()#", level=5) >
+		<cfset appObj.logEntry(value="PROCEDURE getStudentsToBill", level=5) >
 		<cfset appObj.logDump(label="arguments", value="#arguments#", level=5) >
 		<cfstoredproc procedure="getStudentsToBill">
 			<cfprocparam value="#arguments.beginDate#" cfsqltype="CF_SQL_DATE">
@@ -35,22 +35,21 @@
 			<cfset appObj.logEntry(value="PROCEDURE getStudentsToBill combine query #Now()#", level=5) >
 			<!---<cflog file="pcclinks_bill" text="PROCEDURE getStudentsToBill combine query #Now()#">--->
 			<cfquery dbtype="query" name="final">
-				SELECT bannerGNumber, contactId, program, enrolledDate, lastName, firstName, exitDate, schoolDistrictDate, schoolDistrict, districtID, PIDM
+				SELECT bannerGNumber, contactId, program, enrolledDate, exitDate, schoolDistrictDate, schoolDistrict, districtID, PIDM, firstname, lastname
 				FROM qry
 				WHERE qry.pidm is not null
 				UNION
-				SELECT bannerGNumber, contactId, program, enrolledDate, lastName, firstName, exitDate, schoolDistrictDate, schoolDistrict, districtID, pidm.PIDM
+				SELECT bannerGNumber, contactId, program, enrolledDate, exitDate, schoolDistrictDate, schoolDistrict, districtID, pidm.PIDM, firstname, lastname
 				FROM qry, pidm
 				WHERE qry.bannerGNumber = pidm.STU_ID
 				and qry.pidm is null
 			</cfquery>
 		<cfelse>
 			<cfquery dbtype="query" name="final">
-				SELECT bannerGNumber, contactId, program, enrolledDate, lastName, firstName, exitDate, schoolDistrictDate, schoolDistrict, districtID, PIDM
+				SELECT bannerGNumber, contactId, program, enrolledDate, exitDate, schoolDistrictDate, schoolDistrict, districtID, PIDM, firstname, lastname
 				FROM qry
 			</cfquery>
 		</cfif>
-		<cfset appObj.logEntry(value="PROCEDURE getStudentsToBill return final #Now()#", level=5) >
 		<cfreturn final>
 	</cffunction>
 
@@ -80,9 +79,6 @@
 		<cfset local.program = arguments.contactRow.program>
 
 		<!--- label as YTC Attendance if have 1 or more ABE Classes --->
-		<!--- going to do this here rather than as a separate query but not
-		   sure how this works with re-runs and changes and protecting manual
-		   entries --->
 		<cfquery name="abeCount" dbtype="query">
 			select Title
 			from bannerClasses
@@ -116,7 +112,8 @@
 					<cfset ellCredit = ellCredit + 1 >
 				</cfif>
 			</cfloop>
-			<cfif ellCredit GTE 2>
+			<cfif (ellCredit GTE 2)
+				OR (ellCredit EQ ellCount.recordcount) >
 				<cfset local.ytcProgram = 'YtC ELL Credit'>
 			<cfelse>
 				<cfset local.ytcProgram = 'YtC ELL Attendance'>
@@ -171,6 +168,78 @@
 				</cfquery>
 				<cfset appObj.logDump(label="resultBillingstudent", value=resultBillingstudent, level=5) >
 				<cfset local.billingstudentid = #resultBillingstudent.GENERATED_KEY# >
+
+				<!--- create profile record if needed --->
+				<cfquery name="getProfile">
+					select *
+					from billingStudentProfile
+					where contactId = <cfqueryparam value='#arguments.contactRow.contactid#'>
+				</cfquery>
+				<cfif getProfile.recordcount EQ 0>
+					<cfquery datasource="bannerpcclinks" name="bannerPerson">
+						SELECT PIDM, STU_ID, NVL(SUBSTR(stu_name, 0, INSTR(stu_name, ',')-1), stu_name) AS Lastname, NVL(SUBSTR(stu_name, INSTR(stu_name, ',')+2), stu_name) FirstName, birthdate as dob
+							,STU_STREET1, STU_ZIP, STU_CITY, STU_STATE, REP_RACE, case gender when 'M' THEN 1 WHEN 'F' THEN 2 ELSE 0 END Gender,
+						    case REP_RACE WHEN 'Hispanic/Latino' THEN 'Hispanic American'
+								WHEN 'Black or African American' THEN 'African American'
+								WHEN 'White' THEN 'European American'
+								WHEN 'Race and Ethnicity Unknown' THEN 'Not Specified'
+								WHEN 'Asian' THEN 'Asian American'
+								WHEN 'Multi-racial (non Hispanic)' THEN 'Not Specified'
+								WHEN 'Non-Resident Alien' THEN 'Not Specified'
+								WHEN 'American Indian/Alaska Native' THEN 'Native American'
+								WHEN 'Native Hawaiian/Pacific Island' THEN 'Native Hawaiian or Other Pacific Islander'
+							END Ethnicity
+						FROM swvlinks_person
+						WHERE PIDM = <cfqueryparam value="#arguments.contactRow.PIDM#">
+					</cfquery>
+					<cfif bannerPerson.recordcount GT 0>
+						<cfquery name="insertIntoProfile">
+							INSERT INTO billingStudentProfile (contactID, bannerGNumber, firstName, lastName, dob, gender, ethnicity, address, city, state, zip)
+							<cfoutput>
+							VALUES(<cfqueryparam value="#arguments.contactRow.contactid#">
+								,<cfqueryparam value="#arguments.contactRow.bannerGNumber#">
+								,<cfqueryparam value="#bannerPerson.firstname#">
+								,<cfqueryparam value="#bannerPerson.lastname#">
+								,<cfqueryparam value="#bannerPerson.dob#">
+								,<cfqueryparam value="#bannerPerson.gender#">
+								,<cfqueryparam value="#bannerPerson.ethnicity#">
+								,<cfqueryparam value="#bannerPerson.STU_STREET1#">
+								,<cfqueryparam value="#bannerPerson.STU_CITY#">
+								,<cfqueryparam value="#bannerPerson.STU_STATE#">
+								,<cfqueryparam value="#bannerPerson.STU_ZIP#">)
+							</cfoutput>
+						</cfquery>
+					<cfelse>
+						<cfquery name="contactPerson">
+							SELECT contactid, bannerGNumber, Lastname, FirstName, dob, address
+							    ,city, state, zip, ethnicity, gender
+							FROM contact
+							WHERE contactId = <cfqueryparam value="#arguments.contactRow.contactid#">
+						</cfquery>
+						<cfquery name="insertIntoProfile">
+							INSERT INTO billingStudentProfile (contactID, bannerGNumber, firstName, lastName, dob, gender, ethnicity, address, city, state, zip)
+							<cfoutput>
+							VALUES(<cfqueryparam value="#arguments.contactRow.contactid#">
+								,<cfqueryparam value="#arguments.contactRow.bannerGNumber#">
+								,<cfqueryparam value="#contactPerson.firstname#">
+								,<cfqueryparam value="#contactPerson.lastname#">
+								,<cfqueryparam value="#contactPerson.dob#">
+								,<cfqueryparam value="#contactPerson.gender#">
+								,<cfqueryparam value="#contactPerson.ethnicity#">
+								,<cfqueryparam value="#contactPerson.address#">
+								,<cfqueryparam value="#contactPerson.city#">
+								,<cfqueryparam value="#contactPerson.state#">
+								,<cfqueryparam value="#contactPerson.zip#">)
+							</cfoutput>
+						</cfquery>
+						<cfquery name="updateBillingStudentWithError">
+							update BillingStudent
+							set ErrorMessage = 'No Banner Attribute Set for this Student'
+							where billingStudentId = <cfqueryparam value=#local.billingstudentid#>
+						</cfquery>
+					</cfif>
+				</cfif>
+
 				<cfcatch type="any">
 					<cfset appObj.logDump(label="contactRow", value=arguments.contactRow) >
 					<cfset appObj.logEntry(value = DateFormat(arguments.billingStartDate,'yyyy-mm-dd')) >
@@ -576,6 +645,11 @@
 		<cfargument name="billingEndDate" type="date" required="true">
 		<cfargument name="termDropDate"type="date" required="true">
 		<cfargument name="bannerGNumber" default="" required="true">
+
+		<!--- debug --->
+		<cfset appObj.logEntry(value="FUNCTION createBillingStudent #Now()#", level=5) >
+		<cfset appObj.logDump(label="arguments", value=arguments, level=5) >
+
 		<cfset setUpBilling(termBeginDate = arguments.termBeginDate
 							,term = arguments.term
 							,billingStartDate = arguments.billingStartDate

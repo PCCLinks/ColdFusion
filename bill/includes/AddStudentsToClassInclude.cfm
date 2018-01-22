@@ -20,7 +20,7 @@
 		$.ajax({
             type: 'post',
             url: 'programBilling.cfc?method=addStudentToClass',
-            data: {billingStudentId: billingStudentID, crn: <cfoutput>#url.crn#</cfoutput>, billingStudentItemId:billingStudentItemId, isAjax:'true'},
+            data: {billingStudentId: billingStudentID, crn: '<cfoutput>#url.crn#</cfoutput>', billingStudentItemId:billingStudentItemId, isAjax:'true'},
             datatype:'json',
             success: function(billingStudentItemID){
             	$('#' + billingStudentID).parent().html('<a href="javascript:removeItem(' + billingStudentItemID + ', billingStudentId=' + billingStudentID + ');" id=' + billingStudentID + '>Remove Entry</a>');

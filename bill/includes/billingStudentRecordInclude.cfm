@@ -15,6 +15,7 @@
 <cfset readonly = false>
 <cfif BillingStatus EQ 'BILLED'><cfset readonly = true></cfif>
 
+
 <!---
 
 ARCHITECTURE
@@ -23,7 +24,6 @@ The billingStudentTabInclude.cfm calls this page multiple times, resulting in mu
 on a single page
 
 --->
-
 <form id="frm#Variables.billingStudentID#" action='javascript:saveValues("frm#Variables.billingStudentID#");' method="post">
 	<input type="hidden" id="billingStudentId#billingStudentId#" name="billingStudentId" value="#billingStudentId#">
 	<cfif qryBillingStudentRecord.program DOES NOT CONTAIN 'attendance'>
@@ -31,7 +31,7 @@ on a single page
 	<div class="callout">
 		<div class="row">
 			<div class="small-6 columns">
-				Billed Credits
+				<b>Billed Credits</b>
 				<label>Generated:&nbsp;&nbsp;#NumberFormat(generatedBilledUnits,'_._')#</label>
 				<label>Corrected:&nbsp;&nbsp;&nbsp;
 					<input style="max-width:25%;" name="correctedBilledUnits" id="correctedBilledUnits#billingStudentId#" value="#correctedBilledUnits#"
@@ -42,7 +42,7 @@ on a single page
 				<label>Final Billed:&nbsp;#NumberFormat(finalBilledUnits,'_._')#</label>
 			</div>
 			<div class="small-6 columns">
-				Overage Credits
+				<b>Overage Credits</b>
 				<label>Generated:&nbsp;&nbsp;#NumberFormat(generatedOverageUnits,'_._')#</label>
 				<label>Corrected:&nbsp;&nbsp;&nbsp;
 					<input style="max-width:25%;" name="correctedOverageUnits" id="correctedOverageUnits#billingStudentId#" value="#correctedOverageUnits#"
@@ -59,7 +59,7 @@ on a single page
 	<div class="callout">
 		<div class="row">
 			<div class="small-6 columns">
-				Billed Amount
+				<b>Billed Amount</b>
 				<label>Generated:&nbsp;&nbsp;
 					<input style="max-width:25%;" id="generatedBilledAmount#billingStudentId#" name="generatedBilledAmount" value="#NumberFormat(generatedBilledAmount,'_._')#" readonly></label>
 				<label>Corrected:&nbsp;&nbsp;&nbsp;
@@ -71,7 +71,7 @@ on a single page
 				<label>Final Billed:&nbsp;#NumberFormat(finalBilledAmount,'_._')#</label>
 			</div>
 			<div class="small-6 columns">
-				Overage Amount
+				<b>Overage Amount</b>
 				<label>Generated:&nbsp;&nbsp;#NumberFormat(generatedOverageAmount,'_._')#</label>
 				<label>Corrected:&nbsp;&nbsp;&nbsp;
 					<input style="max-width:25%;" name="correctedOverageAmount" id="correctedOverageAmount#billingStudentId#" value="#correctedOverageAmount#"
@@ -135,20 +135,18 @@ on a single page
 	<!-- EXIT STATUS -->
 	<div class="callout">
 		<div class="row">
-			<div class="small-12 columns">
+			<div class="small-4 columns">
 				<label>Exit Date:
-					<input style="max-width:50%" id="exitDate#billingStudentId#" name="exitDate" value="#DateFormat(exitDate,'mm/dd/yy')#"
+					<input style="max-width:50%" id="exitDate#billingStudentId#" name="exitDate" value="#DateFormat(exitDate,'mm/dd/yyyy')#"
 						onChange='javascript:saveValues("frm#billingStudentId#")' class="fdatepicker"
 					>
 				</label>
 			</div>
-		</div>
-		<div class="row">
-			<div class="small-12 columns">
+			<div class="small-8 columns">
 				<label>Exit Reason:
 				<select name="billingStudentExitReasonCode" id="billingStudentExitReasonCode#billingStudentId#" style="max-width:85%"
-						onInput='javascript:saveValues("frm#billingStudentId#")'>
-					<option disabled selected value="" >
+						onChange='javascript:saveValues("frm#billingStudentId#")'>
+					<option  selected value="" >
 						--Select Exit Reason--
 					</option>
 					<cfloop query="exitReasons">
@@ -190,6 +188,19 @@ on a single page
 
 </cfoutput>
 
+<script>
+$(document).ready(function(){
+	$('.fdatepicker').fdatepicker({
+		format: 'mm/dd/yyyy',
+		disableDblClickSelection: true,
+		leftArrow:'<<',
+		rightArrow:'>>',
+		closeIcon:'X',
+		closeButton: true
+	});
+})
+
+</script>
 
 
 

@@ -44,7 +44,7 @@
 			<tr>
 				<td colspan="2" class="no-border" style="text-align:center; font-size:12px">
 					<h4>Monthly Attendance And Days Enrolled - Public School Days</h4>
-					<cfoutput><b>All Students at #url.Program# between #data.BillingStartDate# and #data.BillingEndDate#</b></cfoutput>
+					<cfoutput><b>All Students at #url.Program# between #data.ReportStartDate# and #data.ReportEndDate#</b></cfoutput>
 				</td>
 			</tr>
 		</table>
@@ -103,7 +103,7 @@
      } //end recalculate button
 
 	function goToDetail(billingStudentId){
-		window.open('programStudentDetail.cfm?billingStudentId=' + billingStudentId + '&showNext=true');
+		window.open('programStudentDetail.cfm?billingStudentId=' + billingStudentId + '&showNext=true#Billing');
 	}
 
 	</script>

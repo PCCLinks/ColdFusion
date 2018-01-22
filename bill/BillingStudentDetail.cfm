@@ -11,12 +11,11 @@
 <cfinvoke component="ProgramBilling" method="getBillingStudentForYear"  returnvariable="qryBillingStudentEntries">
 	<cfinvokeargument name="billingStudentId" value="#url.billingStudentId#">
 </cfinvoke>
-
 <!--- assuming sorted by billingDate desc --->
 <cfquery dbtype="query" name="qryStudent">
 	select *
 	from qryBillingStudentEntries
-	where billingStudentId = <cfqueryparam value=#qryBillingStudentEntries.billingStudentId#>
+	where billingStudentId = qryBillingStudentEntries.billingStudentId
 </cfquery>
 
 
@@ -33,7 +32,6 @@
 	</div>
 </div>
 </cfif>
-
 
 <!-- Header Tabs -->
 <ul class="tabs" data-tabs id="header-tabs" >
@@ -53,7 +51,7 @@
 	<cfquery dbtype="query" name="qryOtherBilling">
 		select *
 		from qryBillingStudentEntries
-		where billingStudentId <> <cfqueryparam value=#qryStudent.billingStudentId# >
+		where billingStudentId <> #qryStudent.billingStudentId#
 		order by billingStartDate desc
 	</cfquery>
 
@@ -70,7 +68,7 @@
 <div class="tabs-content" data-tabs-content="header-tabs" style="margin-bottom:25px">
 	<!-- current term container -->
 	<div class= "tabs-panel is-active" id="<cfoutput>#currentKey#</cfoutput>">
-		<cfmodule template="includes/programStudentHeaderInclude.cfm"
+		<cfmodule template="includes/programStudentCurrentHeaderInclude.cfm"
 			qryBillingStudentEntries = #qryBillingStudentEntries#
 			billingStudentId = #qryStudent.billingStudentId#>
 	</div>
@@ -79,7 +77,7 @@
 	<!-- Previous Term Content Container -->
 	<cfoutput query="qryOtherBilling">
 	<div class= "tabs-panel" id="#billingStudentId#H">
-		<cfmodule template="includes/programStudentHeaderInclude.cfm"
+		<cfmodule template="includes/programStudentCurrentHeaderInclude.cfm"
 			qryBillingStudentEntries = #qryBillingStudentEntries#
 			billingStudentId = #qryOtherBilling.billingStudentId#>
 	</div> <!-- end tab content -->
@@ -88,52 +86,6 @@
 </div> <!-- end total tab content -->
 
 
-<!-- Class vs Billing Header Tabs -->
-<ul class="tabs" data-tabs id="billingclassheader-tabs" data-deep-link="true">
-	<li class="tabs-title is-active">
-		<a href="#Classes" aria-selected="true">CLASSES</a>
-	</li>
-	<li class="tabs-title">
-		<a href="#Billing">BILLING</a>
-	</li>
-</ul>
-
-<!-- Class vs Billing Header Content Container -->
-<div class="tabs-content" data-tabs-content="billingclassheader-tabs" >
-	<!-- class content container -->
-	<div class= "tabs-panel is-active" id="Classes">
-		<!-- begin class information -->
-		<div class="row">
-			<!-- lefthand column -->
-			<div class="small-6 columns">
-				<!-- Billed Classes  -->
-				<div class="row" style="margin-bottom:50px">
-					<cfmodule template="includes/billedClassesInclude.cfm" billingStudentId="#url.billingStudentId#">
-				</div> <!-- end billed classes -->
-			</div> <!-- end column -->
-
-			<!-- blank column -->
-			<div class="small-1 columns"></div>
-
-			<!-- righthand column -->
-			<div class="small-5 columns">
-			<!-- past classes -->
-			<div class="row">
-				<cfmodule template="includes/pastClassesInclude.cfm" pidm="#qryStudent.pidm#" term="#qryStudent.Term#" contactId="#qryStudent.contactId#">
-			</div>
-			</div> <!-- end past classes -->
-
-		</div> <!-- end class information -->
-	</div> <!-- end class content container -->
-
-	<!-- billing content container -->
-	<div class= "tabs-panel" id="Billing">
-		<!-- Billing Adjustments -->
-		<cfmodule template="includes/billingStudentTabInclude.cfm"
-			data = "#qryBillingStudentEntries#"
-			selectedBillingStudentId = "#selectedBillingStudentId#">
-	</div> <!-- end billing content container -->
-</div> <!-- End Class vs Billing Header Content Container -->
 
 
 <cfsavecontent variable="pcc_scripts">
@@ -154,15 +106,6 @@
 			bannerGNumber = setNextBillingStudentId(0);
 			window.location.href = 'programStudentDetail.cfm?billingStudentId=' + billingStudentId + '&showNext=true';
 		});
-
-		 $('#header-tabs').on('change.zf.tabs', function() {
-		      var tabId = $('div[data-tabs-content="'+$(this).attr('id')+'"]').find('.tabs-panel.is-active').attr('id');
-      		  $('#billing-tabs').foundation('selectTab', $('#'+tabId.replace('H','B')), false);
-  		 });
-  		  $('#billing-tabs').on('change.zf.tabs', function() {
-		      var tabId = $('div[data-tabs-content="'+$(this).attr('id')+'"]').find('.tabs-panel.is-active').attr('id');
-    		  $('#header-tabs').foundation('selectTab', $('#'+tabId.replace('B','H')), false);
-  		 });
 
 	});
 

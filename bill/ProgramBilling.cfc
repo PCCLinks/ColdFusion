@@ -15,43 +15,54 @@
 	</cffunction>
 
 
-	<cffunction name="getProgramStudent" returntype="query" access="remote">
+	<cffunction name="getBillingStudentForYear" returntype="query" access="remote">
 		<cfargument name="billingStudentId" required="true">
+		<cfquery name="qryInfo">
+			select contactId, term
+			from billingStudent
+			where billingStudentId = <cfqueryparam value="#arguments.billingStudentId#">
+		</cfquery>
 		<!--- main query --->
 		<cfquery name="data" >
 			SELECT res.rsName coach
 				,bs.BillingStudentId
-				,c.bannerGNumber
+				,bs.bannerGNumber
 				,bs.PIDM
-				,lastname
 				,schooldistrict
-				,c.contactId
+				,bs.contactId
 				,Date_Format(bs.enrolledDate, '%m/%d/%Y') EnrolledDate
 				,Date_Format(bs.exitDate, '%m/%d/%Y') ExitDate
 				,bs.billingstatus
 				,bs.Program
-				,c.firstname
-				,c.lastname
+				,bsp.firstname
+				,bsp.lastname
 				,bs.billingStartDate
 				,bs.ErrorMessage
 				,bs.term
 				,bs.includeFlag
 				,bs.reviewWithCoachFlag
 				,bs.billingNotes
-			FROM contact c
-				JOIN billingStudent bs on c.contactid = bs.contactID
+				,bs.reviewNotes
+			FROM billingStudent bs
+				JOIN billingStudentProfile bsp on bs.contactId = bsp.contactId
  				JOIN keySchoolDistrict sd on bs.districtid = sd.keyschooldistrictid
 				JOIN (SELECT contactID, max(statusID) statusID
 		   			  FROM status
            			  WHERE keyStatusID = 6
           			  GROUP BY contactID) coachLastStatus
-			    	ON coachLastStatus.contactID = c.contactID
+			    	ON coachLastStatus.contactID = bs.contactID
 				JOIN (SELECT sres.statusID, res.rsName
 		  			  FROM statusResourceSpecialist sres
 						JOIN keyResourceSpecialist res
 							ON sres.keyResourceSpecialistID = res.keyResourceSpecialistID) res
 					ON coachLastStatus.statusID = res.statusID
-			WHERE bs.billingStudentId = <cfqueryparam value="#arguments.billingStudentId#">
+			WHERE bs.contactId = <cfqueryparam value="#qryInfo.contactId#">
+				and bs.term in (select term from bannerCalendar
+									where ProgramYear = (select ProgramYear
+															from bannerCalendar
+															where term = <cfqueryparam value="#qryInfo.term#">
+															))
+			ORDER BY BillingStartDate desc
 		</cfquery>
 		<cfreturn data>
 	</cffunction>
@@ -80,54 +91,133 @@
 
 	<cffunction name="getProgramStudentList" returntype="query" returnformat="json" access="remote">
 		<!--- arguments --->
-		<cfargument name="program" type="string" required="true">
-		<cfargument name="term" required="true">
+		<cfargument name="program" type="string" default="">
+		<cfargument name="programYear" type="string" required="true">
 		<cfquery name="data" >
 			SELECT res.rsName coach
-				,c.bannerGNumber
-				,c.firstname
-				,c.lastname
+				,bs.bannerGNumber
+				,bsp.firstname
+				,bsp.lastname
 				,schooldistrict
 				,Date_Format(bs.enrolledDate, '%m/%d/%Y') EnrolledDate
 				,Date_Format(bs.exitDate, '%m/%d/%Y') ExitDate
 				,bs.Program
-				,bs.term
-    			,sum(COALESCE(bsYearly.FinalBilledUnits, bsYearly.CorrectedBilledUnits, bsYearly.GeneratedBilledUnits,0)) FYTotalNoOfCredits
-				,COALESCE(bs.FinalBilledUnits, bs.CorrectedBilledUnits, bs.GeneratedBilledUnits,0) CurrentTermNoOfCredits
-				,bs.billingstatus
+				,bs.term MaxTerm
+				,IFNULL(bsi.credits, 0) CurrentTermNoOfCredits
+   				,IFNULL(bsiPrev.credits,0) PrevTermNoOfCredits
+				,bs.billingstatus LatestStatus
 				,bs.BillingStudentId
-			FROM contact c
-				JOIN billingStudent bs on c.contactid = bs.contactID
-					and bs.term = <cfqueryparam value="#arguments.term#">
-				join billingStudent bsYearly on bsYearly.contactId = c.contactId
-    			JOIN bannerCalendar on bsYearly.term = bannerCalendar.Term
-					and bannerCalendar.ProgramYear = (select ProgramYear from bannerCalendar where term = <cfqueryparam value="#arguments.term#">)
-				JOIN keySchoolDistrict sd on bs.districtid = sd.keyschooldistrictid
+			FROM billingStudent bs
+				left outer join (select billingStudentId, sum(Credits) credits
+						from billingStudentItem
+                        group by billingStudentId
+					) bsi
+					on bs.BillingStudentID = bsi.BillingStudentID
+				join billingStudentProfile bsp on bs.contactId = bsp.contactId
+				join bannerCalendar cal on bs.term = cal.Term
+                left outer join bannerCalendar calPrevTerm on cal.ProgramYear = calPrevTerm.ProgramYear
+					and calPrevTerm.ProgramQuarter = cal.ProgramQuarter - 1
+                left outer join billingStudent bsPrevTerm on bsPrevTerm.contactId = bs.contactId
+					and bsPrevTerm.billingStartDate = calPrevTerm.TermBeginDate
+				left outer join (select billingStudentId, sum(Credits) credits
+						from billingStudentItem
+                        group by billingStudentId
+					) bsiPrev
+					on bsiPrev.BillingStudentID = bsPrevTerm.BillingStudentID
+ 				JOIN keySchoolDistrict sd on bs.districtid = sd.keyschooldistrictid
 				JOIN (SELECT contactID, max(statusID) statusID
 		   			  FROM status
            			  WHERE keyStatusID = 6
           			  GROUP BY contactID) coachLastStatus
-			    	ON coachLastStatus.contactID = c.contactID
+			    	ON coachLastStatus.contactID = bs.contactID
 				JOIN (SELECT sres.statusID, res.rsName
 		  			  FROM statusResourceSpecialist sres
 						JOIN keyResourceSpecialist res
 							ON sres.keyResourceSpecialistID = res.keyResourceSpecialistID) res
 					ON coachLastStatus.statusID = res.statusID
-		<cfif len(arguments.program) GT 0>
-			WHERE
-			<cfif arguments.program EQ 'Ytc'>
-				bs.program like 'YtC%'
-			<cfelse>
-				bs.program = <cfqueryparam value="#arguments.program#">
-			 </cfif>
-		</cfif>
-			GROUP BY res.rsName, c.bannerGNumber, schooldistrict, bs.enrolleddate, bs.exitdate, bs.program, bs.billingstatus, bs.billingStudentId
-					,COALESCE(bs.FinalBilledUnits, bs.CorrectedBilledUnits, bs.GeneratedBilledUnits,0)
+			WHERE bs.billingStudentId in (
+				SELECT MAX(BillingStudentId) billingStudentId
+				FROM billingStudent
+				<cfif len(arguments.program) GT 0>
+				WHERE
+					<cfif arguments.program EQ 'YtC'>
+						bs.program like 'YtC%'
+					<cfelse>
+						bs.program = <cfqueryparam value="#arguments.program#">
+					 </cfif>
+				</cfif>
+				GROUP BY ContactId, Program
+			)
 		</cfquery>
 
 		<cfreturn data>
 	</cffunction>
-
+	<cffunction name="getProgramReviewList" returntype="query" returnformat="json" access="remote">
+		<!--- arguments --->
+		<cfargument name="program" type="string" default="">
+		<cfargument name="term" required="true">
+		<cfquery name="data" >
+			SELECT res.rsName coach
+				,bs.bannerGNumber
+				,bsp.firstname
+				,bsp.lastname
+				,schooldistrict
+				,bs.Program
+				,CASE WHEN bs.reviewWithCoachFlag = 1 THEN 'Y' ELSE 'N' END ReviewWithCoach
+				,bs.ReviewNotes
+				,bs.BillingStudentId
+			FROM billingStudent bs
+				join billingStudentProfile bsp on bs.contactId = bsp.contactId
+				JOIN keySchoolDistrict sd on bs.districtid = sd.keyschooldistrictid
+				JOIN (SELECT contactID, max(statusID) statusID
+		   			  FROM status
+           			  WHERE keyStatusID = 6
+          			  GROUP BY contactID) coachLastStatus
+			    	ON coachLastStatus.contactID = bs.contactID
+				JOIN (SELECT sres.statusID, res.rsName
+		  			  FROM statusResourceSpecialist sres
+						JOIN keyResourceSpecialist res
+							ON sres.keyResourceSpecialistID = res.keyResourceSpecialistID) res
+					ON coachLastStatus.statusID = res.statusID
+			WHERE bs.term = <cfqueryparam value="#arguments.term#">
+				<cfif len(arguments.program) GT 0>
+				and
+					<cfif arguments.program EQ 'YtC'>
+						bs.program like 'YtC%'
+					<cfelse>
+						bs.program = <cfqueryparam value="#arguments.program#">
+					 </cfif>
+				</cfif>
+		</cfquery>
+		<cfreturn data>
+	</cffunction>
+	<cffunction name="getTranscriptStudentList" returntype="query" returnformat="json" access="remote">
+		<cfargument name="term" required = "true">
+		<cfquery name="data" >
+			SELECT bsp.firstname
+				,bsp.lastname
+				,bs.bannerGNumber
+				,schooldistrict
+				,program
+				,res.rsName coach
+			FROM billingStudent bs
+				JOIN billingStudentProfile bsp on bs.contactId = bsp.contactId
+				JOIN keySchoolDistrict sd on bs.districtid = sd.keyschooldistrictid
+				JOIN (SELECT contactID, max(statusID) statusID
+		   			  FROM status
+           			  WHERE keyStatusID = 6
+          			  GROUP BY contactID) coachLastStatus
+			    	ON coachLastStatus.contactID = bs.contactID
+				JOIN (SELECT sres.statusID, res.rsName
+		  			  FROM statusResourceSpecialist sres
+						JOIN keyResourceSpecialist res
+							ON sres.keyResourceSpecialistID = res.keyResourceSpecialistID) res
+					ON coachLastStatus.statusID = res.statusID
+			WHERE bs.term = <cfqueryparam value="#arguments.term#">
+				and program not like '%attendance%'
+		</cfquery>
+		<cfreturn data>
+	</cffunction>
 
 	<cffunction name="groupBySchoolDistrictAndProgram" returntype="query" access="remote">
 		<cfargument name="term" required="yes">
@@ -171,7 +261,7 @@
 		<cfreturn data>
 	</cffunction>
 
-
+<!---
 	<cffunction name="studentenrollment" returntype="Query">
 		<cfargument name="program" type="string" default="">
 		<cfargument name="bannerGNumber" type="string" default="">
@@ -239,8 +329,8 @@
 		<!--- <cfdump var="#r#" format="text"> --->
 		<cfreturn studentbillingData>
 	</cffunction>
-
-
+--->
+<!---
 	<cffunction name="selectstudents" access="remote" returntype="struct">
 		<cfargument name="page" type="numeric" required="yes">
 		<cfargument name="pageSize" type="numeric" required="yes">
@@ -285,7 +375,7 @@
 		</cfloop>
 		<cfreturn QueryConvertForGrid(studentsWithClassesInTerm,  ARGUMENTS.page, ARGUMENTS.pageSize)>
 	</cffunction>
-
+--->
 
 	<cffunction name="selectstudent" access="remote" returntype="query">
 		<cfargument name="billingstudentid" type="string" required="no" default="">
@@ -332,7 +422,7 @@
 		<!--- main query --->
 		<cfquery name="data">
 			select bs.billingStudentId, bs.Program, bs.Term, bs.billingStatus
-				,bsi.billingStudentItemId, bsi.TakenPreviousTerm, bsi.IncludeFlag, bsi.CRN, bsi.Subj, bsi.Title, bsi.Credits
+				,bsi.billingStudentItemId, bsi.TakenPreviousTerm, bsi.IncludeFlag, bsi.CRN, bsi.Subj, bsi.CRSE, bsi.Title, bsi.Credits
 				,sum(bsiAttend.Attendance) AttendanceToDate
 			from billingStudentItem bsi
 				join billingStudent bs on bsi.BillingStudentId=bs.BillingStudentId
@@ -354,10 +444,6 @@
 		<cfargument name="pidm" required="yes">
 		<cfargument name="term" required="yes">
 		<cfargument name="contactId" required="yes">
-		<cfset debug="false">
-		<cfif debug>
-			<cfdump var="#arguments.row#" />
-		</cfif>
 		<cfquery name="bannerclasses" datasource="bannerpcclinks">
 			select distinct PIDM, STU_ID, TERM, CRN, LEVL, SUBJ, CRSE, TITLE, CREDITS, GRADE, PASSED
 			from swvlinks_course
@@ -383,11 +469,10 @@
 			from combined
 			group by TERM, CRN, SUBJ, CRSE, TITLE, CREDITS
 		</cfquery>
-		<cfif debug>
-			<cfdump var="#bannerclasses#" />
-		</cfif>
 		<cfreturn final>
 	</cffunction>
+
+
 
 	<!---<cffunction name ="getBannerClasses" access="remote" returnType="struct">
 		<cfargument name="page" type="numeric" required="no" default=1>
@@ -415,7 +500,9 @@
 		<cfargument name="gridchanged" type="struct" required="yes">
 		<cfquery datasource="pcclinks">
 		UPDATE billingstudent
-		SET notes = '#ARGUMENTS.gridchanged["notes"]#'
+		SET notes = '#ARGUMENTS.gridchanged["notes"]#',
+				lastUpdatedBy=<cfqueryparam value=#Session.username#>,
+				dateLastUpdated=current_timestamp
 		WHERE billingstudentid = <cfqueryparam value="#ARGUMENTS.gridrow.billingstudentid#">
 		</cfquery>
 	</cffunction>
@@ -426,7 +513,9 @@
 		<cfargument name="includeflag" required="yes">
 		<cfquery datasource="pcclinks">
 			UPDATE billingStudent
-			SET IncludeFlag = '#ARGUMENTS.includeflag#'
+			SET IncludeFlag = '#ARGUMENTS.includeflag#',
+				lastUpdatedBy=<cfqueryparam value=#Session.username#>,
+				dateLastUpdated=current_timestamp
 			WHERE billingstudentid = <cfqueryparam value="#ARGUMENTS.billingstudentid#">
 		</cfquery>
 	</cffunction>
@@ -437,7 +526,9 @@
 		<cfargument name="includeflag" required="yes">
 		<cfquery>
 			UPDATE billingStudentItem
-			SET IncludeFlag = '#ARGUMENTS.includeflag#'
+			SET IncludeFlag = '#ARGUMENTS.includeflag#',
+				lastUpdatedBy=<cfqueryparam value=#Session.username#>,
+				dateLastUpdated=current_timestamp
 			WHERE billingstudentitemid = <cfqueryparam value="#ARGUMENTS.billingstudentitemid#">
 		</cfquery>
 	</cffunction>
@@ -448,7 +539,9 @@
 		<cfargument name="program" required="yes">
 		<cfquery>
 			UPDATE billingStudent
-			SET Program = '#ARGUMENTS.program#'
+			SET Program = '#ARGUMENTS.program#',
+				lastUpdatedBy=<cfqueryparam value=#Session.username#>,
+				dateLastUpdated=current_timestamp
 			WHERE billingstudentid = <cfqueryparam value="#ARGUMENTS.billingstudentid#">
 		</cfquery>
 	</cffunction>
@@ -458,7 +551,9 @@
 		<cfargument name="exitDate" required="yes">
 		<cfquery>
 			UPDATE billingStudent
-			SET exitDate = <cfif arguments.exitDate EQ "">NULL<cfelse><cfqueryparam value="#DateFormat(arguments.exitDate,'yyyy-mm-dd')#"></cfif>
+			SET exitDate = <cfif arguments.exitDate EQ "">NULL<cfelse><cfqueryparam value="#DateFormat(arguments.exitDate,'yyyy-mm-dd')#"></cfif>,
+				lastUpdatedBy=<cfqueryparam value=#Session.username#>,
+				dateLastUpdated=current_timestamp
 			WHERE billingstudentid = <cfqueryparam value="#ARGUMENTS.billingstudentid#">
 		</cfquery>
 	</cffunction>
@@ -468,13 +563,15 @@
 		<cfargument name="billingstudentid" required="yes">
 		<cfargument name="billingReviewed" required="yes">
 		<cfif arguments.billingReviewed EQ true>
-			<cfset billingStatus = 'COMPLETE'>
+			<cfset billingStatus = 'REVIEWED'>
 		<cfelse>
 			<cfset billingStatus = 'IN PROGRESS'>
 		</cfif>
 		<cfquery>
 			UPDATE billingStudent
-			SET billingStatus = '#billingStatus#'
+			SET billingStatus = '#billingStatus#',
+				lastUpdatedBy=<cfqueryparam value=#Session.username#>,
+				dateLastUpdated=current_timestamp
 			WHERE billingstudentid = <cfqueryparam value="#ARGUMENTS.billingstudentid#">
 		</cfquery>
 	</cffunction>
@@ -484,7 +581,9 @@
 		<cfargument name="billingNotes" required="yes">
 		<cfquery>
 			UPDATE billingStudent
-			SET billingNotes = '#arguments.billingNotes#'
+			SET billingNotes = '#arguments.billingNotes#',
+				lastUpdatedBy=<cfqueryparam value=#Session.username#>,
+				dateLastUpdated=current_timestamp
 			WHERE billingstudentid = <cfqueryparam value="#ARGUMENTS.billingstudentid#">
 		</cfquery>
 	</cffunction>
@@ -494,7 +593,9 @@
 		<cfargument name="reviewWithCoachFlag" required="yes">
 		<cfquery>
 			UPDATE billingStudent
-			SET reviewWithCoachFlag = '#arguments.reviewWithCoachFlag#'
+			SET reviewWithCoachFlag = '#arguments.reviewWithCoachFlag#',
+				lastUpdatedBy=<cfqueryparam value=#Session.username#>,
+				dateLastUpdated=current_timestamp
 			WHERE billingstudentid = <cfqueryparam value="#ARGUMENTS.billingstudentid#">
 		</cfquery>
 	</cffunction>
@@ -504,11 +605,23 @@
 		<cfargument name="includeFlag" required="yes">
 		<cfquery>
 			UPDATE billingStudent
-			SET includeFlag = '#arguments.includeFlag#'
+			SET includeFlag = '#arguments.includeFlag#',
+				lastUpdatedBy=<cfqueryparam value=#Session.username#>,
+				dateLastUpdated=current_timestamp
 			WHERE billingstudentid = <cfqueryparam value="#ARGUMENTS.billingstudentid#">
 		</cfquery>
 	</cffunction>
-
+	<cffunction name="updateStudentReviewNotes" access="remote">
+		<cfargument name="billingstudentid" required="yes">
+		<cfargument name="reviewNotes" required="yes">
+		<cfquery>
+			UPDATE billingStudent
+			SET reviewNotes = '#arguments.reviewNotes#',
+				lastUpdatedBy=<cfqueryparam value=#Session.username#>,
+				dateLastUpdated=current_timestamp
+			WHERE billingstudentid = <cfqueryparam value="#ARGUMENTS.billingstudentid#">
+		</cfquery>
+	</cffunction>
 
 	<cffunction name="storesessiondata" access="remote" output="false">
 		<cfset requestBody = toString( getHttpRequestData().content ) />
@@ -593,7 +706,7 @@
 		<cfquery name="data">
 			SELECT bs.Program, sd.schoolDistrict, bs.term
 				,SUM(CASE WHEN bs.BillingStatus = 'IN PROGRESS' THEN 1 ELSE 0 END) StudentsStillBeingReviewed
-				,SUM(CASE WHEN bs.BillingStatus != 'COMPLETED' THEN 1 ELSE 0 END) StudentsReviewed
+				,SUM(CASE WHEN bs.BillingStatus = 'REVIEWED' THEN 1 ELSE 0 END) StudentsReviewed
 			from billingStudent bs
 			    join keySchoolDistrict sd on bs.DistrictID = sd.keySchoolDistrictID
 			where bs.term = (select max(term) from billingStudent)
@@ -602,7 +715,7 @@
 		<cfreturn data>
 	</cffunction>
 
-
+<!---
 	<cffunction name="getProgramDistrictReconcile" access="remote" returntype="query">
 		<cfargument name="term">
 		<cfargument name="districtID">
@@ -636,8 +749,8 @@
 		</cfquery>
 		<cfreturn data>
 	</cffunction>
-
-
+--->
+<!---
 	<cffunction name="getProgramDistrictReconcileBackup" access="remote" returntype="query">
 		<cfargument name="term">
 		<cfargument name="schooldistrict">
@@ -668,7 +781,7 @@
 		</cfquery>
 		<cfreturn data>
 	</cffunction>
-
+--->
 
 
 
@@ -785,19 +898,19 @@
 		<cfargument name="billingStartDate" type="date" required="true">
 		<cfargument name="crn" required="true">
 		<cfquery name="data" >
-			select c.firstName, c.lastName, c.bannerGNumber
+			select bsp.firstName, bsp.lastName, bs.bannerGNumber
 				,crn, crse, subj, title
 				,bsi.attendance, bsi.billingStudentItemId
 				,billingStartDate, bsi.MaxPossibleAttendance
 			from billingStudent bs
+				JOIN billingStudentProfile bsp on bs.contactId = bsp.contactId
 				join billingStudentItem bsi on bs.billingStudentId = bsi.billingStudentId
-	    		join contact c on bs.contactId = c.contactId
 	    		join bannerCalendar cal1 on <cfqueryparam value="#DateFormat(arguments.billingStartDate,'yyyy-mm-dd')#"> between cal1.TermBeginDate and cal1.TermEndDate
 	    		join bannerCalendar cal2 on bs.term = cal2.term and cal2.ProgramYear = cal1.ProgramYear
-			where bsi.includeFlag = 1
-				and bsi.crn = <cfqueryparam value="#arguments.crn#">
+			where bsi.crn = <cfqueryparam value="#arguments.crn#">
 				and bs.billingStartDate = <cfqueryparam value="#DateFormat(arguments.billingStartDate,'yyyy-mm-dd')#">
-			order by c.lastname, c.firstname
+				and bsi.includeFlag = 1
+			order by bsp.lastname, bsp.firstname
 		</cfquery>
 		<cfreturn data>
 	</cffunction>
@@ -807,9 +920,9 @@
 		<cfargument name="billingStartDate" type="date" required="true">
 		<cfargument name="crn" required="true">
 		<cfquery name="data" >
-			select distinct c.firstname, c.lastname, c.bannerGNumber, bs.billingStudentId, ifnull(bsi.billingStudentItemId,0) billingStudentItemId, case when isnull(bsi.billingStudentItemID) or bsi.includeFlag = 0 then 0 else 1 end includeFlag
-			from contact c
-				join billingStudent bs on c.contactID = bs.contactID
+			select distinct bsp.firstname, bsp.lastname, bs.bannerGNumber, bs.billingStudentId, ifnull(bsi.billingStudentItemId,0) billingStudentItemId, case when isnull(bsi.billingStudentItemID) or bsi.includeFlag = 0 then 0 else 1 end includeFlag
+			from billingStudent bs
+				JOIN billingStudentProfile bsp on bs.contactId = bsp.contactId
 				left outer join billingStudentItem bsi on bs.billingStudentId = bsi.billingStudentId
 					and bsi.crn = <cfqueryparam value="#arguments.crn#">
 			where bs.billingStartDate = <cfqueryparam value="#DateFormat(arguments.billingStartDate,'yyyy-mm-dd')#">
@@ -822,9 +935,9 @@
 	<cffunction name="getStudentsForBillingStartDate" access="remote" returnFormat="json">
 		<cfargument name="billingStartDate" type="date" required="true">
 		<cfquery name="data" >
-			select distinct c.firstname, c.lastname, c.bannerGNumber, bs.billingStudentId, 0 billingStudentItemId, 0 includeFlag
-			from contact c
-				join billingStudent bs on c.contactID = bs.contactID
+			select distinct bsp.firstname, bsp.lastname, bs.bannerGNumber, bs.billingStudentId, 0 billingStudentItemId, 0 includeFlag
+			from billingStudent bs
+				join billingStudentProfile bsp on bs.contactId = bsp.contactId
 			where bs.billingStartDate = <cfqueryparam value="#DateFormat(arguments.billingStartDate,'yyyy-mm-dd')#">
 			order by lastname, firstname
 		</cfquery>
@@ -854,10 +967,10 @@
 		<cfargument name="largePercent" required="true">
 		<cfquery name="save">
 			update billingScenario
-			set indPercent = <cfqueryparam value="#arguments.indPercent#">,
-				smallPercent = <cfqueryparam value="#arguments.smallPercent#">,
-				interPercent = <cfqueryparam value="#arguments.interPercent#">,
-				largePercent = <cfqueryparam value="#arguments.largePercent#">
+			set indPercent = <cfif len(arguments.indPercent) EQ 0>0<cfelse><cfqueryparam value="#arguments.indPercent#"></cfif>,
+				smallPercent = <cfif len(arguments.smallPercent) EQ 0>0<cfelse><cfqueryparam value="#arguments.smallPercent#"></cfif>,
+				interPercent = <cfif len(arguments.interPercent) EQ 0>0<cfelse><cfqueryparam value="#arguments.interPercent#"></cfif>,
+				largePercent = <cfif len(arguments.largePercent) EQ 0>0<cfelse><cfqueryparam value="#arguments.largePercent#"></cfif>
 			where billingScenarioName = <cfqueryparam value="#arguments.billingScenarioName#">
 		</cfquery>
 	</cffunction>
@@ -871,19 +984,27 @@
 			from billingScenarioByCourse
 			where crn = <cfqueryparam value="#arguments.crn#"> and term = <cfqueryparam value="#arguments.term#">
 		</cfquery>
-		<cfif #checkIfExists.cnt# EQ 0>
+		<cfif checkIfExists.cnt EQ 0 AND arguments.billingScenarioId NEQ "">
 			<cfquery name="doInsert" result="insertedItem">
 				insert into billingScenarioByCourse(billingScenarioId, crn, term)
 				values(<cfqueryparam value="#arguments.billingScenarioId#">, <cfqueryparam value="#arguments.crn#">, <cfqueryparam value="#arguments.term#">)
 			</cfquery>
 		<cfelse>
-			<cfquery name="doUpdate">
-				update billingScenarioByCourse
-				set billingScenarioId = <cfqueryparam value="#arguments.billingScenarioId#">,
-					crn = <cfqueryparam value="#arguments.crn#">,
-					term = <cfqueryparam value="#arguments.term#">
-				where billingScenarioByCourseId = <cfqueryparam value="#arguments.billingScenarioByCourseId#">
-			</cfquery>
+			<cfif arguments.billingScenarioId EQ "">
+				<cfquery name="doDelete">
+					delete from billingScenarioByCourse
+					where crn = <cfqueryparam value="#arguments.crn#">
+						and term = <cfqueryparam value="#arguments.term#">
+				</cfquery>
+			<cfelse>
+				<cfquery name="doUpdate">
+					update billingScenarioByCourse
+					set billingScenarioId = <cfqueryparam value="#arguments.billingScenarioId#">,
+						crn = <cfqueryparam value="#arguments.crn#">,
+						term = <cfqueryparam value="#arguments.term#">
+					where billingScenarioByCourseId = <cfqueryparam value="#arguments.billingScenarioByCourseId#">
+				</cfquery>
+			</cfif>
 		</cfif>
 	</cffunction>
 	<cffunction name="addStudentToClass" access="remote" returnformat="json" returntype="numeric">
@@ -1016,31 +1137,166 @@
 		<cfreturn data>
 	</cffunction>
 
-	<cffunction name="getBillingStudentForYear" access="remote" >
-		<cfargument name="contactid" required="true">
-		<cfargument name="term" required="true">
-		<cfquery name="data">
-			select billingStudentId, Term, billingStartDate, program
-			from billingStudent
-			where term in (select term from bannerCalendar where programyear = (select distinct programYear from bannerCalendar where term = <cfqueryparam value="#arguments.term#">))
-				and contactId = <cfqueryparam value="#arguments.contactid#">
-			order by term
-		</cfquery>
-		<cfreturn data>
-	</cffunction>
-
 	<cffunction name="getBillingStudentByBillingStartDate" returnformat="json" access="remote">
 		<cfargument name="billingStartDate" required="true">
 		<cfquery name="data">
-			select c.firstName, c.lastName, c.bannerGNumber, bs.Program, Date_Format(bs.exitDate,'%m/%d/%y') exitdate
+			select bsp.firstName, bsp.lastName, bs.bannerGNumber, bs.Program, Date_Format(bs.exitDate,'%m/%d/%Y') exitdate
 				,er.billingStudentExitReasonDescription, bs.billingStudentId
 			from billingStudent bs
-				join contact c on bs.contactId = c.contactId
+				JOIN billingStudentProfile bsp on bs.contactId = bsp.contactId
 				left join billingStudentExitReason er on bs.billingStudentExitReasonCode = er.billingStudentExitReasonCode
 			where billingStartDate =  <cfqueryparam value="#DateFormat(arguments.billingStartDate,'yyyy-mm-dd')#">
 		</cfquery>
 		<cfreturn data>
 	</cffunction>
 
+	<cffunction name="getExitDateList" returnformat="json" access="remote">
+		<cfargument name="programYear" default = "">
+		<cfargument name="billingStudentId" default = 0>
+
+		<cfquery name="data">
+			select bsp.firstName, bsp.lastName, bs.bannerGNumber, bs.Program
+				,Date_Format(bs.billingStartDate,'%m/%d/%Y') billingPeriod
+				,Date_Format(bs.exitDate,'%m/%d/%Y') exitDate
+				,er.billingStudentExitReasonDescription
+				,bs.billingStudentId
+			from billingStudent bs
+				JOIN billingStudentProfile bsp on bs.contactId = bsp.contactId
+				left join billingStudentExitReason er on bs.billingStudentExitReasonCode = er.billingStudentExitReasonCode
+			where bs.billingStudentID IN
+			<cfif arguments.billingStudentId EQ 0>
+				(select max(billingStudentId)
+				 from billingStudent
+				 where term in (select term from bannerCalendar where ProgramYear = <cfqueryparam value="#arguments.ProgramYear#">
+				 	and includeFlag = 1)
+				 group by contactId, program, enrolledDate)
+			<cfelse>
+				(<cfqueryparam value="#arguments.billingStudentId#">)
+			</cfif>
+		</cfquery>
+		<cfreturn data>
+	</cffunction>
+
+	<cffunction name="updateExitDates" access="remote" >
+		<cfargument name="termBeginDate" required="true">
+		<cfargument name="termEndDate" required="true">
+		<cfargument name="billingStartDate" required="true">
+		<cfargument name="billingEndDate" required="true">
+
+		<cfquery name="updateTermData">
+			update billingStudent bs
+			join  (select contactId, max(statusDate) entryDate
+				from status
+				where keyStatusID IN (2,13,14,15,16)
+					and undoneStatusID is null
+		            and statusDate <= <cfqueryparam value="#DateFormat(arguments.termEndDate,'yyyy-mm-dd')#">
+		        group by contactId
+				) entryDate
+		        on bs.contactId = entryDate.contactId
+			left outer join (select contactId, max(statusDate) exitDate
+				from status
+				where keyStatusID IN (3,12)
+					and undoneStatusID is null
+		            and statusDate <= <cfqueryparam value="#DateFormat(arguments.termEndDate,'yyyy-mm-dd')#">
+				group by contactId
+				) exitDate
+				on entryDate.contactId = exitDate.contactId
+					and (entryDate <= exitDate.exitDate OR exitDate.exitDate IS NULL)
+			set bs.ExitDate = exitDate.exitDate
+			where bs.billingStartDate = <cfqueryparam value="#DateFormat(arguments.termBeginDate,'yyyy-mm-dd')#">
+				and bs.program not like '%attendance%'
+				and bs.exitDate is null
+		</cfquery>
+
+		<cfquery name="updateAttendanceData">
+			update billingStudent bs
+			join  (select contactId, max(statusDate) entryDate
+				from status
+				where keyStatusID IN (2,13,14,15,16)
+					and undoneStatusID is null
+		            and statusDate <= <cfqueryparam value="#DateFormat(arguments.billingEndDate,'yyyy-mm-dd')#">
+		        group by contactId
+				) entryDate
+		        on bs.contactId = entryDate.contactId
+					and bs.billingStartDate = <cfqueryparam value="#DateFormat(arguments.billingStartDate,'yyyy-mm-dd')#">
+					and bs.billingEndDate = <cfqueryparam value="#DateFormat(arguments.billingEndDate,'yyyy-mm-dd')#">
+			left outer join (select contactId, max(statusDate) exitDate
+				from status
+				where keyStatusID IN (3,12)
+					and undoneStatusID is null
+		            and statusDate <= <cfqueryparam value="#DateFormat(arguments.billingEndDate,'yyyy-mm-dd')#">
+				group by contactId
+				) exitDate
+				on entryDate.contactId = exitDate.contactId
+					and (entryDate <= exitDate.exitDate OR exitDate.exitDate IS NULL)
+			set bs.ExitDate = exitDate.exitDate
+			where bs.billingStartDate = <cfqueryparam value="#DateFormat(arguments.billingStartDate,'yyyy-mm-dd')#">
+				and bs.billingEndDate = <cfqueryparam value="#DateFormat(arguments.billingEndDate,'yyyy-mm-dd')#">
+				and bs.exitDate is null
+		</cfquery>
+	</cffunction>
+
+	<cffunction name="getTranscriptTerms" access="remote" >
+		<cfargument name="bannerGNumber" required="true">
+		<cfquery name="data">
+			select distinct term, pidm, contactId
+			from billingStudent
+			where bannerGNumber = <cfqueryparam value="#arguments.bannerGNumber#">
+			order by term desc
+		</cfquery>
+		<!---><cfquery name="bannerclasses" datasource="bannerpcclinks">
+			select distinct <cfqueryparam value="#bs.contactId#"> contactId, pidm, term
+			from swvlinks_course
+			where pidm = <cfqueryparam value="#bs.pidm#">
+		</cfquery>
+		<cfquery name="data1" dbtype="query">
+			select CAST(contactId as INTEGER) contactId, CAST(pidm AS INTEGER) pidm, CAST(term as INTEGER) term
+			from bs
+			union
+			select CAST(contactId as INTEGER) contactId, CAST(pidm AS INTEGER) pidm, CAST(term as INTEGER) term
+			from bannerclasses
+		</cfquery>
+		<cfquery name="data" dbtype="query">
+			select distinct contactId, pidm, term
+			from data1
+			order by term desc
+		</cfquery>--->
+		<cfreturn data>
+	</cffunction>
+
+	<cffunction name="getBannerClassesForTerm" access="remote" returnType="query">
+		<cfargument name="pidm" required="yes">
+		<cfargument name="contactId" required="yes">
+		<cfargument name="term" required="yes">
+		<cfquery name="banner" datasource="bannerpcclinks">
+			select TERM, CRN, SUBJ, CRSE, TITLE, CREDITS, GRADE, PASSED, 'No' Billed, 0 takenPreviousTerm
+			from swvlinks_course
+			where pidm = <cfqueryparam value="#arguments.pidm#">
+				and term = <cfqueryparam value="#arguments.term#">
+		</cfquery>
+		<cfquery name="bs" >
+			select TERM, CRN, SUBJ, CRSE, TITLE, CREDITS, '' GRADE, '' PASSED
+				,case when bs.includeFlag=0 then 'No'
+						when bsi.includeFlag=0 then 'No'
+						else 'Yes' end billed
+				,takenPreviousTerm, CRN
+			from billingStudent bs
+				join billingStudentItem bsi on bs.billingStudentId = bsi.billingStudentId
+			where contactId = <cfqueryparam value="#arguments.contactId#">
+				and term = <cfqueryparam value="#arguments.term#">
+		</cfquery>
+		<cfquery name="data1" dbtype="query">
+			select CAST(TERM AS INTEGER) TERM, CRN, SUBJ, CRSE, TITLE, CREDITS, GRADE, PASSED, Billed, takenPreviousTerm
+			from banner
+			union select CAST(TERM AS INTEGER), CRN, SUBJ, CRSE, TITLE, CREDITS, GRADE, PASSED, Billed, takenPreviousTerm
+			from bs
+		</cfquery>
+		<cfquery name="data" dbtype="query">
+			select TERM, CRN, SUBJ, CRSE, TITLE, CREDITS, MAX(GRADE) Grade, MAX(PASSED) Passed, MAX(Billed) Billed, MAX(takenPreviousTerm) TakenPreviousTerm
+			from data1
+			group by TERM, CRN, SUBJ, CRSE, TITLE, CREDITS
+		</cfquery>
+		<cfreturn data>
+	</cffunction>
 
 </cfcomponent>

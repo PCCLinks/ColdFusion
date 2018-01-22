@@ -9,7 +9,7 @@
 	<div class="row">
 		<div class="small-4 medium-4 columns">
 			<label>Term:<br/>
-				<select name="term" id="term" onchange="getScenarios()"/>
+				<select name="term" id="term" onchange="getScenarios()">
 					<option disabled value="" >
 						--Select Term--
 					</option>
@@ -29,6 +29,7 @@
 			<br><input type="button" class="button" onClick="javascript:show('add class to scenario');" value="Show Class Scenarios">
 		</div>
 		<div class="small-4 medium-2 columns"></div>
+	</div>
 </div>
 <br>
 <div class= "callout display" id="addScenarioDisplay">
@@ -48,7 +49,7 @@
 	<div class="row">
 		<div class="small-3 columns">
 			<label>Scenario:<br/>
-				<select name="billingScenarioSelect" id="billingScenarioSelect" onchange="populateScenario()"/>
+				<select name="billingScenarioSelect" id="billingScenarioSelect" onchange="populateScenario()">
 					<option disabled selected value="" >
 						--Select Scenario--
 					</option>
@@ -164,7 +165,9 @@
           });
 	}
 	function enterScenario(crn,billingScenarioByCourseId){
-			var billingScenarioId = $('#' + crn.replace(" ","_") + 'Select').val();
+			//var billingScenarioId = $('#' + crn.replace(" ","_") + 'Select').val();
+			var selectName = crn.split(' ').join('_') + 'Select';
+			var billingScenarioId = $('#' + selectName).val();
 			var term = $('#term').val();
 			$.ajax({
 	            type: 'post',

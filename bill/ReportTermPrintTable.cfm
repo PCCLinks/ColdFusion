@@ -30,6 +30,12 @@
 			border-left-style:none;
 			border-right-style:none;
 		}
+		.border-no-left{
+			border-left-style:none;
+		}
+		.border-no-right{
+			border-right-style:none;
+		}
 		.no-border{
 			border-color:none;
 			border-style:none;
@@ -47,7 +53,7 @@
 
 	</style>
 
-<table id="printtable" >
+<table id="printtable" style="page-break-inside: avoid;font-size:0.8em;font-family:serif;width:100%">
 	<thead ><cfoutput>
 			<tr>
 				<th class="border-bottom-only" style="text-align:left; font-size:x-small" colspan="9">
@@ -62,6 +68,7 @@
 				<th class="no-border" style="text-align:center" colspan="19">
 					<h3 style="margin:0px">College Quarterly Credit - Equivalent Instructional Days</h3>
 					<cfoutput><b>All Students at <cfif data.Program EQ "gtc">PCC/HSC<cfelse>#data.Program#</cfif> for #data.BillingStartDate# and #data.BillingEndDate#</b></cfoutput>
+					<br><br>
 				</th>
 			</tr></cfoutput>
 		<tr id="dt-header">
@@ -78,20 +85,20 @@
 			<th class="bold-left-border border-no-top">Credits</th>
 			<th class="border-no-top">Days</th>
 			<!-- FALL -->
-			<th class="bold-left-border  border-no-top">Credits</th>
-			<th class="border-no-top">Over</th>
-			<th class="border-no-top">Days</th>
-			<th class="border-no-top">Over</th>
+			<th class="bold-left-border border-no-top border-no-right">Credits</th>
+			<th class="border-no-left border-no-top">Over</th>
+			<th class="border-no-top border-no-right">Days</th>
+			<th class="border-no-left border-no-top">Over</th>
 			<!-- WINTER -->
-			<th class="bold-left-border  border-no-top">Credits</th>
-			<th class="border-no-top">Over</th>
-			<th class="border-no-top">Days</th>
-			<th class="border-no-top">Over</th>
+			<th class="bold-left-border border-no-top border-no-right">Credits</th>
+			<th class="border-no-top border-no-left">Over</th>
+			<th class="border-no-top border-no-right">Days</th>
+			<th class="border-no-left border-no-top">Over</th>
 			<!-- SPRING -->
-			<th class="bold-left-border border-no-top">Credits</th>
+			<th class="bold-left-border border-no-top border-no-right">Credits</th>
 			<th class="border-no-top">Over</th>
-			<th class="border-no-top">Days</th>
-			<th class="border-no-top">Over</th>
+			<th class="border-no-top border-no-right">Days</th>
+			<th class="border-no-left border-no-top">Over</th>
 			<!-- ROW TOTALS -->
 			<th class="border-no-top bold-left-border">Total<br/>Credit</th>
 			<th class="border-no-top" >Max<br/>Total<br/>Credit</th>
@@ -101,29 +108,29 @@
 	</thead>
 	<tbody>
 	<cfoutput query="data">
-	    <tr>
+	    <tr style="page-break-inside: avoid;">
 	        <td style="text-align:left">
-		        <div style="white-space: nowrap;"><div><b>#LASTNAME#, #FIRSTNAME#</b></div>
+		        <div style="white-space:nowrap;padding:6px"><div><b>#LASTNAME#, #FIRSTNAME#</b></div>
 						&nbsp;&nbsp;&nbsp;#EntryDate# <cfif ExitDate NEQ "">- #ExitDate#</cfif></div>
 			</td>
 			<!-- SUMMER -->
 			<td class="bold-left-border">#NumberFormat(SummerNoOfCredits,'_._')#</td>
 			<td>#NumberFormat(SummerNoOfDays,'_._')#</td>
 			<!-- FALL -->
-			<td class="bold-left-border">#NumberFormat(FallNoOfCredits,'_._')#</td>
-			<td>#NumberFormat(FallNoOfCreditsOver,'_._')#</td>
-			<td>#NumberFormat(FallNoOfDays,'_._')#</td>
-			<td>#NumberFormat(FallNoOfDaysOver,'_._')#</td>
+			<td class="bold-left-border border-no-right">#NumberFormat(FallNoOfCredits,'_._')#</td>
+			<td class="border-no-left"><cfif FallNoOfCreditsOver NEQ 0>#NumberFormat(FallNoOfCreditsOver,'_._')#</cfif></td>
+			<td class="border-no-right">#NumberFormat(FallNoOfDays,'_._')#</td>
+			<td class="border-no-left"><cfif FallNoOfDaysOver NEQ 0>#NumberFormat(FallNoOfDaysOver,'_._')#</cfif></td>
 			<!-- WINTER -->
-			<td class="bold-left-border">#NumberFormat(WinterNoOfCredits,'_._')#</td>
-			<td>#NumberFormat(WinterNoOfCreditsOver,'_._')#</td>
-			<td>#NumberFormat(WinterNoOfDays,'_._')#</td>
-			<td>#NumberFormat(WinterNoOfDaysOver,'_._')#</td>
+			<td class="bold-left-border border-no-right">#NumberFormat(WinterNoOfCredits,'_._')#</td>
+			<td class="border-no-left"><cfif WinterNoOfCreditsOver NEQ 0>#NumberFormat(WinterNoOfCreditsOver,'_._')#</cfif></td>
+			<td class="border-no-right">#NumberFormat(WinterNoOfDays,'_._')#</td>
+			<td class="border-no-left"><cfif WinterNoOfDaysOver NEQ 0>#NumberFormat(WinterNoOfDaysOver,'_._')#</cfif></td>
 			<!-- SPRING -->
-			<td class="bold-left-border">#NumberFormat(SpringNoOfCredits,'_._')#</td>
-			<td>#NumberFormat(SpringNoOfCreditsOver,'_._')#</td>
-			<td>#NumberFormat(SpringNoOfDays,'_._')#</td>
-			<td>#NumberFormat(SpringNoOfDaysOver,'_._')#</td>
+			<td class="bold-left-border border-no-right">#NumberFormat(SpringNoOfCredits,'_._')#</td>
+			<td class="border-no-left"><cfif SpringNoOfCreditsOver NEQ 0>#NumberFormat(SpringNoOfCreditsOver,'_._')#</cfif></td>
+			<td class=" border-no-right">#NumberFormat(SpringNoOfDays,'_._')#</td>
+			<td class="border-no-left"><cfif SpringNoOfDaysOver NEQ 0>#NumberFormat(SpringNoOfDaysOver,'_._')#</cfif></td>
 			<!-- Total Credits -->
 			<td class="bold-left-border">#NumberFormat(FYTotalNoOfCredits,'_._')#</td>
 			<!-- Max Total Credits -->
@@ -149,26 +156,26 @@
 	</cfquery>
 	<cfoutput query="totals">
 	<tr id="dt-footer1">
-	<td>Totals</td>
+	<td><b>Totals</b></td>
 	<!--- have to use DecimalFormat or does not round properly --->
 	<!-- SUMMER -->
 	<td class="bold-left-border">#NumberFormat(DecimalFormat(SummerNoOfCredits),'_._')#</td>
 	<td>#NumberFormat(DecimalFormat(SummerNoOfDays),'_._')#</td>
 	<!-- FALL -->
-	<td class="bold-left-border">#NumberFormat(Replace(DecimalFormat(FallNoOfCredits),",",""),'_._')#</td>
-	<td>#NumberFormat(DecimalFormat(FallNoOfCreditsOver),'_._')#</td>
-	<td>#NumberFormat(Replace(DecimalFormat(FallNoOfDays),',',''),'_._')#</td>
-	<td>#NumberFormat(DecimalFormat(FallNoOfDaysOver),'_._')#</td>
+	<td class="bold-left-border border-no-right">#NumberFormat(Replace(DecimalFormat(FallNoOfCredits),",",""),'_._')#</td>
+	<td class="border-no-left">#NumberFormat(DecimalFormat(FallNoOfCreditsOver),'_._')#</td>
+	<td class=" border-no-right">#NumberFormat(Replace(DecimalFormat(FallNoOfDays),',',''),'_._')#</td>
+	<td class="border-no-left">#NumberFormat(DecimalFormat(FallNoOfDaysOver),'_._')#</td>
 	<!-- WINTER -->
-	<td class="bold-left-border">#NumberFormat(DecimalFormat(WinterNoOfCredits),'_._')#</td>
-	<td>#NumberFormat(DecimalFormat(WinterNoOfCreditsOver),'_._')#</td>
-	<td>#NumberFormat(DecimalFormat(WinterNoOfDays),'_._')#</td>
-	<td>#NumberFormat(DecimalFormat(WinterNoOfDaysOver),'_._')#</td>
+	<td class="bold-left-border border-no-right">#NumberFormat(DecimalFormat(WinterNoOfCredits),'_._')#</td>
+	<td class="border-no-left">#NumberFormat(DecimalFormat(WinterNoOfCreditsOver),'_._')#</td>
+	<td class=" border-no-right">#NumberFormat(DecimalFormat(WinterNoOfDays),'_._')#</td>
+	<td class="border-no-left">#NumberFormat(DecimalFormat(WinterNoOfDaysOver),'_._')#</td>
 	<!-- SPRING -->
-	<td class="bold-left-border">#NumberFormat(DecimalFormat(SpringNoOfCredits),'_._')#</td>
-	<td>#NumberFormat(DecimalFormat(SpringNoOfCreditsOver),'_._')#</td>
-	<td>#NumberFormat(DecimalFormat(SpringNoOfDays),'_._')#</td>
-	<td>#NumberFormat(DecimalFormat(SpringNoOfDaysOver),'_._')#</td>
+	<td class="bold-left-border border-no-right">#NumberFormat(DecimalFormat(SpringNoOfCredits),'_._')#</td>
+	<td class="border-no-left">#NumberFormat(DecimalFormat(SpringNoOfCreditsOver),'_._')#</td>
+	<td class=" border-no-right">#NumberFormat(DecimalFormat(SpringNoOfDays),'_._')#</td>
+	<td class="border-no-left">#NumberFormat(DecimalFormat(SpringNoOfDaysOver),'_._')#</td>
 	<!-- Grand Totals -->
 	<td class="bold-left-border">#NumberFormat(Replace(DecimalFormat(FYTotalNoOfCredits),',',''),'_._')#</td>
 	<td>#NumberFormat(Replace(DecimalFormat(FYMaxTotalNoOfCredits),',',''),'_._')#</td>
@@ -176,7 +183,7 @@
 	<td>#NumberFormat(Replace(DecimalFormat(FYMaxTotalNoOfDays),',',''),'_._')#</td>
 	</tr>
 	<tr id="dt-footer2">
-	<td>Max Billing</td>
+	<td><b>Max Billing</b></td>
 	<!-- Summer -->
 	<td colspan="2" class="max-billing" >#NumberFormat(Replace(DecimalFormat(SummerNoOfDays),',',''),'_._')#</td>
 	<!-- Fall -->

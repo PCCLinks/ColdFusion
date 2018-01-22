@@ -1,7 +1,8 @@
 <cfsetting requesttimeout="180">
 <cfinclude template="includes/header.cfm" />
 
-<cfinvoke component="LookUp" method="getTerms" returnvariable="qryTerms"></cfinvoke>
+<cfinvoke component="LookUp" method="getCurrentYearTerms" returnvariable="qryTerms"></cfinvoke>
+<cfinvoke component="LookUp" method="getNextTermToBill" returnvariable="nextTerm"></cfinvoke>
 <cfinvoke component="LookUp" method="getPrograms" returnvariable="qryPrograms"></cfinvoke>
 
 <style>
@@ -21,11 +22,11 @@
 		<div class="small-3 columns">
 			<label>Term:<br/>
 				<select name="term" id="term" >
-					<option disabled selected value="" >
+					<option disabled value="" >
 						--Select Term--
 					</option>
 					<cfoutput query="qryTerms">
-					<option  value="#term#" >#termDescription#</option>
+					<option  value="#term#" <cfif qryTerms.term EQ nextTerm.term>selected</cfif> >#termDescription#</option>
 					</cfoutput>
 				</select>
 			</label>
@@ -33,31 +34,37 @@
 		<cfoutput>
 		<div class="small-3 columns">
 			<label>Term Begin Date:<br/>
-				<input name="termBeginDate" id="termBeginDate" type="text"  readonly="true"/>
+				<input name="termBeginDate" id="termBeginDate" type="text"  readonly="true" value="#DateFormat(nextTerm.termBeginDate,'mm/dd/yyyy')#"/>
 			</label>
 		</div>
 		<div class="small-3 columns">
 			<label>Term Drop Date:<br/>
-				<input name="termDropDate" id="termDropDate" type="text" readonly="true"/>
+				<input name="termDropDate" id="termDropDate" type="text" readonly="true" value="#DateFormat(nextTerm.termDropDate,'mm/dd/yyyy')#"/>
+			</label>
+		</div>
+		<div class="small-3 columns">
+			<label>Term End Date:<br/>
+				<input name="termEndDate" id="termEndDate" type="text" readonly="true" value="#DateFormat(nextTerm.termEndDate, 'mm/dd/yyyy')#"/>
 			</label>
 		</div>
 		</cfoutput>
-		<div class="small-3 columns"></div>
 	</div>
 	<div class="row">
+		<cfoutput>
 		<div class="small-4 columns">
 			<label>Billing Start Date:<br/>
-				<input name="billingStartDate" id="billingStartDate" type="text" class="fdatepicker" />
+				<input name="billingStartDate" id="billingStartDate" type="text" class="fdatepicker" <cfif url.type EQ 'Term'>value="#DateFormat(nextTerm.termBeginDate,'mm/dd/yyyy')#" </cfif>/>
 			</label>
 		</div>
 		<div class="small-4 columns">
 			<label>Billing End Date:<br/>
-				<input name="billingEndDate" id="billingEndDate" type="text" class="fdatepicker" />
+				<input name="billingEndDate" id="billingEndDate" type="text" class="fdatepicker" <cfif url.type EQ 'Term'>value="#DateFormat(DateAdd("d",-2, nextTerm.termEndDate),'mm/dd/yyyy')#"</cfif> />
 			</label>
 		</div>
 		<div class="small-4 columns">
 			<label><br/><input class="button" type="submit" name="submit" value="Generate Billing" /></label>
 		</div>
+		</cfoutput>
 	</div>
 </form>
 <!--- end query parameters --->
@@ -74,6 +81,7 @@
 <cfsavecontent variable="pcc_scripts">
 <script type="text/javascript">
 	$(document).ready(function(){
+		selectedTerm = <cfoutput>#nextTerm.term#</cfoutput>;
 		function setDate(term, displayField, idName){
 			selectedTerm = term;
 	        var url = 'LookUp.cfc?method=getFilteredTerm&term=' + term + '&displayField='+ displayField + '&ReturnFormat=json';
@@ -95,6 +103,9 @@
 		 	saveSessionToServer();
 		 	setDate(termValue, 'TermBeginDate', 'termBeginDate');
 		 	setDate(termValue, 'TermDropDate', 'termDropDate');
+		 	setDate(termValue, 'TermEndDate', 'termEndDate');
+		 	$('#billingStartDate').val('');
+		 	$('#billingEndDate').val('');
 		 }
 	 );
 	});

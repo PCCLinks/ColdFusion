@@ -41,13 +41,20 @@
 			border-bottom-style:none;
 		}
 		.tdmonth{
-			width:45px;
+			width:32px;
 			text-align:right;
+			padding-top:0px;
+			padding-bottom:1px;
+		}
+		.nameRow{
+			padding-bottom:0px;
+			text-align:left;
 		}
 
 	</style>
 
-<table id="printtable">
+
+<table id="printtable" style="font-size:12px;font-family:serif;">
 <thead ><cfoutput>
 			<tr>
 				<th class="border-bottom-only" style="text-align:left; font-size:x-small" colspan="9">
@@ -60,21 +67,21 @@
 			<tr><th colspan="16" class="no-border"></th></tr>
 			<tr>
 				<th class="no-border" style="text-align:center" colspan="19">
-					<h3 style="margin:0px">Monthly Attendance And Days Enrolled - Public School Days</h3>
-					<cfoutput><b>All Students at <cfif data.Program EQ "gtc">PCC/HSC<cfelse>#data.Program#</cfif> Between #data.BillingStartDate# and #data.BillingEndDate#</b></cfoutput>
+					<h3 style="margin:1px;font-size:18px">Monthly Attendance And Days Enrolled - Public School Days</h3>
+					<cfoutput><b>All Students at <cfif data.Program EQ "gtc">PCC/HSC<cfelse>#data.Program#</cfif> Between #data.ReportStartDate# and #data.ReportEndDate#</b></cfoutput>
 				</th>
 			</tr></cfoutput>
 		<tr>
-			<th colspan="6" style="text-align:left">Student</th>
-			<th colspan="2" style="text-align:left">Apprv.&nbsp;Status</th>
-			<th colspan="2" style="text-align:left">DOB</th>
-			<th colspan="2" style="text-align:left">Entry Date</th>
-			<th colspan="2" style="text-align:left">Exit Date</th>
+			<th colspan="6" class="nameRow">Student</th>
+			<th colspan="2" class="nameRow">Apprv.&nbsp;Status</th>
+			<th colspan="2" class="nameRow">DOB</th>
+			<th colspan="2" class="nameRow">Entry Date</th>
+			<th colspan="2" class="nameRow">Exit Date</th>
 			<th colspan="2"></th>
 		</tr>
 		<tr>
-			<th style="border-bottom-style:solid"></th>
-			<th style="border-bottom-style:solid"></th>
+			<th style="border-bottom-style:solid;padding-top:0px;padding-bottom:2px;"></th>
+			<th style="border-bottom-style:solid;padding-top:0px;padding-bottom:2px;"></th>
 			<th style="border-bottom-style:solid" class="tdmonth">Jun</th>
 			<th style="border-bottom-style:solid" class="tdmonth">Jul</th>
 			<th style="border-bottom-style:solid" class="tdmonth">Aug</th>
@@ -97,16 +104,17 @@
 	<tbody>
 	<cfoutput query="data">
 		<tr><td colspan="16">
-		<table style= "page-break-inside: avoid;">
+		<!-- note this separate  table is to stop page breaks within a student/attendance entry -->
+		<table style= "page-break-inside: avoid;font-size:12px;font-family:serif;">
 			<tr>
-				<td colspan="8" style="text-align:left">#name#</td>
-				<td colspan="2" style="text-align:left">#DateFormat(dob,"m/d/y")#</td>
-				<td colspan="2" style="text-align:left">#DateFormat(enrolleddate,"m/d/y")#</td>
-				<td colspan="2" style="text-align:left">#DateFormat(exitdate,"m/d/y")#</td>
+				<td colspan="8" style="text-align:left;padding-top:0px;padding-bottom:2px;">#name#</td>
+				<td colspan="2" style="text-align:left;padding-top:0px;padding-bottom:2px;">#DateFormat(dob,"m/d/y")#</td>
+				<td colspan="2" style="text-align:left;padding-top:0px;padding-bottom:2px;">#DateFormat(enrolleddate,"m/d/y")#</td>
+				<td colspan="2" style="text-align:left;padding-top:0px;padding-bottom:2px;">#DateFormat(exitdate,"m/d/y")#</td>
 				<td colspan="2"></td>
 			</tr>
 			<tr>
-				<td colspan="2" style="width:60px"></td>
+				<td colspan="2" style="width:60px;padding-top:0px;padding-bottom:2px;"></td>
 				<td class="tdmonth">#Jun#</td>
 				<td class="tdmonth">#Jul#</td>
 				<td class="tdmonth">#Aug#</td>
@@ -155,3 +163,4 @@
 		</tr>
 		</cfoutput>
 </table>
+

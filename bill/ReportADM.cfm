@@ -4,6 +4,8 @@
 <cfinvoke component="LookUp" method="getSchools" returnvariable="schools"></cfinvoke>
 <cfinvoke component="LookUp" method="getAttendanceBillingStartDates" returnvariable="billingDates"></cfinvoke>
 <cfinvoke component="LookUp" method="getLatestDateAttendanceMonth" returnvariable="latestMonth"></cfinvoke>
+
+<div class="callout primary">ADM Report</div>
 <!-- Filter -->
 <div class="row">
 	<div class="small-2 columns">
@@ -108,6 +110,9 @@
 			$(".dataTables_filter").hide();
 
 			table = $('#dt_table').DataTable();
+			$('#billingStartDate').change(function(){
+				table.ajax.reload();
+			});
 			$('#program').change(function(){
 				table.ajax.reload();
 			});

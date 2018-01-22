@@ -11,6 +11,7 @@
 </cfif>
 <cfinvoke component="LookUp" method="getPrograms" returnvariable="programs"></cfinvoke>
 <cfinvoke component="LookUp" method="getCurrentYearTerms" returnvariable="terms"></cfinvoke>
+<cfinvoke component="LookUp" method="getCurrentProgramYear" returnvariable="programYear"></cfinvoke>
 
 <style>
 .dataTables_wrapper .dataTables_processing{
@@ -18,21 +19,24 @@
 	height: 50px !important;
 	background-color: lightGray;
 }
+.dt-buttons{
+	float:right !important;
+}
 </style>
 
 <!-- Filter -->
-<div class="row">
-	<div class="small-2 columns">
-		<label for="Term">Term:
+<div class="row"><!--->
+	<div class="small-3 columns">
+		<label for="Term">Latest Term:
 			<select name="term" id="term">
-				<option value="" > --Select All Terms-- </option>
+				<option value="" > --Select Last Term Billed-- </option>
 			<cfoutput query="terms">
 				<option value="#term#" <cfif Variables.MaxTerm EQ #term#> selected </cfif> > #termDescription# </option>
 			</cfoutput>
 			</select>
 		</label>
-	</div>
-	<div class="small-3 columns">
+	</div>--->
+	<div class="small-4 columns">
 		<label for="Program">Program:
 			<select name="program" id="program">
 				<option disabled <cfif Variables.Program EQ ""> selected </cfif> value="" > --Select Program-- </option>
@@ -42,7 +46,7 @@
 			</select>
 		</label>
 	</div>
-	<div class="small-7 columns">
+	<div class="small-8 columns">
 	</div>
 </div> <!-- end Filter row -->
 
@@ -60,10 +64,10 @@
 					<th id="EnrolledDate">Enrolled Date</th>
 					<th id="ExitDate">Exit Date</th>
 					<th id="Program">Program</th>
-					<th id="Program">Term</th>
-					<th id="FYTotalNoOfCredits">FY Total Credits</th>
+					<th id="Program">Latest Term</th>
 					<th id="CurrentTermNoOfCredits">Current Term Credits</th>
-					<th id="BillingStatus">Billing Status</th>
+					<th id="PrevTermNoOfCredits">Prev Term Credits</th>
+					<th id="BillingStatus">Last Billing Status</th>
 					<th id="BillingStudentId"></th>
 				</tr>
 				<tr id="searchRow">
@@ -75,10 +79,12 @@
 					<th><input type="text" placeholder="Enrolled Date" /></th>
 					<th><input type="text" placeholder="Exit Date" /></th>
 					<th><input type="text" placeholder="Program" /></th>
-					<th><input type="text" placeholder="Term" /></th>
-					<th><input type="text" placeholder="FY Total Credits" /></th>
+					<th><input type="text" id="termPlaceholder" placeholder="Term" value="<cfoutput>#Variables.MaxTerm#</cfoutput>" /></th>
+					<!---><th><input type="text" placeholder="Term" value=<cfoutput>#Variables.MaxTerm#</cfoutput> /></th>--->
 					<th><input type="text" placeholder="Current Term Credits" /></th>
-					<th><input type="text" placeholder="Billing Status" /></th>
+					<th><input type="text" placeholder="Prev Term Credits" /></th>
+					<th><input type="text" id="billingStatusPlaceholder" placeholder="Billing Status" /></th>
+
 					<th></th>
 				</tr>
 			</thead>
@@ -93,15 +99,21 @@
 		var indexOfGNumber = 1;
 		var indexOfBillingStudentId = 12;
 		var table;
+		var txtShowActive = 'Show Active Only';
+		var txtShowAll = 'Include Non-Active Students';
+		var txtShowInProgress = 'Needs Review Only';
+		var txtShowAllStatus = 'Include Already Reviewed';
+
 		$.fn.dataTable.ext.errMode = 'throw';
 		$(document).ready(function() {
 			setUpTable();
 			$('#program').change(function(){
-				table.ajax.reload();
+				table.column(7).search($('#program').val()).draw();
 			});
-			$('#term').change(function(){
-				table.ajax.reload();
-			});
+			table.column(8).search("<cfoutput>#Variables.MaxTerm#</cfoutput>").draw();
+			//$('#term').change(function(){
+			//	table.column(8).search($('#term').val()).draw();
+			//});
 		});
 		function setUpTable(program){
 			table = $('#dt_table').DataTable({
@@ -114,7 +126,7 @@
 					        handleAjaxError(xhr, textStatus, thrownError);
 						}
 				},
-				dom: '<"top"i>rt<"bottom"flp>',
+				dom: '<"top"iB>rt<"bottom"flp>',
 				language:{ processing: "Loading data..."},
 				columnDefs:[
 	                {	targets: indexOfGNumber,
@@ -123,7 +135,23 @@
              					}
          				},
          				{targets: indexOfBillingStudentId, visible: false}
-         			]
+         			],
+         		buttons: [
+            	//Active Students Button
+            	{
+            	  text: txtShowAll,
+            	  action: function( e, table, node, config ){
+					filterShowActive(table, this);
+            	  }
+            	},
+            	//Reviewed Students Button
+            	{
+            	  text: txtShowInProgress,
+            	  action: function( e, table, node, config ){
+					filterShowReview(table, this);
+            	  }
+            	}
+            	]
 			});
 			//hide main filter
 			$(".dataTables_filter").hide();
@@ -137,9 +165,10 @@
 					}
 				});
 			});
+			//table.column(8).search(<cfoutput>#Variables.MaxTerm#</cfoutput>).draw();
 		}
 		function getParameters(){
-		 	return { term: $('#term').val(), program: $('#program').val()};
+		 	return {programYear: '<cfoutput>#Variables.programYear#</cfoutput>', program: $('#program').val()};
 		}
 		function goToDetail(billingStudentId){
 			var dt = $('#dt_table').DataTable();
@@ -149,6 +178,20 @@
   			$.post("SaveSession.cfm", data, function(){
   				window.location	='programStudentDetail.cfm?billingStudentId='+billingStudentId+'&showNext=true';
   			});
+		}
+		function filterShowActive(table, button) {
+			filter =  button.text() == txtShowActive ? "<cfoutput>#Variables.MaxTerm#</cfoutput>" : "";
+			table.column(8).search(filter).draw();
+			$('#termPlaceholder').val(filter);
+			buttonText = button.text() == txtShowActive ? txtShowAll : txtShowActive;
+	        button.text(buttonText);
+		}
+		function filterShowReview(table, button) {
+			filter =  button.text() == txtShowInProgress ? "IN PROGRESS" : "";
+			table.column(11).search(filter).draw();
+			$('#billingStatusPlaceholder').val(filter);
+			buttonText = (button.text() == txtShowAllStatus ? txtShowInProgress : txtShowAllStatus);
+	        button.text(buttonText);
 		}
 
 	</script>

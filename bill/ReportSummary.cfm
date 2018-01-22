@@ -6,8 +6,8 @@
 </cfinvoke>
 <cfinvoke component="LookUp" method="getPrograms" returnvariable="programs"></cfinvoke>
 <cfinvoke component="LookUp" method="getSchools" returnvariable="schools"></cfinvoke>
-<cfinvoke component="LookUp" method="getTerms" returnvariable="qryTerms"></cfinvoke>
-<cfinvoke component="LookUp" method="getAttendanceBillingStartDates" returnvariable="billingDates"></cfinvoke>
+<cfinvoke component="LookUp" method="getOpenTerms" returnvariable="qryTerms"></cfinvoke>
+<cfinvoke component="LookUp" method="getOpenAttendanceBillingStartDates" returnvariable="billingDates"></cfinvoke>
 
 
 <div class="callout primary">
@@ -47,8 +47,10 @@
 					<option disabled selected value="" >
 						--Select Term--
 					</option>
+					<cfset i = 1>
 					<cfoutput query="qryTerms">
-					<option  value="#term#" >#termDescription#</option>
+					<option  value="#term#" <cfif i EQ 1>selected</cfif>>#termDescription#</option>
+					<cfset i = i + 1>
 					</cfoutput>
 				</select>
 			</label>
@@ -91,9 +93,11 @@
 						<option disabled selected value="" >
 							--Select Term--
 						</option>
-						<cfoutput query="qryTerms">
-						<option  value="#term#" >#termDescription#</option>
-						</cfoutput>
+					<cfset i = 1>
+					<cfoutput query="qryTerms">
+					<option  value="#term#" <cfif i EQ 1>selected</cfif>>#termDescription#</option>
+					<cfset i = i + 1>
+					</cfoutput>
 					</select>
 				</label>
 			</div>

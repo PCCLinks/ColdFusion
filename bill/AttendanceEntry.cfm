@@ -3,7 +3,7 @@
 <cfinvoke component="LookUp" method="getLatestDateAttendanceMonth"  returnvariable="attendanceMonth"></cfinvoke>
 <cfparam name="selectedBillingStartDate" default = #attendanceMonth# >
 <cfif structKeyExists(url, "billingStartDate")>
-	<cfset Variables.billingStartDate = url.billingStartDate>
+	<cfset Variables.selectedBillingStartDate = url.billingStartDate>
 </cfif>
 
 <cfparam name="selectedCRN" default="">
@@ -67,7 +67,7 @@
 	$(document).ready(function() {
 		getCRN();
 		if(selectedCRN != ''){
-			getCRNChanged();
+			getAttendanceEntryInclude();
 		}
 
 		//#showHideButtons(showAddClass, showAddLab, showShowStudent, showShowAttendance)
@@ -98,6 +98,7 @@
        		cache: false
     	}).done(function(data) {
         	$("#crnselect").html(data);
+        	getCRNChanged();
     	});
 	}
 	function getCRNChanged(){

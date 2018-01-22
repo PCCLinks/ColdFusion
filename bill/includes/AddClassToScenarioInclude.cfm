@@ -28,9 +28,9 @@ select{
 			<tr >
 				<td class="scenario"><input id="#CRN#" value="#CRN#" style="border-style:none"></td>
 				<td class="scenario">
-					<select id="#EncodeForHtml(Replace(CRN," ","_"))#Select" onchange="javascript:enterScenario('#EncodeForHtml(CRN)#','#billingScenarioByCourseId#');">
-						<option disabled selected value="" >
-							--Select Scenario--
+					<select id="#EncodeForHtml(Replace(CRN," ","_","all"))#Select" onchange="javascript:enterScenario('#EncodeForHtml(CRN)#','#billingScenarioByCourseId#');">
+						<option <cfif data.billingScenarioID EQ "">selected</cfif> value="" >
+							--No Scenario - Select To Set--
 						</option>
 						<cfloop query="qryScenario">
 							<option value="#billingScenarioID#" <cfif qryScenario.billingScenarioID EQ data.billingScenarioID> selected </cfif>>#billingScenarioName#</option>

@@ -3,11 +3,11 @@
 <cfif structKeyExists(url, "billingStartDate")>
 	<cfset Variables.selectedBillingStartDate = url.billingStartDate>
 <cfelse>
-	<cfinvoke component="LookUp" method="getLatestDateAttendanceMonth"  returnvariable="selectedBillingStartDate"></cfinvoke>
+	<cfinvoke component="LookUp" method="getCurrentProgramYear"  returnvariable="programYear"></cfinvoke>
 </cfif>
-<cfinvoke component="LookUp" method="getAttendanceBillingStartDates" returnvariable="billingDates"></cfinvoke>
-<cfinvoke component="ProgramBilling" method="getBillingStudentByBillingStartDate" returnvariable="data">
-	<cfinvokeargument name="billingStartDate" value="#Variables.selectedBillingStartDate#">
+<!---><cfinvoke component="LookUp" method="getBillingStudentWithMaxBillingStartDate" returnvariable="billingDates"></cfinvoke>--->
+<cfinvoke component="ProgramBilling" method="getExitDateList" returnvariable="data">
+	<cfinvokeargument name="programYear" value="#Variables.programYear#">
 </cfinvoke>
 
 <cfinvoke component="LookUp" method="getExitReasons" returnvariable="exitReasons"></cfinvoke>
@@ -33,7 +33,7 @@
 	}
 
 </style>
-
+<!--->
 <div class= "callout display" id="addExistingClassDisplay">
 	<div class="row">
 		<div class="medium-12 columns" >
@@ -47,16 +47,17 @@
 			</label>
 		</div>
 	</div>
-</div>
+</div>--->
 
 <div class="row">
-	<div class="small-5 columns">
+	<div class="small-6 columns">
 		<table id="dt_table">
 			<thead>
 				<tr>
 					<th>Name</th>
 					<th>G</th>
 					<th>Program</th>
+					<th>Billing Period</th>
 					<th>Exit Date</th>
 					<th>Exit Reason</th>
 				</tr>
@@ -68,6 +69,7 @@
 					<td>#firstname# #lastname#</td>
 					<td><a href='javascript:getStudent(#billingStudentId#)'>#bannerGNumber#</a></td>
 					<td>#program#</td>
+					<td>#billingPeriod#</td>
 					<td>#exitdate#</td>
 					<td>#billingstudentexitreasondescription#</td>
 				</tr>
@@ -76,7 +78,8 @@
 		</table>
 	</div>
 	<div class="small-1 columns"></div>
-	<div class="small-6 columns">
+	<br><br>
+	<div class="small-5 columns">
 		<div class="callout primary" id="selectedGNumber">Select a Student from the left</div>
 		<div id="target"></div>
 	</div>
@@ -90,7 +93,7 @@
 	var table;
 	$(document).ready(function() {
 		$('#dt_table').DataTable({
-			order:[[3, 'desc'],[1],[0]],
+			order:[[4, 'desc'],[1],[0]],
 			dom: 'ftlp',
 			saveState: true
 		});
@@ -100,11 +103,13 @@
 		} );
 	});
 	function refreshPage(){
-		window.location = window.location.href + '?billingStartDate=' + $('#billingStartDate').val();
+		window.location = window.location.pathname + '?billingStartDate=' + $('#billingStartDate').val();
 	}
 	function getStudent(billingStudentId){
 		currentBillingStudentId = billingStudentId;
-		var heading = table.cell(currentRow, 0).data() + ' (' + table.cell(currentRow,1).data() + ') ';
+		var heading = '<b>' + table.cell(currentRow, 0).data() + '</b>'
+							+ ' (' + table.cell(currentRow,1).data().replace('getStudent','goToDetail') + ') '
+							+ '<br><b>Program:</b> ' + table.cell(currentRow,2).data() + ', <b>Billing Period:</b> ' + table.cell(currentRow,3).data();
 
 		$.ajax({
         	url: "includes/billingstudentRecordInclude.cfm?billingStudentId=" + billingStudentId,
@@ -114,8 +119,12 @@
         	$("#target").html(data);
     	});
 	}
+	function goToDetail(billingStudentId){
+		window.open('programStudentDetail.cfm?billingStudentId='+billingStudentId+'&showNext=false');
+	}
 	function saveValues(frmId){
 	 	var $form = $('#'+frmId);
+	 	var id = frmId.substring(3,10);
 	    $.ajax({
 	       	url: 'report.cfc?method=updateBillingStudentRecord',
 	       	type: 'POST',
@@ -124,12 +133,12 @@
 	        	var d = new Date();
 				$('#savemessage').html('Saved ' + addZero(d.getHours()) + ':' + addZero(d.getMinutes()) + ':' + addZero(d.getSeconds()));
 				$.ajax({
-		        	url: "programBilling.cfc?method=getBillingStudentByBillingStartDate&billingStartDate=" + $('#billingStartDate').val() + "&billingStudentId=" + currentBillingStudentId,
+		        	url: "programBilling.cfc?method=getExitDateList&billingStudentId=" + currentBillingStudentId,
 		       		cache: false,
 		       		dataType:'json'
 		    	}).done(function(data) {
-					table.cell(currentRow,3).data($('#exitDate').val()).draw();
-					table.cell(currentRow,4).data($('#billingStudentExitReasonCode option:selected').text()).draw();
+					table.cell(currentRow,4).data($('#exitDate'+id).val()).draw('page');
+					table.cell(currentRow,5).data($('#billingStudentExitReasonCode' + id + ' option:selected').text()).draw('page');
 		    	});
 	    	},
 			error: function (jqXHR, exception) {
