@@ -65,6 +65,7 @@ select {
 			<th>Coach</th>
 			<th>Max Reg Term</th>
 			<th>Last Contact</th>
+			<th>Credits</th>
 			<th></th>
 		</tr>
 	</thead>
@@ -96,11 +97,13 @@ select {
 	var idx_coach = 6;
 	var idx_maxterm = 7;
 	var idx_lastContactDate = 8;
+	var idx_creditsEarned = 9;
 	//these are all hidden
-	var idx_pidm = 9;
-	var idx_in_contract = 10;
-	var idx_pcc_email = 11;
-	var idx_flagged = 12;
+	var idx_pidm = 10;
+	var idx_in_contract = 11;
+	var idx_pcc_email = 12;
+	var idx_flagged = 13;
+
 
 	$(document).ready(function() {
 		//intialize table
@@ -225,10 +228,14 @@ select {
 			}
 		} ); //end add filter
 
+
+
 		// Apply the search
 		dt.columns().every( function () {
 			var that = this;
 			$( 'input', this.header() ).on( 'keyup change', function () {
+				if(this.id == "Credits")
+					return;
 				var value = this.value;
 				var isRegEx = false;
 				if(value.charAt(0)=="!"){
@@ -237,7 +244,7 @@ select {
 				}
 				if ( that.search() !== value ) {
 					that
-						.search( value, isRegEx, true )
+						.search( value, isRegEx, !isRegEx )
 						.draw();
 				}
 			} );
@@ -258,7 +265,33 @@ select {
 		</cfif>
 		</cfoutput>
 
+		$('#minCredits, #maxCredits, #Credits').keyup( function() {
+        	dt.draw();
+    	} );
+
 	} ); //end document ready
+
+	/* Custom filtering function which will search data in column four between two values */
+	$.fn.dataTable.ext.search.push(
+	    function( settings, data, dataIndex ) {
+	    	if( $('#Credits').val().charAt(0) == ">"){
+	    		var min = parseInt( $('#Credits').val().substring(1), 10 )+1;
+	    	}
+	    	if( $('#Credits').val().charAt(0) == "<"){
+	    		var max = parseInt( $('#Credits').val().substring(1), 10 )-1;
+	    	}
+	        var credits = parseFloat( data[idx_creditsEarned] ) || 0;
+
+	        if ( ( isNaN( min ) && isNaN( max ) ) ||
+	             ( isNaN( min ) && credits <= max ) ||
+	             ( min <= credits   && isNaN( max ) ) ||
+	             ( min <= credits   && credits <= max ) )
+	        {
+	            return true;
+	        }
+	        return false;
+	    }
+	);
 
    // save flag checkbox changes
    function saveFlag(checkBox){
