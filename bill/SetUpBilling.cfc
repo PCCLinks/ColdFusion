@@ -1,6 +1,6 @@
 
 <cfcomponent displayname="SetUpBilling">
-	<cfsetting requesttimeout="10000">
+	<cfsetting requesttimeout="100000">
 
 	<cfobject name="appObj" component="application">
 
@@ -35,21 +35,23 @@
 			<cfset appObj.logEntry(value="PROCEDURE getStudentsToBill combine query #Now()#", level=5) >
 			<!---<cflog file="pcclinks_bill" text="PROCEDURE getStudentsToBill combine query #Now()#">--->
 			<cfquery dbtype="query" name="final">
-				SELECT bannerGNumber, contactId, program, enrolledDate, exitDate, schoolDistrictDate, schoolDistrict, districtID, PIDM, firstname, lastname
+				SELECT bannerGNumber, contactId, program, enrolledDate, exitDate, schoolDistrict, districtID, PIDM, firstname, lastname
 				FROM qry
 				WHERE qry.pidm is not null
 				UNION
-				SELECT bannerGNumber, contactId, program, enrolledDate, exitDate, schoolDistrictDate, schoolDistrict, districtID, pidm.PIDM, firstname, lastname
+				SELECT bannerGNumber, contactId, program, enrolledDate, exitDate, schoolDistrict, districtID, pidm.PIDM, firstname, lastname
 				FROM qry, pidm
 				WHERE qry.bannerGNumber = pidm.STU_ID
 				and qry.pidm is null
 			</cfquery>
 		<cfelse>
-			<cfquery dbtype="query" name="final">
-				SELECT bannerGNumber, contactId, program, enrolledDate, exitDate, schoolDistrictDate, schoolDistrict, districtID, PIDM, firstname, lastname
+			<cfquery dbtype="query" name="final" result="finalResult">
+				SELECT bannerGNumber, contactId, program, enrolledDate, exitDate, schoolDistrict, districtID, MAX(PIDM) PIDM, firstname, lastname
 				FROM qry
+				GROUP BY bannerGNumber, contactId, program, enrolledDate, exitDate, schoolDistrict, districtID, firstname, lastname
 			</cfquery>
 		</cfif>
+		<cfset appObj.logDump(label="getStudents final", value=final, level=5) >
 		<cfreturn final>
 	</cffunction>
 
@@ -136,7 +138,6 @@
 				and Term = <cfqueryparam value="#arguments.term#">
 				and billingStartDate = <cfqueryparam value="#DateFormat(arguments.billingStartDate,'yyyy-mm-dd')#">
 				and districtID = <cfqueryparam value="#arguments.contactRow.districtID#">
-				and program = <cfqueryparam value="#local.program#">
 		</cfquery>
 		<cfset appObj.logDump(label="qryResult", value=qryResult, level=3) >
 
@@ -154,7 +155,7 @@
 								,#arguments.term#
 								,'#program#'
 								,'#arguments.contactRow.enrolleddate#'
-								,<cfqueryparam value="#arguments.contactRow.exitdate#" null="#not len(arguments.contactRow.exitdate)#">
+								,<cfqueryparam value="#DateFormat(arguments.contactRow.exitdate,'yyyy-mm-dd')#" null="#not len(arguments.contactRow.exitdate)#">
 								,<cfqueryparam value="#DateFormat(arguments.billingStartDate,'yyyy-mm-dd')#">
 								,<cfqueryparam value="#DateFormat(arguments.billingEndDate,'yyyy-mm-dd')#">
 								,'IN PROGRESS'
@@ -233,7 +234,7 @@
 							</cfoutput>
 						</cfquery>
 						<cfquery name="updateBillingStudentWithError">
-							update BillingStudent
+							update billingStudent
 							set ErrorMessage = 'No Banner Attribute Set for this Student'
 							where billingStudentId = <cfqueryparam value=#local.billingstudentid#>
 						</cfquery>
@@ -253,7 +254,8 @@
 			<cfquery name="update">
 				UPDATE billingStudent
 				SET billingStartDate = <cfqueryparam value="#DateFormat(arguments.billingStartDate,'yyyy-mm-dd')#">,
-					billingEndDate = <cfqueryparam value="#DateFormat(arguments.billingEndDate,'yyyy-mm-dd')#">
+					billingEndDate = <cfqueryparam value="#DateFormat(arguments.billingEndDate,'yyyy-mm-dd')#">,
+					exitDate = <cfqueryparam value="#DateFormat(arguments.contactRow.exitdate,'yyyy-mm-dd')#" null="#not len(arguments.contactRow.exitdate)#">
 				WHERE billingStudentId = <cfqueryparam value="#qry.billingstudentid#" >
 			</cfquery>
 			<cfset local.billingstudentid = #qry.billingstudentid#>
@@ -271,6 +273,15 @@
 				set ErrorMessage = 'Student is active but has no classes in Banner',
 					BillingStatus = 'NO CLASSES'
 				where BillingStudentID = <cfqueryparam value="#local.billingstudentid#">
+			</cfquery>
+		<cfelse>
+			<!--- clear error where no longer valid --->
+			<cfquery name="updateNoError" >
+				update billingStudent
+				set ErrorMessage = NULL,
+					BillingStatus = 'IN PROGRESS'
+				where BillingStudentID = <cfqueryparam value="#local.billingstudentid#">
+					and BillingStatus = 'NO CLASSES'
 			</cfquery>
 		</cfif>
 
@@ -306,7 +317,6 @@
 		<cfset appObj.logDump(label="existing billing", value=existingBilling) >
 
 		<!--- union with banner data ---->
-		<!--- ABE 0744 classes have an additional lab element --->
 		<cfquery name="unionRows" dbtype="query">
 			select CAST(CRN as varchar) CRN, CAST(CRSE AS varchar) CRSE, SUBJ, Title, CAST(Credits as INTEGER) Credits, 1 addOrSubtract
 			from bannerClasses
@@ -323,14 +333,15 @@
 			<cfset appObj.logEntry(value="No union rows", level=5) >
 		</cfif>
 
-		<!--- get rows where there is a row to add or remove --->
+		<!--- get rows where there is a row to add --->
+		<!--- TODO? Handle classes that were dropped?  At this point difficult to discern those that were added manually vs. generated --->
 		<cfquery name="rowsToInsert" dbtype="query">
 			select CRN, CRSE, SUBJ, Title, SUM(addOrSubtract*Credits) CREDITS, SUM(addOrSubtract) addOrSubtract
 			from unionRows
 			group by CRN, CRSE, SUBJ, Title
-			having SUM(addOrSubtract) <> 0
+			having SUM(addOrSubtract) > 0
 		</cfquery>
-		<cfset appObj.logDump(label="rowsToInsert", value=rowsToInsert) >
+		<cfset appObj.logDump(label="rowsToInsert", value=rowsToInsert, level=5) >
 
 		<!--- if rows to insert --->
 		<cfif rowstoInsert.recordcount GT 0>
@@ -339,12 +350,13 @@
 				<cfoutput query="rowsToInsert">
 				select #arguments.billingStudentId#, '#crn#', '#crse#', '#subj#', '#Title#', 1, #Credits*AddOrSubtract#, Now(), Now(), '#Session.username#', '#Session.username#'
 	       			<cfif currentrow LT rowsToInsert.recordcount>UNION ALL</cfif>
+	       			<cfset appObj.logEntry(label="currentRow", value=currentRow, level=5)>
 				</cfoutput>
 			</cfquery>
 		</cfif> <!--- end rows to insert --->
 
 		<!--- debug code --->
-		<cfif IsDefined("r")><cfset appObj.logDump(label="doInsertResult", value=doInsertResult) ></cfif>
+		<cfif IsDefined("doInsertResult")><cfset appObj.logDump(label="doInsertResult", value=doInsertResult) ></cfif>
 	</cffunction>
 
 	<cffunction name="checkIfClassPreviouslyWithdrawn"  access="remote">
@@ -560,58 +572,74 @@
 		<cfargument name="termDropDate"type="date" required="true">
 		<cfargument name="bannerGNumber" default="">
 
-		<cfquery name="attendanceClasses">
-			select distinct CRN, bs.bannerGNumber, CRSE, SUBJ, Title, Credits
-			from billingStudentItem bsi
-				join billingStudent bs on bsi.billingStudentId = bs.billingStudentId
+		<cfquery name="attendanceStudents">
+			select distinct bannerGNumber
+			from billingStudent
 			where term = <cfqueryparam value="#arguments.term#">
-				and bs.program like '%attendance%'
+				and program like '%attendance%'
 		</cfquery>
-		<cfset appObj.logDump(label="attendanceClasses", value="#attendanceClasses#", level=5)>
-			<!------------------------------------------------>
-			<!--- loop through each student                --->
-			<!------------------------------------------------>
-		<cfloop query="attendanceClasses">
-			<cfset var studentQry = getStudents(endDate=#arguments.billingEndDate#,
-													beginDate=#arguments.billingStartDate#,
-													bannerGNumber = #attendanceClasses.bannerGNumber#) >
 
-			<cfif studentQry.recordcount GT 0>
-				<cfset appObj.logDump(label="attendanceClasses.bannerGNumber", value="#attendanceClasses.bannerGNumber#", level=3)>
-				<cfset appObj.logDump(label="studentQry", value="#studentQry#", level=3)>
-
-				<cfset contactrow=#GetQueryRow(studentQry, 1)#>
-				<!--- get the billing student record and the banner classes --->
-				<cfset local.returnArray = getBillingStudent(contactrow=#contactrow#, billingStartDate=#arguments.billingStartDate#,
-																billingEndDate=#arguments.billingEndDate#, term=#arguments.term#) >
-				<cfset local.billingStudentId = returnArray[1]>
-				<cfset local.bannerClasses = returnArray[2]>
-				<cfset appObj.logDump(label="billingStudentId", value="#billingStudentId#", level=5)>
-
-				<cfquery dbtype="query" name="classes">
-					select *
-					from attendanceClasses
-					where bannerGNumber = '#studentQry.bannerGNumber#'
-				</cfquery>
-
-				<cfset var result = populateClassEntries(billingstudentid=#local.billingStudentId#,
-													bannerGNumber=#studentQry.bannerGNumber#,
-													PIDM = #studentQry.PIDM#,
-													billingStartDate=#arguments.billingStartDate#,
-													bannerClasses=#classes#)>
-
-				<cfset updateIncludeBasedOnPreviousClasses(billingstudentid=#local.billingStudentId#,
-																		PIDM = #studentQry.PIDM#,
-																		currentterm = #arguments.term#) >
-			</cfif>
+		<!------------------------------------------------>
+		<!--- loop through each student                --->
+		<!------------------------------------------------>
+		<cfloop query="attendanceStudents">
+			<cfset setUpStudent(billingEndDate=#arguments.billingEndDate#, billingStartDate=#arguments.billingStartDate#,
+									term = #arguments.term#, bannerGNumber = #attendanceStudents.bannerGNumber#) >
 		</cfloop> <!--- loop through each student --->
 		<cfreturn 1> <!--- to indicate session is done --->
 	</cffunction>
 
+	<cffunction name="setUpStudent">
+		<cfargument name="billingEndDate" required="true">
+		<cfargument name="billingStartDate" required="true">
+		<cfargument name="term" required="true">
+		<cfargument name="bannerGNumber" required="true">
+
+		<cfset var studentQry = getStudents(endDate=#arguments.billingEndDate#,
+										beginDate=#arguments.billingStartDate#,
+										bannerGNumber = #arguments.bannerGNumber#) >
+		<cfset local.billingStudentId = 0>
+		<cfif studentQry.recordcount GT 0>
+			<cfset appObj.logDump(label="arguments.bannerGNumber", value="#arguments.bannerGNumber#", level=3)>
+			<cfset appObj.logDump(label="studentQry", value="#studentQry#", level=3)>
+
+			<cfset contactrow=#GetQueryRow(studentQry, 1)#>
+			<!--- get the billing student record and the banner classes --->
+			<cfset local.returnArray = getBillingStudent(contactrow=#contactrow#, billingStartDate=#arguments.billingStartDate#,
+															billingEndDate=#arguments.billingEndDate#, term=#arguments.term#) >
+			<cfset local.billingStudentId = returnArray[1]>
+			<cfset local.bannerClasses = returnArray[2]>
+			<cfset appObj.logDump(label="billingStudentId", value="#billingStudentId#", level=5)>
+
+			<cfset var result = populateClassEntries(billingstudentid=#local.billingStudentId#,
+												bannerGNumber=#studentQry.bannerGNumber#,
+												PIDM = #studentQry.PIDM#,
+												billingStartDate=#arguments.billingStartDate#,
+												bannerClasses=#local.bannerClasses#)>
+
+			<cfquery name = "isCredit" >
+				select *
+				from billingStudent bs
+				where bs.billingstudentid = <cfqueryparam value="#local.billingStudentID#">
+					and program not like '%attendance%'
+			</cfquery>
+
+			<cfif isCredit.recordcount GT 0>
+				<cfset updateIncludeBasedOnPreviousClasses(billingstudentid=#local.billingStudentId#,
+																		PIDM = #studentQry.PIDM#,
+																		currentterm = #arguments.term#) >
+			</cfif>
+		</cfif>
+		<cfreturn local.billingStudentId>
+	</cffunction>
+
 	<cffunction name="getSIDNYData" returnformat="json" access="remote">
 		<cfargument name="bannerGNumber" required="true">
+		<!--- debug --->
+		<cfset appObj.logEntry(value="FUNCTION getSIDNYData #Now()#", level=5) >
+		<cfset appObj.logDump(label="arguments", value=arguments, level=5)>
 		<cfset students = getStudents(beginDate = '2000-01-01', endDate='2999-12-31', bannerGNumber="#arguments.bannerGNumber#")>
-
+		<cfset appObj.logDump(label="students", value=students, level=5)>
 		<cfquery dbtype="query" name="data">
 				select firstname, lastname, bannerGNumber, program, enrolledDate, exitDate, schoolDistrict, bannerGNumber as AddStudent
 				from students
@@ -671,14 +699,18 @@
 		<cfargument name = "billingStartDate" type="date" required="true">
 		<cfargument name="billingEndDate" type="date" required="true">
 
+		<cfset local.billingStudentId = setUpStudent(billingEndDate=#arguments.billingEndDate#, billingStartDate=#arguments.billingStartDate#,
+								term = #arguments.term#, bannerGNumber = #arguments.bannerGNumber#) >
+
+	<!--->
 		<cfset var studentQry = getStudents(beginDate = '2000-01-01', endDate='2999-12-31',
 													bannerGNumber = #arguments.bannerGNumber#) >
 		<cfset appObj.logDump(label="studentQry", value="#studentQry#", level=5)>
 		<cfset contactrow=#GetQueryRow(studentQry, 1)#>
 		<cfset local.returnArray = getBillingStudent(contactrow=#contactrow#, billingStartDate=#arguments.billingStartDate#,
 														billingEndDate=#arguments.billingEndDate#, term=#arguments.term#) >
-		<cfset appObj.logDump(label="returnArray", value="#local.returnArray#", level=5)>
-		<cfreturn local.returnArray[1]>
+		<cfset appObj.logDump(label="returnArray", value="#local.returnArray#", level=5)>--->
+		<cfreturn local.billingStudentId>
 	</cffunction>
 	<cffunction name="getInsertCount" access="remote" returnFormat = "json">
 		<cfargument name="term" required="true">

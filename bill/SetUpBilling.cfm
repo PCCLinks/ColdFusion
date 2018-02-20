@@ -16,7 +16,7 @@
 <div class="callout primary">
 <h4><cfoutput>Set Up #url.type# Billing</h4></cfoutput>
 <!--- query parameters --->
-<form id="pageForm" action="javascript:setUpBilling();" method="post">
+<form id="pageForm" action="javascript:setUpBilling();" >
 	<cfoutput><input type="hidden" name="type" value="#url.type#"></cfoutput>
 	<div class="row">
 		<div class="small-3 columns">

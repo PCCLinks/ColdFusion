@@ -159,23 +159,23 @@
 	<td><b>Totals</b></td>
 	<!--- have to use DecimalFormat or does not round properly --->
 	<!-- SUMMER -->
-	<td class="bold-left-border">#NumberFormat(DecimalFormat(SummerNoOfCredits),'_._')#</td>
-	<td>#NumberFormat(DecimalFormat(SummerNoOfDays),'_._')#</td>
+	<td class="bold-left-border">#NumberFormat(Replace(DecimalFormat(SummerNoOfCredits),',',''),'_._')#</td>
+	<td>#NumberFormat(Replace(DecimalFormat(SummerNoOfDays),',',''),'_._')#</td>
 	<!-- FALL -->
 	<td class="bold-left-border border-no-right">#NumberFormat(Replace(DecimalFormat(FallNoOfCredits),",",""),'_._')#</td>
-	<td class="border-no-left">#NumberFormat(DecimalFormat(FallNoOfCreditsOver),'_._')#</td>
+	<td class="border-no-left">#NumberFormat(Replace(DecimalFormat(FallNoOfCreditsOver),',',''),'_._')#</td>
 	<td class=" border-no-right">#NumberFormat(Replace(DecimalFormat(FallNoOfDays),',',''),'_._')#</td>
-	<td class="border-no-left">#NumberFormat(DecimalFormat(FallNoOfDaysOver),'_._')#</td>
+	<td class="border-no-left">#NumberFormat(Replace(DecimalFormat(FallNoOfDaysOver),',',''),'_._')#</td>
 	<!-- WINTER -->
-	<td class="bold-left-border border-no-right">#NumberFormat(DecimalFormat(WinterNoOfCredits),'_._')#</td>
-	<td class="border-no-left">#NumberFormat(DecimalFormat(WinterNoOfCreditsOver),'_._')#</td>
-	<td class=" border-no-right">#NumberFormat(DecimalFormat(WinterNoOfDays),'_._')#</td>
-	<td class="border-no-left">#NumberFormat(DecimalFormat(WinterNoOfDaysOver),'_._')#</td>
+	<td class="bold-left-border border-no-right">#NumberFormat(Replace(DecimalFormat(WinterNoOfCredits),',',''),'_._')#</td>
+	<td class="border-no-left">#NumberFormat(Replace(DecimalFormat(WinterNoOfCreditsOver),',',''),'_._')#</td>
+	<td class=" border-no-right">#NumberFormat(Replace(DecimalFormat(WinterNoOfDays),',',''),'_._')#</td>
+	<td class="border-no-left">#NumberFormat(Replace(DecimalFormat(WinterNoOfDaysOver),',',''),'_._')#</td>
 	<!-- SPRING -->
-	<td class="bold-left-border border-no-right">#NumberFormat(DecimalFormat(SpringNoOfCredits),'_._')#</td>
-	<td class="border-no-left">#NumberFormat(DecimalFormat(SpringNoOfCreditsOver),'_._')#</td>
-	<td class=" border-no-right">#NumberFormat(DecimalFormat(SpringNoOfDays),'_._')#</td>
-	<td class="border-no-left">#NumberFormat(DecimalFormat(SpringNoOfDaysOver),'_._')#</td>
+	<td class="bold-left-border border-no-right">#NumberFormat(Replace(DecimalFormat(SpringNoOfCredits),',',''),'_._')#</td>
+	<td class="border-no-left">#NumberFormat(Replace(DecimalFormat(SpringNoOfCreditsOver),',',''),'_._')#</td>
+	<td class=" border-no-right">#NumberFormat(Replace(DecimalFormat(SpringNoOfDays),',',''),'_._')#</td>
+	<td class="border-no-left">#NumberFormat(Replace(DecimalFormat(SpringNoOfDaysOver),',',''),'_._')#</td>
 	<!-- Grand Totals -->
 	<td class="bold-left-border">#NumberFormat(Replace(DecimalFormat(FYTotalNoOfCredits),',',''),'_._')#</td>
 	<td>#NumberFormat(Replace(DecimalFormat(FYMaxTotalNoOfCredits),',',''),'_._')#</td>

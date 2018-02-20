@@ -70,7 +70,7 @@
 </div>
 
 <div class="row" id="addClassToScenario">
-	<div class="small-6 columns">
+	<div class="small-12 columns">
 		<div id="dataTable"></div>
 	</div>
 </div>

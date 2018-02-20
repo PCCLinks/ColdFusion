@@ -59,7 +59,8 @@
 					<th>Program</th>
 					<th>Billing Period</th>
 					<th>Exit Date</th>
-					<th>Exit Reason</th>
+					<th>AEP Exit Reason</th>
+					<th>Sidny Exit Reason</th>
 				</tr>
 			</thead>
 			<tbody>
@@ -70,8 +71,9 @@
 					<td><a href='javascript:getStudent(#billingStudentId#)'>#bannerGNumber#</a></td>
 					<td>#program#</td>
 					<td>#billingPeriod#</td>
-					<td>#exitdate#</td>
+					<td>#exitDate#</td>
 					<td>#billingstudentexitreasondescription#</td>
+					<td>#sidnyexitreasondescription#</td>
 				</tr>
 			</cfoutput>
 			</tbody>

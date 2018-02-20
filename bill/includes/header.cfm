@@ -30,6 +30,7 @@
 		 		<li><a href="AddStudent.cfm">Add Student</a></li>
 		 		<li><a href="AddScenario.cfm">Scenarios</a></li>
 				<li><a href="ReportSummary.cfm?type=Attendance">Reporting</a></li>
+				<li><a href="ReportAttendanceEntry.cfm">Export Attendance</a></li>
 			</ul>
 		</li>
 		<li><a href="ProgramStudent.cfm">Review Billing</a>
@@ -44,6 +45,7 @@
 				<li><a href="ReportExitStatus.cfm">Exit Status Report</a></li>
 				<li><a href="ReportADM.cfm">ADM Report</a></li>
 				<li><a href="ReportPPS.cfm">PPS Report</a></li>
+				<li><a href="ReportEnrollment.cfm">Enrollment Report</a></li>
 				<li><a href="ReportOverage.cfm?program=GtC">GtC Overage Report</a></li>
 				<li><a href="ReportOverage.cfm?program=YtC">YtC Overage Report</a></li>
 			</ul>

@@ -36,7 +36,7 @@
 		</label>
 	</div>--->
 	<div class="small-4 columns">
-		<label for="Program">Program:
+		<label for="program">Program:
 			<select name="program" id="program">
 				<option disabled <cfif Variables.Program EQ ""> selected </cfif> value="" > --Select Program-- </option>
 				<cfoutput query="programs">
@@ -51,32 +51,29 @@
 
 <div class="row">
 	<div class="small-12 columns">
-		<table id="dt_table" class="hover" cellspacing="0" width="100%">
+		<table id="dt_table" class="hover" cellspacing="0" style="width:100%">
 			<thead>
-				<tr>
-					<td colspan="9" style="font-weight:500;font-style:italic">Enter search criteria in the boxes below</td>
-				</tr>
 				<tr id="headerRow">
-					<th id="coach">Coach</th>
-					<th id="bannerGNumber">G</th>
-					<th id="firstname">First name</th>
-					<th id="LASTNAME">Last name</th>
-					<th id="SchoolDistrict">School District</th>
-					<th id="Program">Program</th>
-					<th id="BillingStatus" class="notForPrint">Review with Coach</th>
-					<td id="ReviewNotes">Notes</th>
-					<th id="BillingStudentId" class="notForPrint"></th>
+					<th id="coachHeader">Coach</th>
+					<th id="bannergnumberHeader">G</th>
+					<th id="firstnameHeader">First name</th>
+					<th id="lastnameHeader">Last name</th>
+					<th id="schooldistrictHeader">School District</th>
+					<th id="programHeader">Program</th>
+					<th >Review with Coach</th>
+					<td id="reviewnotesHeader">Notes</th>
+					<th  ></th>
 				</tr>
 				<tr id="searchRow">
-					<th><input type="text" placeholder="Coach"></th>
-					<th><input type="text" placeholder="G" /></th>
-					<th><input type="text" placeholder="First name" /></th>
-					<th><input type="text" placeholder="Last name" /></th>
-					<th><input type="text" placeholder="School District" /></th>
-					<th><input type="text" placeholder="Program" /></th>
-					<th><input type="text" placeholder="Review with Coach" /></th>
-					<th><input type="text" placeholder="Notes" /></th>
-					<th></th>
+					<th><input type="text" placeholder="Coach" id="coach"></th>
+					<th><input type="text" placeholder="G" id="bannergnumber"/></th>
+					<th><input type="text" placeholder="First name" id="firstname"/></th>
+					<th><input type="text" placeholder="Last name" id="lastname" /></th>
+					<th><input type="text" placeholder="School District" id="schooldistrict" /></th>
+					<th><input type="text" placeholder="Program" id="program"/></th>
+					<th class="notForPrint"><input type="text" placeholder="Review Y/N" /></th>
+					<th><input type="text" placeholder="Notes" id="reviewnotes"/></th>
+					<th class="notForPrint"></th>
 				</tr>
 			</thead>
 			<tbody>
@@ -132,13 +129,23 @@
 					filterShowAll(table, this);
             	  }
             	},
-				/*{extend: 'excel',
+				{extend: 'excel',
             		text: 'export',
             		exportOptions:{
-            			columns: ':not(.notForPrint)'
-  					},
-  					title: 'Coach Review'
-				}*/
+            			columns: ':not(.notForPrint)',
+  						format: {
+	                         header:  function (data, columnIdx) {
+	                         	if(data){
+	                         		var id = $(data).attr("id");
+	                         		return $('#'+ id +"Header").html();
+	                         	}else{
+	                         		return data;
+	                         	}
+                        	}
+  						},
+            		},
+  					title: 'Billing Review',
+				}
             	]
 			});
 			//hide main filter

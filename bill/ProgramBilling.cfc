@@ -49,6 +49,7 @@
 				JOIN (SELECT contactID, max(statusID) statusID
 		   			  FROM status
            			  WHERE keyStatusID = 6
+						and undoneStatusID is null
           			  GROUP BY contactID) coachLastStatus
 			    	ON coachLastStatus.contactID = bs.contactID
 				JOIN (SELECT sres.statusID, res.rsName
@@ -861,7 +862,9 @@
 		<cfquery name="updateItem">
 			UPDATE billingStudentItem
 			SET attendance = #attendance#
-				, maxPossibleAttendance = #numberOfDays#
+				,maxPossibleAttendance = #numberOfDays#
+				,lastUpdatedBy=<cfqueryparam value=#Session.username#>
+				,dateLastUpdated=current_timestamp
 			WHERE billingStudentItemId = <cfqueryparam value="#arguments.billingStudentItemId#">
 		</cfquery>
 		<cfset dataset = {"attendance":#attendance#, "numberOfDays":#numberOfDays#}>
@@ -889,6 +892,8 @@
 			update billingStudentItem
 			set attendance = <cfif arguments.attendance EQ "">NULL<cfelse><cfqueryparam value="#arguments.attendance#"></cfif>
 				,maxPossibleAttendance = <cfif arguments.maxPossibleAttendance EQ "">NULL<cfelse><cfqueryparam value="#arguments.maxPossibleAttendance#"></cfif>
+				,lastUpdatedBy=<cfqueryparam value=#Session.username#>
+				,dateLastUpdated=current_timestamp
 			where billingStudentItemId = <cfqueryparam value="#arguments.billingStudentItemId#">
 		</cfquery>
 	</cffunction>
@@ -1015,6 +1020,8 @@
 			<cfquery name="updateData" >
 				update billingStudentItem
 				set  includeFlag = 1
+				,lastUpdatedBy=<cfqueryparam value=#Session.username#>
+				,dateLastUpdated=current_timestamp
 				where billingStudentItemId = <cfqueryparam value="#arguments.billingstudentitemid#">
 			</cfquery>
 			<cfreturn #arguments.billingstudentitemid#>
@@ -1055,6 +1062,8 @@
 			<cfquery name="updateData" >
 				update billingStudentItem
 				set  includeFlag = 1
+				,lastUpdatedBy=<cfqueryparam value=#Session.username#>
+				,dateLastUpdated=current_timestamp
 				where billingStudentItemId = <cfqueryparam value="#arguments.billingstudentitemid#">
 			</cfquery>
 			<cfreturn #arguments.billingstudentitemid#>
@@ -1111,6 +1120,8 @@
 		<cfquery name="deleteData" >
 			update billingStudentItem
 			set  includeFlag = 0
+				,lastUpdatedBy=<cfqueryparam value=#Session.username#>
+				,dateLastUpdated=current_timestamp
 			where billingStudentItemId = <cfqueryparam value="#arguments.billingstudentitemid#">
 		</cfquery>
 	</cffunction>
@@ -1120,11 +1131,16 @@
 		<cfargument name="term" required="true">
 		<cfquery name="data">
 			select *
-			from (select *
-			from billingScenarioByCourse
-			where term = <cfqueryparam value="#arguments.term#">
+			from (select bsbc1.billingScenarioByCourseId, bsbc1.billingScenarioId, bsbc1.Term, bsbc1.CRN, bsData.CRSE, bsData.SUBJ, bsData.Title
+			from billingScenarioByCourse bsbc1
+				join (select distinct crn, CRSE, SUBJ, Title
+					  from billingStudentItem bsi
+						join billingStudent bs on bsi.billingStudentId = bs.BillingStudentID
+						where bs.term = <cfqueryparam value="#arguments.term#">
+					) bsData on bsbc1.crn = bsData.crn
+			where bsbc1.term = <cfqueryparam value="#arguments.term#">
 			union
-			select null, null, bs.term, bsi.crn
+			select null, null, bs.term, bsi.crn, bsi.CRSE, bsi.SUBJ, bsi.Title
 			from billingStudentItem bsi
 				join billingStudent bs on bsi.billingStudentId = bs.BillingStudentID
 				left outer join billingScenarioByCourse bsbc on bsi.crn = bsbc.crn and bs.term = bsbc.term
@@ -1132,7 +1148,7 @@
 				and bsbc.crn is null
 				and bs.program like '%attendance%'
 			) data
-			order by crn
+			order by SUBJ, CRSE
 		</cfquery>
 		<cfreturn data>
 	</cffunction>
@@ -1156,24 +1172,40 @@
 
 		<cfquery name="data">
 			select bsp.firstName, bsp.lastName, bs.bannerGNumber, bs.Program
-				,Date_Format(bs.billingStartDate,'%m/%d/%Y') billingPeriod
-				,Date_Format(bs.exitDate,'%m/%d/%Y') exitDate
+				,Date_Format(bs.billingStartDate,'%Y-%m-%d') billingPeriod
+				,Date_Format(bs.exitDate,'%Y-%m-%d') exitDate
 				,er.billingStudentExitReasonDescription
+				,ksr.reasonText sidnyExitReasonDescription
 				,bs.billingStudentId
 			from billingStudent bs
 				JOIN billingStudentProfile bsp on bs.contactId = bsp.contactId
 				left join billingStudentExitReason er on bs.billingStudentExitReasonCode = er.billingStudentExitReasonCode
+				left outer join keyStatusReason ksr on bs.exitStatusReasonID = ksr.keyStatusReasonID
 			where bs.billingStudentID IN
 			<cfif arguments.billingStudentId EQ 0>
 				(select max(billingStudentId)
 				 from billingStudent
-				 where term in (select term from bannerCalendar where ProgramYear = <cfqueryparam value="#arguments.ProgramYear#">
-				 	and includeFlag = 1)
+				 where term in (select term from bannerCalendar where ProgramYear = <cfqueryparam value="#arguments.ProgramYear#">)
+				 	and includeFlag = 1
 				 group by contactId, program, enrolledDate)
 			<cfelse>
 				(<cfqueryparam value="#arguments.billingStudentId#">)
 			</cfif>
 		</cfquery>
+		<cfreturn data>
+	</cffunction>
+
+	<cffunction name="getExitDateList2" returnformat="json" access="remote">
+		<cfargument name="billingStartDate" required="true">
+		<cfargument name="billingEndDate" required="true">
+
+		<cfstoredproc procedure="spGetBillingStudentExitData" >
+			<cfprocparam value="#arguments.billingStartDate#" cfsqltype="CF_SQL_DATE">
+			<cfprocparam value="#arguments.billingEndDate#" cfsqltype="CF_SQL_DATE">
+			<cfprocparam value="" cfsqltype="CF_SQL_STRING">
+			<cfprocresult name="data">
+		</cfstoredproc>
+
 		<cfreturn data>
 	</cffunction>
 
@@ -1203,6 +1235,8 @@
 				on entryDate.contactId = exitDate.contactId
 					and (entryDate <= exitDate.exitDate OR exitDate.exitDate IS NULL)
 			set bs.ExitDate = exitDate.exitDate
+				,lastUpdatedBy=<cfqueryparam value=#Session.username#>
+				,dateLastUpdated=current_timestamp
 			where bs.billingStartDate = <cfqueryparam value="#DateFormat(arguments.termBeginDate,'yyyy-mm-dd')#">
 				and bs.program not like '%attendance%'
 				and bs.exitDate is null
@@ -1230,6 +1264,8 @@
 				on entryDate.contactId = exitDate.contactId
 					and (entryDate <= exitDate.exitDate OR exitDate.exitDate IS NULL)
 			set bs.ExitDate = exitDate.exitDate
+				,lastUpdatedBy=<cfqueryparam value=#Session.username#>
+				,dateLastUpdated=current_timestamp
 			where bs.billingStartDate = <cfqueryparam value="#DateFormat(arguments.billingStartDate,'yyyy-mm-dd')#">
 				and bs.billingEndDate = <cfqueryparam value="#DateFormat(arguments.billingEndDate,'yyyy-mm-dd')#">
 				and bs.exitDate is null
@@ -1298,5 +1334,54 @@
 		</cfquery>
 		<cfreturn data>
 	</cffunction>
+	<cffunction name="getbillingStudentProfile"  returntype="query" access="remote">
+		<cfargument name="contactId" required="true">
+		<cfquery name ="data">
+			select *
+			from billingStudentProfile
+			where contactid = <cfqueryparam value="#arguments.contactId#">
+		</cfquery>
+		<cfreturn data>
+	</cffunction>
+	<cffunction name="updateBillingStudentProfile" access="remote">
+		<cfargument name="contactId" required="true">
+		<cfargument name="firstName" required="true">
+		<cfargument name="lastName" required="true">
+		<cfargument name="dob" required="true">
+		<cfargument name="gender" required="true">
+		<cfargument name="ethnicity" required="true">
+		<cfargument name="address" required="true">
+		<cfargument name="city" required="true">
+		<cfargument name="state" required="true">
+		<cfargument name="zip" required="true">
 
+		<cfquery name="update">
+			update billingStudentProfile
+			set firstname = <cfqueryparam value="#arguments.firstname#">,
+				lastName = <cfqueryparam value="#arguments.lastName#">,
+				dob = <cfqueryparam value="#DateFormat(arguments.dob,'yyyy-mm-dd')#">,
+				gender = <cfqueryparam value="#arguments.gender#">,
+				ethnicity = <cfqueryparam value="#arguments.ethnicity#">,
+				address = <cfqueryparam value="#arguments.address#">,
+				city = <cfqueryparam value="#arguments.city#">,
+				state = <cfqueryparam value="#arguments.state#">,
+				zip = <cfqueryparam value="#arguments.zip#">
+			where contactId = <cfqueryparam value="#arguments.contactid#">
+		</cfquery>
+	</cffunction>
+
+	<cffunction name="getStudentForCRNAndTerm" returntype="query" access="remote">
+		<cfargument name="crn" required="true">
+		<cfargument name="term" required="true">
+		<cfquery name="data">
+			select distinct firstname, lastname
+			from billingStudentProfile bp
+				join billingStudent bs on bp.contactid = bs.contactid
+			    join billingStudentItem bsi on bs.BillingStudentID = bsi.BillingStudentID
+			where bs.term = <cfqueryparam value="#arguments.term#">
+			and bsi.crn = <cfqueryparam value="#arguments.crn#">
+			order by firstname, lastname
+		</cfquery>
+		<cfreturn data>
+	</cffunction>
 </cfcomponent>
