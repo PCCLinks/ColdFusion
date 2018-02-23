@@ -235,8 +235,8 @@
 		<cfargument name="schooldistrict" required="true">
 		<cfquery name="data">
 			select concat(lastname,', ',firstname) name, bannerGNumber, DATE_FORMAT(dob,'%m/%d/%Y') dob, DATE_FORMAT(exitdate,'%m/%d/%Y') exitDate,
-				MIN(DATE_FORMAT(billingStartDate,'%m/%d/%Y')) enrolledDate,
-				DATE_FORMAT(bannerCal.reportStartDate, '%m/%d/%Y') ReportStartDate, DATE_FORMAT(bannerCal.reportEndDate, '%m/%d/%Y') ReportEndDate,
+				DATE_FORMAT(MIN(billingStartDate),'%m/%d/%Y') enrolledDate,
+				DATE_FORMAT(MAX(bannerCal.reportStartDate), '%m/%d/%Y') ReportStartDate, '01/31/2018' ReportEndDate,
 				SUM(IFNULL(Enrollment,0)) Enrl, schooldistrict, program,
 				SUM(ROUND(IFNULL(case when month(billingStartDate) = 6 then billedAmount end,0),1)) Jun,
 				SUM(ROUND(IFNULL(case when month(billingStartDate) = 7 then billedAmount end,0),1)) Jul,
@@ -277,9 +277,9 @@
 			) data,
  			(select min(termBeginDate) reportStartDate, max(termEndDate) reportEndDate
               from bannerCalendar
-               where programYear = (select programYear from bannerCalendar where term = 201704)
-  			  and term <= 201704) bannerCal
-			group by lastname, firstname, bannerGNumber, dob, schooldistrict, program, exitdate, bannerCal.reportStartDate, bannerCal.reportEndDate
+               where programYear = (select programYear from bannerCalendar where term = <cfqueryparam value=#arguments.term#>)
+  			  and term <= <cfqueryparam value=#arguments.term#>) bannerCal
+			group by lastname, firstname, bannerGNumber, dob, schooldistrict, program, exitdate
 			order by lastname, firstname, exitdate
 		</cfquery>
 		<cfset list = "">
@@ -644,4 +644,18 @@
 		<cfreturn data>
 	</cffunction>
 
+	<cffunction name="updateOverrideTotal" access="remote">
+		<cfargument name="program" required="true">
+		<cfargument name="schooldistrict" required="true">
+		<cfargument name="month" required="true">
+		<cfargument name="value" required="true">
+		<cfset appObj.logDump(label="arguments", value="#arguments#", level=5) >
+		<cfquery name="update" result="r">
+			update billingStudentTotalOverride
+			set `#month#` =  <cfif len(arguments.value) EQ 0>NULL<cfelse><cfqueryparam value="#arguments.value#"></cfif>
+			where program = <cfqueryparam value="#arguments.program#">
+				and schooldistrict = <cfqueryparam value="#arguments.schooldistrict#">
+		</cfquery>
+		<cfset appObj.logDump(label="r", value="#r#", level=5) >
+	</cffunction>
 </cfcomponent>

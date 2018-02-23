@@ -52,11 +52,10 @@
 
 <input class="button" id="recalculate" value="Recalculate" onClick="javascript: reCalculate();">
 <input class="button" id="print" value="Print Friendly Version" onClick="javascript: print();">
+<!---<input class="button" id="exportToExcel" value="Export to Excel" onClick="javascript: exportToExcel();">--->
 	<div id="displayTable">
 	<cfinclude template="includes\reportAttendanceDisplayTableInclude.cfm">
 	</div>
-
-
 	<cfsavecontent variable="pcc_scripts">
 	<script>
 
@@ -79,6 +78,9 @@
 
 	function print(){
 		window.open('ReportAttendancePrintTable.cfm');
+	}
+	function exportToExcel(){
+		window.open('ReportAttendanceExcelExport.cfm');
 	}
 
 	function reCalculate(){

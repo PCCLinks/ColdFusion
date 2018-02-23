@@ -142,22 +142,29 @@
 					sum(attnd) Attnd, sum(enrl) enrl
 				from data
 		</cfquery>
+		<cfquery name="ovrd">
+			select *
+			from billingStudentTotalOverride
+			where schooldistrict = <cfqueryparam value="#data.schooldistrict#">
+				and Program = <cfqueryparam value="#data.Program#">
+				and ProgramYear = '2017/2018'
+		</cfquery>
 		<cfoutput query="totals">
 		<tr>
 			<td style="border-top-style:solid;width:30px" >Total:</td>
 			<td style="border-top-style:solid;width:18px" >#cnt#</td>
-			<td style="border-top-style:solid" class="tdmonth">#Jun#</td>
-			<td style="border-top-style:solid" class="tdmonth">#Jul#</td>
-			<td style="border-top-style:solid" class="tdmonth">#Aug#</td>
-			<td style="border-top-style:solid" class="tdmonth">#Sept#</td>
-			<td style="border-top-style:solid" class="tdmonth">#Oct#</td>
-			<td style="border-top-style:solid" class="tdmonth">#Nov#</td>
-			<td style="border-top-style:solid" class="tdmonth">#Dcm#</td>
-			<td style="border-top-style:solid" class="tdmonth">#Jan#</td>
-			<td style="border-top-style:solid" class="tdmonth">#Feb#</td>
-			<td style="border-top-style:solid" class="tdmonth">#Mar#</td>
-			<td style="border-top-style:solid" class="tdmonth">#Apr#</td>
-			<td style="border-top-style:solid" class="tdmonth">#May#</td>
+			<td style="border-top-style:solid" class="tdmonth"><cfif len(ovrd.Jun) GT 0>#ovrd.Jun#<cfelse>#Jun#</cfif></td>
+			<td style="border-top-style:solid" class="tdmonth"><cfif len(ovrd.Jul) GT 0>#ovrd.Jul#<cfelse>#Jul#</cfif></td>
+			<td style="border-top-style:solid" class="tdmonth"><cfif len(ovrd.Aug) GT 0>#ovrd.Aug#<cfelse>#Aug#</cfif></td>
+			<td style="border-top-style:solid" class="tdmonth"><cfif len(ovrd.Sept) GT 0>#ovrd.Sept#<cfelse>#Sept#</cfif></td>
+			<td style="border-top-style:solid" class="tdmonth"><cfif len(ovrd.Oct) GT 0>#ovrd.Oct#<cfelse>#Oct#</cfif></td>
+			<td style="border-top-style:solid" class="tdmonth"><cfif len(ovrd.Nov) GT 0>#ovrd.Nov#<cfelse>#Nov#</cfif></td>
+			<td style="border-top-style:solid" class="tdmonth"><cfif len(ovrd.Dcm) GT 0>#ovrd.Dcm#<cfelse>#Dcm#</cfif></td>
+			<td style="border-top-style:solid" class="tdmonth"><cfif len(ovrd.Jan) GT 0>#ovrd.Jan#<cfelse>#Jan#</cfif></td>
+			<td style="border-top-style:solid" class="tdmonth"><cfif len(ovrd.Feb) GT 0>#ovrd.Feb#<cfelse>#Feb#</cfif></td>
+			<td style="border-top-style:solid" class="tdmonth"><cfif len(ovrd.Mar) GT 0>#ovrd.Mar#<cfelse>#Mar#</cfif></td>
+			<td style="border-top-style:solid" class="tdmonth"><cfif len(ovrd.Apr) GT 0>#ovrd.Apr#<cfelse>#Apr#</cfif></td>
+			<td style="border-top-style:solid" class="tdmonth"><cfif len(ovrd.May) GT 0>#ovrd.May#<cfelse>#May#</cfif></td>
 			<td style="border-top-style:solid" class="tdmonth">#Attnd#</td>
 			<td style="border-top-style:solid" class="tdmonth">#Enrl#</td>
 		</tr>
