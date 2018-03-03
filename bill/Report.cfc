@@ -492,13 +492,23 @@
 	<cffunction name="overageReport" access="remote">
 		<cfargument name="gtcOrYes" required="true">
 		<cfquery name="data">
-			SELECT bsp.firstName, bsp.lastName, bs.bannerGNumber,
+			SELECT bsp.firstName, bsp.lastName, bs.bannerGNumber, substring_index(statusIDCoach,'|',-1) Coach,
 				MAX(billingStudentId) billingStudentId,
 				SUM(coalesce(PostBillCorrectedBilledAmount, FinalBilledAmount, CorrectedBilledAmount, GeneratedBilledAmount,0)) Days,
-    			SUM(coalesce(FinalBilledUnits, CorrectedBilledUnits, GeneratedBilledUnits,0)) Credits
+    			SUM(coalesce(FinalBilledUnits, CorrectedBilledUnits, GeneratedBilledUnits,0)) Credits,
+                MAX(bs.Term) MaxTerm
 			FROM billingStudent bs
 				join billingStudentProfile bsp on bs.contactId = bsp.contactId
 				JOIN bannerCalendar bc on bs.term = bc.term
+                LEFT OUTER JOIN (SELECT contactID, max(concat(status.statusDate,'|', res.rsName)) statusIDCoach
+		   			  FROM status
+						join statusResourceSpecialist sres on status.statusId = sres.statusID
+						JOIN keyResourceSpecialist res
+							ON sres.keyResourceSpecialistID = res.keyResourceSpecialistID
+           			  WHERE keyStatusID = 6
+						and undoneStatusID is null
+          			  GROUP BY contactID) coach
+					ON coach.contactID = bs.contactID
 			WHERE <cfif arguments.gtcOrYes EQ 'gtc'>
 				Program = 'GtC'
 				<cfelse>
@@ -628,15 +638,17 @@
 		<cfreturn data>
 	</cffunction>
 
-	<cffunction name="attendanceentry" returntype="query" returnformat="json"  access="remote">
+	<cffunction name="attendanceEntry" returntype="query" returnformat="json"  access="remote">
 		<cfargument name="billingStartDate" required="true">
 		<cfquery name="data">
 			select CRN, CRSE, SUBJ, Title, CASE WHEN bs.IncludeFlag=0 OR bs.IncludeFlag IS NULL THEN 'Student NOT Billed' ELSE NULL END IncludeStudent
 				,bsp.bannerGNumber, bsp.firstName, bsp.lastName, bs.billingStudentId, Attendance, MaxPossibleAttendance
+				,schoolDistrict, bs.Program
 			    ,CASE WHEN bsi.IncludeFlag=0 OR bsi.IncludeFlag IS NULL THEN 'Class NOT Billed' ELSE NULL END IncludeClass
 			from billingStudent bs
 				join billingStudentItem bsi on bs.billingStudentId = bsi.billingStudentId
 			    left outer join billingStudentProfile bsp on bs.contactid = bsp.contactId
+			    left outer join keySchoolDistrict sd on bs.districtId = sd.keySchoolDistrictId
 			where bs.billingStartDate = <cfqueryparam value="#arguments.billingStartDate#">
 			and bs.program like '%attendance%'
 			order by CRN, lastname

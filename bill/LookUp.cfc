@@ -158,6 +158,19 @@
 		</cfquery>
 		<cfreturn data>
 	</cffunction>
+	<cffunction name="getNextAttendanceDatesToBill" access="remote">
+		<cfquery datasource="pcclinks" name="data">
+			SELECT *
+			FROM bannerCalendar bc
+				JOIN (SELECT MAX(BillingStartDate) Term
+						,Date_Add(MAX(billingEndDate),INTERVAL 1 Day) NextDate
+						,DATE_ADD(MAX(billingEndDate), INTERVAL (9 - IF(DAYOFWEEK(MAX(billingEndDate))=1, 8, DAYOFWEEK(CURDATE()))) DAY) Next
+						FROM billingStudent
+	               		WHERE program like '%Attendance%') d
+	               	on d.NextDate between termBeginDate and termEndDate
+		</cfquery>
+		<cfreturn data>
+	</cffunction>
 	<cffunction name="getProgramYearTerms" access="remote">
 	<cfargument name="term" default="">
 	<cfif len(arguments.term) EQ 0>

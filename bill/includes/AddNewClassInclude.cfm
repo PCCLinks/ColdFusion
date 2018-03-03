@@ -1,12 +1,15 @@
 
 
 
-<div class= "callout display" id="addNewClassDisplay">
+<div class="callout" id="addNewClassDisplay">
 	<div class="row">
-		<div class="small-12 columns"><b>Enter a CRN or, if there is no CRN, a Short Name to Identify the Class.
-			<br>Subject, Course and Title are optional.
-			<br>Select below the students to add to the new class.
-			<br>Once all the students have been added, click &#60;Enter Attendance&#62.</b></div>
+		<div class="small-12 columns">Enter a CRN or, if there is no CRN, a Short Name to Identify the Class.
+			<ul>
+				<li>Subject, Course and Title are optional.</li>
+				<li>Select below the students to add to the new class.</li>
+				<li>Once all the students have been added, click &#60;Enter Attendance&#62.</li>
+			</ul>
+		</div>
 	</div>
 	<div class="row">
 		<div class="small-2 columns"><label>CRN:* <input id="crn_anc"></label></div>

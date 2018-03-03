@@ -9,6 +9,10 @@
 <cfparam name="selectedCRN" default="">
 <cfif structKeyExists(url, "crn")>
 	<cfset Variables.selectedCRN = url.crn>
+<cfelse>
+	<cfif structKeyExists(Session, "selectedCRN")>
+		<cfset Variables.selectedCRN = Session.selectedCRN>
+	</cfif>
 </cfif>
 
 
@@ -50,7 +54,7 @@
 		<div class="small-1 medium-5 columns"><br>
 			<input id="btnAddClass" type="button" class="button" value="Add New Class" onClick="javascript:addClass();">
 			<input id="btnAddLab" type="button" class="button" value="Add Lab" onClick="javascript:addLab();">
-			<input id="btnShowStudent" type="button" class="button" value="Add/Remove Students" onClick="javascript:showStudents();">
+			<input id="btnAddStudent" type="button" class="button" value="Add Student" onClick="javascript:addStudent();">
 			<input id="btnShowAttendance" type="button" class="button" value="Enter Attendance" onClick="javascript:showAttendance();">
 		</div>
 	</div>
@@ -63,6 +67,7 @@
 <cfsavecontent variable="pcc_scripts">
 <script>
 	var selectedCRN = '<cfoutput>#selectedCRN#</cfoutput>';
+
 	var addBillingStudentTable = null;
 	$(document).ready(function() {
 		getCRN();
@@ -230,6 +235,37 @@
 		}else{
 			$('#btnShowAttendance').hide();
 		}
+	}
+
+	function  removeItem(billingStudentItemID, billingStudentID)
+	{
+		var response = window.confirm('Are you sure you want to remove this item?');
+		if(response)
+		{
+			$.blockUI({ message: '<h1>Just a moment...</h1>' });
+			$.ajax({
+	            type: 'post',
+	            url: 'programBilling.cfc?method=removeItem',
+	            data: {billingStudentItemID: billingStudentItemID, isAjax:'true'},
+	            datatype:'json',
+	            async:false,
+	            success: function(){
+	            	$('#' + billingStudentID).parent().html('<input type="checkbox" id=' + billingStudentID + ' onclick="javascript:insertItem(' + billingStudentID + ', ' + billingStudentItemID + ');">');
+	            },
+	            error: function (jqXHR, exception) {
+					handleAjaxError(jqXHR, exception);
+				}
+        	});
+        	//refresh page
+        	getAttendanceEntryInclude();
+        	$.unblockUI();
+		}
+	}
+	function addStudent(){
+		var data = $.param({selectedCRN:selectedCRN, addStudentReturnPage:'attendanceEntry.cfm'});
+  		$.post("SaveSession.cfm", data, function(){
+  			window.location	='addStudent.cfm';
+  		});
 	}
 </script>
 </cfsavecontent>

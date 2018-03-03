@@ -14,7 +14,8 @@
 
 <cfoutput query="data">
 <div class="row">
-	<div class="small-12 medium-12 columns display readonly">#data.lastname#, #data.firstname# (#data.bannerGNumber#)</div>
+	<div class="small-8 medium-9 columns display readonly">#data.lastname#, #data.firstname# (#data.bannerGNumber#)</div>
+	<div class="small-3 medium-3 columns display"><a href="javascript:removeItem(#data.billingStudentItemId#, #data.billingStudentId#)">Remove from Class</a></div>
 </div>
 <div class="row">
 	<div class="column small-3 large-1" >Attendance: <input onBlur="saveEntry(#data.billingStudentItemId#);" value="#NumberFormat(Attendance,"0")#" id='attendance#data.billingStudentItemId#' style="width:50px"></div>

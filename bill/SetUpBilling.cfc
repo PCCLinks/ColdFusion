@@ -297,6 +297,7 @@
 		<!--- <cfargument name = "billingStartDate" required="true">--->
 		<!--- passing in current classes in banner --->
 		<cfargument name = "bannerClasses" type="query" required="true">
+		<cfargument name="term" required="true">
 
 		<!--- debug code --->
 		<cfset appObj.logEntry(value="FUNCTION populateClassEntries #Now()#", level=5) >
@@ -307,6 +308,25 @@
 		<!--- in order to determine if any new classes need to be added --->
 		<!---------------------------------------------------------------->
 
+		<!--- for attendance, sometimes add classes other than what is in Banner --->
+		<!--- so want to readd them in subsequent months in the same term --->
+		<cfquery name="billedInTerm">
+			select distinct CRN, CRSE, SUBJ, Title, Credits
+			from billingStudent bs
+				join billingStudentItem bsi on bs.billingStudentId = bsi.BillingStudentID
+			where bsi.includeFlag = 1
+				and term = <cfqueryparam value="#arguments.term#">
+				and contactid = (select contactid from billingStudent where billingStudentId = <cfqueryparam value="#arguments.billingStudentId#">)
+		</cfquery>
+
+		<cfquery name="bannerAndBilledClassesForTerm" dbtype="query">
+			select CAST(CRN as varchar) CRN, CAST(CRSE AS varchar) CRSE, SUBJ, Title, CAST(Credits as INTEGER) Credits
+			from bannerClasses
+			union
+			select CAST(CRN as varchar) CRN, CAST(CRSE as varchar) CRSE, SUBJ, Title, CAST(Credits as INTEGER) Credits
+			from billedInTerm
+		</cfquery>
+
 		<!--- get classes currently added to bill --->
 		<cfquery name = "existingBilling" >
 			select *
@@ -314,12 +334,12 @@
 				join billingStudentItem bsi on bs.BillingStudentID = bsi.BillingStudentID
 			where bs.billingstudentid = <cfqueryparam value="#arguments.billingStudentID#">
 		</cfquery>
-		<cfset appObj.logDump(label="existing billing", value=existingBilling) >
+		<cfset appObj.logDump(label="existing billing", value=existingBilling, level=5) >
 
 		<!--- union with banner data ---->
 		<cfquery name="unionRows" dbtype="query">
 			select CAST(CRN as varchar) CRN, CAST(CRSE AS varchar) CRSE, SUBJ, Title, CAST(Credits as INTEGER) Credits, 1 addOrSubtract
-			from bannerClasses
+			from bannerAndBilledClassesForTerm
 			union all
 			select CAST(CRN as varchar) CRN, CAST(CRSE as varchar) CRSE, SUBJ, Title, CAST(Credits as INTEGER), -1 addOrSubtract
 			from existingBilling
@@ -540,7 +560,8 @@
 													bannerGNumber=#studentQry.bannerGNumber#,
 													PIDM = #studentQry.PIDM#,
 													billingStartDate=#arguments.billingStartDate#,
-													bannerClasses=#local.bannerClasses#)>
+													bannerClasses=#local.bannerClasses#,
+													term = #local.term#)>
 
 					<!--- for current term only ---------------------->
 					<!--- check if class already taken and exclude --->
@@ -615,7 +636,8 @@
 												bannerGNumber=#studentQry.bannerGNumber#,
 												PIDM = #studentQry.PIDM#,
 												billingStartDate=#arguments.billingStartDate#,
-												bannerClasses=#local.bannerClasses#)>
+												bannerClasses=#local.bannerClasses#,
+												term = #arguments.term#)>
 
 			<cfquery name = "isCredit" >
 				select *
@@ -702,14 +724,13 @@
 		<cfset local.billingStudentId = setUpStudent(billingEndDate=#arguments.billingEndDate#, billingStartDate=#arguments.billingStartDate#,
 								term = #arguments.term#, bannerGNumber = #arguments.bannerGNumber#) >
 
-	<!--->
-		<cfset var studentQry = getStudents(beginDate = '2000-01-01', endDate='2999-12-31',
-													bannerGNumber = #arguments.bannerGNumber#) >
-		<cfset appObj.logDump(label="studentQry", value="#studentQry#", level=5)>
-		<cfset contactrow=#GetQueryRow(studentQry, 1)#>
-		<cfset local.returnArray = getBillingStudent(contactrow=#contactrow#, billingStartDate=#arguments.billingStartDate#,
-														billingEndDate=#arguments.billingEndDate#, term=#arguments.term#) >
-		<cfset appObj.logDump(label="returnArray", value="#local.returnArray#", level=5)>--->
+		<!--- restore everything to included, if was unflagged --->
+		<cfquery>
+			UPDATE billingStudentItem
+			SET IncludeFlag = 1
+			WHERE billingStudentId = <cfqueryparam value="#local.billingStudentId#">
+		</cfquery>
+
 		<cfreturn local.billingStudentId>
 	</cffunction>
 	<cffunction name="getInsertCount" access="remote" returnFormat = "json">

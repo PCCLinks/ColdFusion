@@ -33,7 +33,7 @@
 
 	function  removeItem(billingStudentItemID, billingStudentID)
 	{
-		var response = window.confirm('Are you sure you want to remove this item?');
+		var response = window.confirm('Are you sure you want to remove this student from this class?');
 		if(response)
 		{
 			$.ajax({
@@ -47,7 +47,7 @@
 	            error: function (jqXHR, exception) {
 					handleAjaxError(jqXHR, exception);
 				}
-        });
+        	});
 		}
 	}
 

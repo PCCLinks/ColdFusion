@@ -147,6 +147,7 @@
 
 <cfsavecontent variable="pcc_scripts">
 <script>
+	<cfif IsDefined("Session.addStudentReturnPage")>var returnPage = '<cfoutput>#Session.addStudentReturnPage#</cfoutput>';</cfif>
 	var table;
 	$(document).ready(function() {
 		//intialize table
@@ -185,7 +186,7 @@
                  },
                 {targets: 7,
 			 	render: function ( data, type, row ) {
-                 			return '<a href="javascript:addStudent(\''+data+'\')">Add</a>';
+                 			return '<a href="javascript:addStudent(\''+data+'\')">Select</a>';
             			}
 			 	},
                ]
@@ -253,13 +254,17 @@
             data:{bannerGNumber:$('#bannerGNumber').val(), term:$('#term').val(),
             		billingStartDate:$('#billingStartDate').val(), billingEndDate:$('#billingEndDate').val()},
             dataType: 'json',
+            async:false,
             success: function(billingStudentId){
             	window.location = 'programStudentDetail.cfm?billingStudentId='+billingStudentId+'&showNext=false';
             },
             error: function (jqXHR, exception) {
 			    handleAjaxError(jqXHR, exception);
             }
-        })
+        });
+        if(returnPage){
+        	window.location(returnPage);
+        }
     }
 	function setDate(term, displayField, idName){
 		selectedTerm = term;

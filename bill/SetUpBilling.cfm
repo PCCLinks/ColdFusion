@@ -2,7 +2,11 @@
 <cfinclude template="includes/header.cfm" />
 
 <cfinvoke component="LookUp" method="getCurrentYearTerms" returnvariable="qryTerms"></cfinvoke>
-<cfinvoke component="LookUp" method="getNextTermToBill" returnvariable="nextTerm"></cfinvoke>
+<cfif url.type EQ 'Term'>
+	<cfinvoke component="LookUp" method="getNextTermToBill" returnvariable="nextTerm"></cfinvoke>
+<cfelse>
+	<cfinvoke component="LookUp" method="getNextAttendanceDatesToBill" returnvariable="nextTerm"></cfinvoke>
+</cfif>
 <cfinvoke component="LookUp" method="getPrograms" returnvariable="qryPrograms"></cfinvoke>
 
 <style>
@@ -53,7 +57,9 @@
 		<cfoutput>
 		<div class="small-4 columns">
 			<label>Billing Start Date:<br/>
-				<input name="billingStartDate" id="billingStartDate" type="text" class="fdatepicker" <cfif url.type EQ 'Term'>value="#DateFormat(nextTerm.termBeginDate,'mm/dd/yyyy')#" </cfif>/>
+				<input name="billingStartDate" id="billingStartDate" type="text" class="fdatepicker"
+						<cfif url.type EQ 'Term'>value="#DateFormat(nextTerm.termBeginDate,'mm/dd/yyyy')#"</cfif>
+			>
 			</label>
 		</div>
 		<div class="small-4 columns">

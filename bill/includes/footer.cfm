@@ -20,7 +20,7 @@ $(document).foundation();
 
 $(document).ready(function(){
 	$('.fdatepicker').fdatepicker({
-		format: 'mm/dd/yyyy',
+		format: 'm/d/yyyy',
 		disableDblClickSelection: true,
 		leftArrow:'<<',
 		rightArrow:'>>',

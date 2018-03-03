@@ -1,8 +1,14 @@
 <cfinclude template="includes/header.cfm">
 <cfinvoke component="LookUp" method="getLatestAttendanceDates" returnvariable="dates"></cfinvoke>
+<cfinvoke component="LookUp" method="getAttendanceBillingStartDates" returnvariable="billingDates"></cfinvoke>
+
+<cfparam name="billingStartDate" default="#dates.billingStartDate#">
+<cfif isDefined("Form.billingStartDate")>
+	<cfset Variables.billingStartDate = Form.billingStartDate>
+</cfif>
 
 <cfinvoke component="Report" method="attendanceEntry" returnvariable="data">
-	<cfinvokeargument name="billingStartDate" value="#dates.billingStartDate#">
+	<cfinvokeargument name="billingStartDate" value="#Variables.billingStartDate#">
 </cfinvoke>
 <cfset Session.attendanceEntryPrint = data>
 
@@ -19,23 +25,37 @@
 		width:auto;
 	}
 </style>
-<cfoutput>
-<cfset title = "Attendance Entry for #DateFormat(dates.billingStartDate,'mm-dd-yy')# to #DateFormat(dates.billingEndDate,'mm-dd-yy')#">
+<cfset title = "Attendance Entry for #DateFormat(Variables.billingStartDate,'mm-dd-yy')#">
 <cfset Session.attendanceEntryTitle = title>
-<div class="callout primary">#title#</div>
-</cfoutput>
+<form action="ReportAttendanceEntry.cfm" method="post">
+<div class="callout primary"><label for="billingStartDate">Attendance Entry for:&nbsp;&nbsp;
+				<select name="billingStartDate" id="billingStartDate" onChange="javascript:this.form.submit()" style="width:200px">
+					<option disabled selected value="" > --Select Month Start Date-- </option>
+					<cfoutput query="billingDates">
+						<option value="#billingStartDate#" <cfif billingStartDate EQ Variables.billingStartDate> selected </cfif>  > #DateFormat(billingStartDate,'mm-dd-yy')# </option>
+					</cfoutput>
+				</select>
+			</label>
+</div>
+<div class="callout"><div class="row">
+	<div class="large-2 columns"><a class="group-by" data-column="0" data-src="crn">Group by CRN</a></div>
+	<div class="large-3 columns"><a class="group-by" data-column="3" data-src="schooldistrict">Group by School District</a></div>
+	<div class="large-7 columns"><a class="group-by" data-column="5" data-src="program">Group by Program</a></div>
+</div></div>
+</form>
 <table id="dt_table">
 	<thead>
 		<tr>
 			<th>CRN</th>
-			<th>CRSE</th>
-			<th>SUBJ</th>
-			<th>Title</th>
+			<th>Crse</th>
+			<th>Subj</th>
+			<th>District</th>
+			<th>Program</th>
 			<th>G</th>
-			<th>Firstname</th>
-			<th>Lastname</th>
-			<th>Attendance</th>
-			<th>Scheduled</th>
+			<th>First Name</th>
+			<th>Last Name</th>
+			<th>Attend.</th>
+			<th>Sched.</th>
 			<th>Exclude Student</th>
 			<th>Exclude Class</th>
 		</tr>
@@ -46,7 +66,8 @@
 			<td><a href='AttendanceEntry.cfm?crn=#crn#&billingStartDate=#dates.billingStartDate#' target="_blank">#crn#</a></td>
 			<td>#crse#</td>
 			<td>#subj#</td>
-			<td>#title#</td>
+			<td>#schooldistrict#</td>
+			<td>#program#</td>
 			<td><a href='javascript:goToBillingRecord(#billingStudentId#);'>#bannerGNumber#</a></td>
 			<td>#firstname#</td>
 			<td>#lastname#</td>
@@ -63,7 +84,7 @@
 <cfsavecontent variable="pcc_scripts">
 	<script>
 		$(document).ready(function() {
-		    $('#dt_table').DataTable({
+		    var table = $('#dt_table').DataTable({
 		    	dom: '<"top"iBf>rt<"bottom"lp>',
 				buttons:[
 					{ text: "export",
@@ -72,13 +93,22 @@
             	  		}
             	  }
             	  ],
-            	columns:[{data:'crn'},{data:'crse'},{data:'subj'},{data:'title'},{data:'bannerGNumber'}
+            	columns:[{data:'crn'},{data:'crse'},{data:'subj'}
+            			,{data:'schooldistrict'}, {data:'program'},{data:'bannerGNumber'}
             			,{data:'firstname'},{data:'lastname'},{data:'attendance'},{data:'maxpossibleattendance'}
             			,{data:'includestudent'},{data:'includeclass'}],
             	rowGroup: {
     				dataSrc: 'crn'
-    			}
+    			},
+    			columDef:[{target:3, visible:false}]
 		    });
+
+		    $('a.group-by').on( 'click', function (e) {
+				e.preventDefault();
+				table.column($(this).data('column')).order('asc');
+				table.rowGroup().dataSrc( $(this).data('src') );
+				table.order.fixed( {pre: [[ $(this).data('column')*1, 'asc' ]]} ).draw();
+			});
 		} );
 	function goToBillingRecord(billingStudentId){
 		window.open('programStudentDetail.cfm?billingStudentId='+billingStudentId+'&showNext=true#Billing');

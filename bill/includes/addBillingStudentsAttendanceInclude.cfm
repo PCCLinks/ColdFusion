@@ -28,7 +28,6 @@
 	}
 </style>
 	<h4>Students Listed for Billing Period: <cfoutput>#DateFormat(url.billingStartDate,'mm-dd-yy')#</cfoutput></h4>
-	<a href='addStudent.cfm' class="button" target="_blank">Add Student Missing from this Billing Period</a>&nbsp;<a href="javascript:refresh();" class="button">Refresh Data</a>
 	<table id="dt_table_<cfoutput>#dataType#</cfoutput>">
 		<thead>
 			<th>First Name</th>

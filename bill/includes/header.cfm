@@ -30,7 +30,7 @@
 		 		<li><a href="AddStudent.cfm">Add Student</a></li>
 		 		<li><a href="AddScenario.cfm">Scenarios</a></li>
 				<li><a href="ReportSummary.cfm?type=Attendance">Reporting</a></li>
-				<li><a href="ReportAttendanceEntry.cfm">Export Attendance</a></li>
+				<li><a href="ReportAttendanceEntry.cfm">Attendance Summary</a></li>
 				<li><a href="AttendanceBillingTotalOverride.cfm">Totals Override</a></li>
 			</ul>
 		</li>

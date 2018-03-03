@@ -137,7 +137,7 @@ on a single page
 		<div class="row">
 			<div class="small-4 columns">
 				<label>Exit Date:
-					<input style="max-width:50%" id="exitDate#billingStudentId#" name="exitDate" value="#DateFormat(exitDate,'mm/dd/yyyy')#"
+					<input style="max-width:75%" id="exitDate#billingStudentId#" name="exitDate" value="#DateFormat(exitDate,'mm/dd/yyyy')#"
 						onChange='javascript:saveValues("frm#billingStudentId#")' class="fdatepicker"
 					>
 				</label>
