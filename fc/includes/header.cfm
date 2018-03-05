@@ -17,6 +17,7 @@
 <cfsavecontent variable="pcc_menu">	 <!--- List items for menu --->
 	<li><a href="dashboard.cfm">Home</a></li>
 	<li><a href="caseload.cfm">Caseload</a></li>
+	<li><a href="report.cfm">Report</a></li>
 </cfsavecontent>
 
 <!-- HEAD -->
@@ -32,6 +33,8 @@
 	<link rel="stylesheet" href="https://cdn.datatables.net/v/dt/dt-1.10.15/b-1.3.1/b-html5-1.3.1/kt-2.2.1/r-2.1.1/rg-1.0.0/datatables.min.css"/>
 	<link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/v/dt/dt-1.10.15/b-1.3.1/b-colvis-1.3.1/b-html5-1.3.1/b-print-1.3.1/cr-1.3.3/fc-3.2.2/fh-3.1.2/kt-2.2.1/r-2.1.1/rg-1.0.0/sc-1.4.2/se-1.2.2/datatables.min.css"/>
 	<cfoutput>#pcc_styles#</cfoutput>
+
+
 
 	<!-- jquery -->
 	<script src="<cfoutput>#pcc_source#</cfoutput>/js/vendor/jquery.js"></script>

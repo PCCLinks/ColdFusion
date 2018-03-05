@@ -563,6 +563,45 @@ all the banner queries need to force a distinct by PIDM
 		<cfreturn caseload_banner>--->
 	</cffunction>
 
+	<cffunction name="getReportList" access="remote" returnType="query" returnformat="json">
+		<cfset caseloaddata = getCaseload()>
+
+		<cfquery dbtype="query" name="qryData" >
+			select STU_NAME
+			,bannerGNumber
+			,cohort
+			,ASAP_STATUS
+			,statusInternal
+			,coach
+			,MaxTerm
+			,lastContactDate
+			,O_EARNED
+			,gender
+			,REP_RACE
+			,HighSchool
+			,parentalStatus
+			,careerPlan
+			,RE_HOLD
+			,O_GPA
+			,te_read
+			,te_write
+			,te_math
+			,exitReason
+			,cellPhone
+			,phone2
+			,PCC_EMAIL
+			,emailPersonal
+			,preferredName
+			,weeklyWorkHours
+			,in_contract
+			,FundedBy
+		    ,P_DEGREE
+		    ,EFC
+			from caseloaddata
+		</cfquery>
+		<cfreturn qryData>
+	</cffunction>
+
 	<cffunction name="getCaseloadList" access="remote" returnType="query" returnformat="json">
 		<cfset caseloaddata = getCaseload()>
 
