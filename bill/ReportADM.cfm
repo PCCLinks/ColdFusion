@@ -1,6 +1,5 @@
 <cfinclude template="includes/header.cfm">
 
-<cfinvoke component="LookUp" method="getPrograms" returnvariable="programs"></cfinvoke>
 <cfinvoke component="LookUp" method="getSchools" returnvariable="schools"></cfinvoke>
 <cfinvoke component="LookUp" method="getAttendanceBillingStartDates" returnvariable="billingDates"></cfinvoke>
 <cfinvoke component="LookUp" method="getLatestDateAttendanceMonth" returnvariable="latestMonth"></cfinvoke>
@@ -21,25 +20,14 @@
 	<div class="small-2 columns">
 		<label for="District">District:
 			<select name="district" id="district">
-				<option disabled selected value="" > --Select District-- </option>
+			<!--->	<option disabled selected value="" > --Select District-- </option>--->
 			<cfoutput query="schools">
 				<option value="#keySchoolDistrictID#" > #schooldistrict# </option>
 			</cfoutput>
 			</select>
 		</label>
 	</div>
-	<div class="small-3 columns">
-		<label for="Program">Program:
-			<select name="program" id="program">
-				<option disabled  selected > --Select Program-- </option>
-				<cfoutput query="programs">
-					<option value="#programName#" > #programName# </option>
-				</cfoutput>
-			</select>
-		</label>
-	</div>
-	<div class="small-7 columns">
-	</div>
+	<div class="small-10 columns"></div>
 </div> <!-- end Filter row -->
 <table id="dt_table">
 	<thead>
@@ -52,6 +40,8 @@
 			<th>Inter. Grp.</th>
 			<th>Small Grp.</th>
 			<th>Tutorial</th>
+			<th>Days Present</th>
+			<th>Days Absent</th>
 		</tr>
 		<!---<tr id="searchRow">
 			<th><input type="text" placeholder="Last Name"></th>
@@ -100,10 +90,13 @@
 				dom: '<"top"iB>rt<"bottom"flp>',
 				language:{ processing: "Loading data..."},
 				buttons:[
-					{extend: 'csv',
-            	  		text: 'export'
+					{text: "export",
+            	  		action: function( e, table, node, config ){
+							window.open('includes/reportAdmExportInclude.cfm');
+            	  		}
             	  	}
-            	  ]
+            	  ],
+            	columDefs:[{target:[10,11,12,13], visible:false}]
 		    });
 
 			//hide main filter
@@ -113,13 +106,14 @@
 			$('#billingStartDate').change(function(){
 				table.ajax.reload();
 			});
-			$('#program').change(function(){
-				table.ajax.reload();
-			});
 			$('#district').change(function(){
 				table.ajax.reload();
+				setColumnVisibility();
 			});
 
+			setColumnVisibility();
+
+		} );
 
 		function getParameters(){
 			param = '&billingStartDate=' + $('#billingStartDate').val();
@@ -130,8 +124,15 @@
 		 	return param;
 		}
 
-
-		} );
+		function setColumnVisibility(){
+			if($('#district').val() == 4){
+				table.column(8).visible(true);
+				table.column(9).visible(true);
+			}else{
+				table.column(8).visible(false);
+				table.column(9).visible(false);
+			}
+		}
 
 
 	</script>

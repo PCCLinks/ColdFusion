@@ -15,12 +15,14 @@
 <script src="<cfoutput>#pcc_source#</cfoutput>/js/vendor/foundation-datepicker.min.js"></script>
 <script src="<cfoutput>#pcc_source#</cfoutput>/js/vendor/moment.min.js"></script>
 
+<script src="https://cdn.datatables.net/select/1.2.5/js/dataTables.select.min.js"></script>
+
 <script>
 $(document).foundation();
 
 $(document).ready(function(){
 	$('.fdatepicker').fdatepicker({
-		format: 'm/d/yyyy',
+		format: 'mm/dd/yyyy',
 		disableDblClickSelection: true,
 		leftArrow:'<<',
 		rightArrow:'>>',

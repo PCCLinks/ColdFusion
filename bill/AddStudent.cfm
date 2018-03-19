@@ -4,6 +4,11 @@
 <cfinvoke component="LookUp" method="getTerms" returnvariable="qryTerms"></cfinvoke>
 <cfinvoke component="LookUp" method="getLatestAttendanceDates" returnvariable="qryDates"></cfinvoke>
 
+<cfparam name="selectedCRN" default="">
+<cfif structKeyExists(Session, "selectedCRN")>
+	<cfset Variables.selectedCRN = Session.selectedCRN>
+</cfif>
+
 <style>
 
 	.dataTables_info{
@@ -75,7 +80,11 @@
 			</label>
 		</div>
 		</cfoutput>
-		<div class="small-6 columns">
+		<div class="small-6 columns"></div>
+	</div>
+	<div class="row">
+		<div class="small-3 columns" id="crnselect"></div>
+		<div class="small-9 columns">
 			<br><input class="button" type="submit" name="submit" value="Add Student to Billing" onClick="javascript:addStudentToBilling();" id="addStudentToBilling"/>
 			<input class="button" value="New Search" onClick="javascript:newSearch();" id="newSearch">
 		</div>
@@ -147,8 +156,10 @@
 
 <cfsavecontent variable="pcc_scripts">
 <script>
-	<cfif IsDefined("Session.addStudentReturnPage")>var returnPage = '<cfoutput>#Session.addStudentReturnPage#</cfoutput>';</cfif>
+	var returnPage = null;
+	<cfif IsDefined("Session.addStudentReturnPage")>returnPage = '<cfoutput>#Session.addStudentReturnPage#</cfoutput>';</cfif>
 	var table;
+	var selectedCRN = '<cfoutput>#selectedCRN#</cfoutput>';
 	$(document).ready(function() {
 		//intialize table
 		$.fn.dataTable.ext.errMode = 'throw';
@@ -234,8 +245,6 @@
 			}
 		});
 
-
-
 		$('#addStudent').hide();
 
 		 $('body').on('change', '#term', function(e) {
@@ -252,7 +261,8 @@
             url: "setUpBilling.cfc?method=addBillingStudent",
             type:'post',
             data:{bannerGNumber:$('#bannerGNumber').val(), term:$('#term').val(),
-            		billingStartDate:$('#billingStartDate').val(), billingEndDate:$('#billingEndDate').val()},
+            		billingStartDate:$('#billingStartDate').val(), billingEndDate:$('#billingEndDate').val(),
+            		crn: $('#crn').val()},
             dataType: 'json',
             async:false,
             success: function(billingStudentId){
@@ -263,7 +273,7 @@
             }
         });
         if(returnPage){
-        	window.location(returnPage);
+        	window.location = returnPage;
         }
     }
 	function setDate(term, displayField, idName){
@@ -288,6 +298,7 @@
 	function addStudent(gNumber){
 		$('#bannerGNumber').val(gNumber);
 		$('#search').hide();
+		getCRN();
 		$('#addStudent').show();
 	}
 	function newSearch(){
@@ -295,6 +306,16 @@
 		$('#addStudent').hide();
 	}
 
+	function getCRN(){
+		var url = "includes/crnForTermInclude.cfm?billingStartDate=" + $('#billingStartDate').val() + '&crn='+ selectedCRN;
+		$.ajax({
+        	url: url,
+       		cache: false
+    	}).done(function(data) {
+        	$("#crnselect").html(data);
+    	});
+	}
+	function getCRNChanged(){}
 
 </script>
 </cfsavecontent>

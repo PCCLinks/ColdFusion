@@ -277,7 +277,8 @@
 	<cffunction name="getAttendanceCRN" access="remote" returnFormat="json">
 		<cfargument name="billingStartDate" required="true">
 		<cfquery name="data" >
-			select distinct CRN
+			select distinct CRN,
+				CASE WHEN CRN = CRSE THEN CRN ELSE concat(CRN,' - ',SUBJ,CRSE) END CRNDesc
 			from billingStudent bs
 				join billingStudentItem bsi on bs.billingStudentID = bsi.billingStudentId
 			where billingStartDate = <cfqueryparam value="#DateFormat(arguments.billingStartDate,'yyyy-mm-dd')#">

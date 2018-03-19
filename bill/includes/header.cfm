@@ -53,8 +53,7 @@
 		</li>
 		<li><a>Set Exits</a>
 			<ul class="menu">
-				<li><a href="ExitDate.cfm">Set Exit Reason</a></li>
-				<li><a href="UpdateExitDates.cfm">Update Exit Dates</a></li>
+				<li><a href="SetExit.cfm">Set Exit Reason and Dates</a></li>
 			</ul>
 		</li>
 		 <!---<li><a href="Reconcile.cfm">Reconcile Previous Billing</a></li>--->
@@ -76,6 +75,8 @@
 	<!--<link rel="stylesheet" href="https://cdn.datatables.net/v/dt/dt-1.10.15/b-1.3.1/b-html5-1.3.1/kt-2.2.1/r-2.1.1/rg-1.0.0/datatables.min.css"/>
 	<link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/v/dt/dt-1.10.15/b-1.3.1/b-colvis-1.3.1/b-html5-1.3.1/b-print-1.3.1/cr-1.3.3/fc-3.2.2/fh-3.1.2/kt-2.2.1/r-2.1.1/rg-1.0.0/sc-1.4.2/se-1.2.2/datatables.min.css"/>-->
 	<cfoutput>#pcc_styles#</cfoutput>
+
+    <link rel="stylesheet" href="https://cdn.datatables.net/select/1.2.5/css/select.dataTables.min.css" />
 
 	<!-- jquery -->
 	<script src="<cfoutput>#pcc_source#</cfoutput>/js/vendor/jquery.js"></script>
@@ -101,7 +102,7 @@
           <h2><cfoutput>#pcc_title#</cfoutput></h2>
         </div>
 		<div class="small-2 medium-1 large-1 columns">
-			<br class="clear"><a href="?action=logout" >Logout</a>
+			<br class="clear"><a href="?action=logout" style="color:white" >Logout</a>
 		</div>
       </div> <!-- end row -->
     </header> <!-- end header -->

@@ -8,6 +8,6 @@
 <label>Select Existing CRN:
 	<select id="crn" name="crn" onChange="javascript:getCRNChanged()">
 		<option value="" <cfoutput><cfif crnselected EQ "None">selected</cfif></cfoutput> >--- None Selected ---</option>
-		<cfoutput query="crnData"><option value="#crn#" <cfif crn EQ crnselected>selected</cfif> >#crn#</option></cfoutput>
+		<cfoutput query="crnData"><option value="#crn#" <cfif crn EQ crnselected>selected</cfif> >#crnDesc#</option></cfoutput>
 	</select>
 </label>

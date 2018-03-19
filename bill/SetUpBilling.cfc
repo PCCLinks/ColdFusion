@@ -720,6 +720,7 @@
 		<cfargument name= "term" required="true">
 		<cfargument name = "billingStartDate" type="date" required="true">
 		<cfargument name="billingEndDate" type="date" required="true">
+		<cfargument name="crn" default="">
 
 		<cfset local.billingStudentId = setUpStudent(billingEndDate=#arguments.billingEndDate#, billingStartDate=#arguments.billingStartDate#,
 								term = #arguments.term#, bannerGNumber = #arguments.bannerGNumber#) >
@@ -730,6 +731,31 @@
 			SET IncludeFlag = 1
 			WHERE billingStudentId = <cfqueryparam value="#local.billingStudentId#">
 		</cfquery>
+
+		<!--- add crn if not added in above process - will happen when manually added class like GED Test --->
+		<cfif arguments.crn NEQ ''>
+			<cfquery name="findCrn">
+				select count(*) cnt
+				from billingStudentItem
+				where crn = <cfqueryparam value="#arguments.crn#">
+					and billingStudentId = <cfqueryparam value="#local.billingStudentId#">
+			</cfquery>
+	
+			<!--- to do - combine this with the call made to populate classes so only one insert --->
+			<cfif findCrn.cnt EQ 0>
+				<cfquery name="class">
+					select crn, crse, subj, title, Credits
+					from billingStudentItem
+					where crn = <cfqueryparam value="#arguments.crn#">
+					limit 1
+				</cfquery>
+	
+				<cfquery name="doInsert" >
+					insert into billingStudentItem(billingstudentid, crn, crse, subj, Title, includeflag, credits, datecreated, datelastupdated, createdby, lastupdatedby)
+					values(#local.billingStudentId#, '#arguments.crn#', '#class.crse#', '#class.subj#', '#class.Title#', 1, #class.Credits#, Now(), Now(), '#Session.username#', '#Session.username#')
+				</cfquery>
+			</cfif> <!--- end rows to insert --->
+		</cfif>
 
 		<cfreturn local.billingStudentId>
 	</cffunction>

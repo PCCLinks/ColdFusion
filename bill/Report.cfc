@@ -362,7 +362,6 @@
 		<cfargument name="billingNotes" required="true">
 		<cfargument name="includeFlag" default="0">
 		<cfargument name="adjustedDaysPerMonth" default="">
-		<cfargument name="billingRecordExitReasonCode" default="">
 		<cfargument name="postBillCorrectedBilledAmount" default="">
 		<cfargument name="generatedBilledAmount">
 		<cfargument name="billingStudentExitReasonCode" default="">
@@ -388,33 +387,45 @@
 			WHERE billingStudentId = <cfqueryparam value="#arguments.billingStudentId#">
 		</cfquery>
 	</cffunction>
+	<cffunction name="updatebillingStudentRecordExit" access="remote">
+		<cfargument name="billingStudentId" required="true">
+		<cfargument name="exitDate" required="true">
+		<cfargument name="billingStudentExitReasonCode" required="true">
+		<cfargument name="adjustedDaysPerMonth" required="true">
+
+		<cfquery name="update">
+			UPDATE billingStudent
+				SET adjustedDaysPerMonth = <cfif arguments.adjustedDaysPerMonth EQ "">NULL<cfelse><cfqueryparam value="#arguments.adjustedDaysPerMonth#"></cfif>,
+		 		 billingStudentExitReasonCode = <cfif arguments.billingStudentExitReasonCode EQ "">NULL<cfelse><cfqueryparam value="#arguments.billingStudentExitReasonCode#"></cfif>,
+				 exitDate = <cfif arguments.exitDate EQ "">NULL<cfelse><cfqueryparam value="#DateFormat(arguments.exitDate,'yyyy-mm-dd')#"></cfif>
+			WHERE billingStudentId = <cfqueryparam value="#arguments.billingStudentId#">
+		</cfquery>
+	</cffunction>
 	<cffunction name="exitStatusReport"  returntype="query" returnformat="json"  access="remote">
-		<cfargument name="programyear" required="true">
+		<cfargument name="billingStartDate" required="true">
 		<cfargument name="program">
 		<cfargument name="districtid">
+
+		<cfquery name="cal">
+			select left(MAX(programyear),4) bannerYear, max(programYear) programYear
+			from bannerCalendar
+			where termBeginDate <= <cfqueryparam value="#arguments.billingStartDate#">
+		</cfquery>
+
 		<cfquery name="data">
 			select bsp.LastName,
 				bsp.FirstName,
+				gender,
+				ethnicity,
 				DATE_FORMAT(bsp.DOB, '%m/%d/%Y') DOB,
-				case
-					when dob < date(concat(banneryear-21,'-09-01')) then 'Over'
-					when dob < date(concat(banneryear-20,'-09-01')) then 15
-					when dob < date(concat(banneryear-19,'-09-01')) then 14
-					when dob < date(concat(banneryear-18,'-09-01')) then 13
-					when dob < date(concat(banneryear-17,'-09-01')) then 12
-					when dob < date(concat(banneryear-16,'-09-01')) then 11
-					when dob < date(concat(banneryear-15,'-09-01')) then 10
-					when dob < date(concat(banneryear-14,'-09-01')) then 9
-				end Grade,
+				fnGetGrade(dob, #cal.bannerYear#) Grade,
 				DATE_FORMAT(min(bs.billingStartDate), '%m/%d/%Y') EntryDate,
 				DATE_FORMAT(bsCalcExitDate.ExitDate, '%m/%d/%Y') ExitDate,
-				MAX(bs.billingStudentExitReasonCode) 'ExitReason'
-			from (
-				select left(programyear,4) banneryear
-				from bannerCalendar
-				where term = 201801
-				) calendardata,
-				 billingStudent bs
+				MAX(bs.billingStudentExitReasonCode) 'ExitReason',
+				bs.Program,
+				SchoolDistrict,
+				Date('#DateFormat(arguments.billingStartDate,"yyyy-mm-dd")#') billingStartDate
+			from billingStudent bs
 				join billingStudentProfile bsp on bs.contactId = bsp.contactId
 				join keySchoolDistrict sd on bs.DistrictID = sd.keySchoolDistrictID
 				join (select bs.billingStudentId, coalesce(max(bs.exitDate), max(bsNext.exitDate)) exitDate
@@ -424,7 +435,7 @@
 						group by bs.billingStudentId
 						 ) bsCalcExitDate
 					   		on bs.billingStudentId = bsCalcExitDate.billingStudentId
-			where bs.term in (select term from bannerCalendar where programYear = <cfqueryparam value="#arguments.programyear#">)
+			where bs.term in (select term from bannerCalendar where programYear = <cfqueryparam value="#cal.programyear#">)
 				and includeFlag = 1
 				<cfif structKeyExists(arguments, "program")>
 				and bs.program = <cfqueryparam value="#arguments.program#">
@@ -432,8 +443,9 @@
 				<cfif structKeyExists(arguments, "districtid")>
 				and bs.districtid = <cfqueryparam value="#arguments.districtid#">
 				</cfif>
-			group by LastName, FirstName, DOB, 'Grade', bsCalcExitDate.ExitDate, schoolDistrict, program
+			group by LastName, FirstName, DOB, Grade, bsCalcExitDate.ExitDate, schoolDistrict, program
 		</cfquery>
+		<cfset Session.exitStatusReport = data>
 		<cfreturn data>
 	</cffunction>
 	<cffunction name="admReport" returntyp="query" returnformat="json" access="remote">
@@ -448,17 +460,23 @@
 				,FORMAT(sum(bsi.Attendance*IFNULL(InterPercent,0)),1) as InterGrp
 				,FORMAT(sum(bsi.Attendance*IFNULL(SmallPercent,0)),1) as SmallGrp
 				,FORMAT(CASE WHEN AdjustedIndHours = 0 THEN sum(bsi.Attendance*IFNULL(IndPercent,0)) ELSE AdjustedIndHours END,1) as Tutorial
+				,sum(Attendance) DaysPresent
+				,sum(MaxPossibleAttendance)-sum(Attendance) DaysAbsent
+				,Program, SchoolDistrict, beginDate, endDate
 			from (
 				select bs.contactId, bsNext.exitDate
-					,bsp.FirstName, bsp.LastName
+					,bsp.FirstName, bsp.LastName, bs.Program, schooldistrict
+					,beginDate, endDate
 					,MIN(bs.billingStartDate) entryDate
 					,MAX(bs.billingStartDate) maxBillingDate
 					,MAX(bs.billingStudentId) maxbillingStudentId
 					,MAX(CASE WHEN bs.billingStartDate = <cfqueryparam value="#DateFormat(arguments.billingStartDate,'yyyy-mm-dd')#">
 							  THEN bs.AdjustedIndHours ELSE 0
 						END) AdjustedIndHours
-				from billingStudent bs
+				from (select BillingStartDate beginDate, billingEndDate endDate from billingStudent where billingStartDate = <cfqueryparam value="#DateFormat(arguments.billingStartDate,'yyyy-mm-dd')#"> limit 1) dates,
+					billingStudent bs
 					join billingStudentProfile bsp on bs.contactId = bsp.contactId
+					join keySchoolDistrict sd on bs.districtId = sd.keySchoolDistrictId
 					left outer join billingStudent bsNext on bs.contactId = bsNext.contactID
 						and bs.program = bsNext.program
 			            and bs.DistrictID = bsNext.DistrictID
@@ -467,19 +485,21 @@
 				where bs.billingStartDate <= <cfqueryparam value="#DateFormat(arguments.billingStartDate,'yyyy-mm-dd')#">
 					and bs.term in (select term from bannerCalendar where programYear = (select max(ProgramYear) from bannerCalendar where TermBeginDate <= <cfqueryparam value="#DateFormat(arguments.billingStartDate,'yyyy-mm-dd')#"> ))
 					and bs.includeFlag = 1
+					and bs.program like '%attendance%'
 					<cfif structKeyExists(arguments, "program")>
 					and bs.program = <cfqueryparam value="#arguments.program#">
 					</cfif>
 					<cfif structKeyExists(arguments, "districtid")>
 					and bs.districtid = <cfqueryparam value="#arguments.districtid#">
 					</cfif>
-				group by bs.contactId, bsNext.exitDate
+				group by bs.contactId, bsNext.exitDate, bs.program, schooldistrict, beginDate, endDate
 			) bs
 				left outer join billingStudentItem bsi on bs.maxBillingStudentId = bsi.billingStudentId
 					and bsi.IncludeFlag = 1
 					and bs.maxBillingDate = <cfqueryparam value="#DateFormat(arguments.billingStartDate,'yyyy-mm-dd')#">
 			group by contactId, exitDate, FirstName, LastName, entryDate, maxBillingDate, maxBillingStudentId
 		</cfquery>
+		<cfset Session.admReport = data>
 		<cfreturn data>
 	</cffunction>
 
@@ -645,6 +665,7 @@
 				,bsp.bannerGNumber, bsp.firstName, bsp.lastName, bs.billingStudentId, Attendance, MaxPossibleAttendance
 				,schoolDistrict, bs.Program
 			    ,CASE WHEN bsi.IncludeFlag=0 OR bsi.IncludeFlag IS NULL THEN 'Class NOT Billed' ELSE NULL END IncludeClass
+			    ,bs.exitDate
 			from billingStudent bs
 				join billingStudentItem bsi on bs.billingStudentId = bsi.billingStudentId
 			    left outer join billingStudentProfile bsp on bs.contactid = bsp.contactId

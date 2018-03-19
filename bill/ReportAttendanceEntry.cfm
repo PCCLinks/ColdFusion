@@ -28,19 +28,21 @@
 <cfset title = "Attendance Entry for #DateFormat(Variables.billingStartDate,'mm-dd-yy')#">
 <cfset Session.attendanceEntryTitle = title>
 <form action="ReportAttendanceEntry.cfm" method="post">
-<div class="callout primary"><label for="billingStartDate">Attendance Entry for:&nbsp;&nbsp;
-				<select name="billingStartDate" id="billingStartDate" onChange="javascript:this.form.submit()" style="width:200px">
-					<option disabled selected value="" > --Select Month Start Date-- </option>
-					<cfoutput query="billingDates">
-						<option value="#billingStartDate#" <cfif billingStartDate EQ Variables.billingStartDate> selected </cfif>  > #DateFormat(billingStartDate,'mm-dd-yy')# </option>
-					</cfoutput>
-				</select>
-			</label>
+<div class="callout primary">
+	<label for="billingStartDate">Attendance Entry for:&nbsp;&nbsp;
+		<select name="billingStartDate" id="billingStartDate" onChange="javascript:this.form.submit()" style="width:200px">
+			<option disabled selected value="" > --Select Month Start Date-- </option>
+			<cfoutput query="billingDates">
+				<option value="#billingStartDate#" <cfif billingStartDate EQ Variables.billingStartDate> selected </cfif>  > #DateFormat(billingStartDate,'mm-dd-yy')# </option>
+			</cfoutput>
+		</select>
+	</label>
 </div>
 <div class="callout"><div class="row">
 	<div class="large-2 columns"><a class="group-by" data-column="0" data-src="crn">Group by CRN</a></div>
 	<div class="large-3 columns"><a class="group-by" data-column="3" data-src="schooldistrict">Group by School District</a></div>
-	<div class="large-7 columns"><a class="group-by" data-column="5" data-src="program">Group by Program</a></div>
+	<div class="large-3 columns"><a class="group-by" data-column="4" data-src="program">Group by Program</a></div>
+	<div class="large-4 columns"><a class="group-by" data-column="5" data-src="bannerGNumber">Group by Student</a></div>
 </div></div>
 </form>
 <table id="dt_table">
@@ -54,6 +56,7 @@
 			<th>G</th>
 			<th>First Name</th>
 			<th>Last Name</th>
+			<th>Exit Date</th>
 			<th>Attend.</th>
 			<th>Sched.</th>
 			<th>Exclude Student</th>
@@ -71,6 +74,7 @@
 			<td><a href='javascript:goToBillingRecord(#billingStudentId#);'>#bannerGNumber#</a></td>
 			<td>#firstname#</td>
 			<td>#lastname#</td>
+			<td>#DateFormat(exitDate,'m/d/yyyy')#</td>
 			<td>#NumberFormat(attendance,'99.99')#</td>
 			<td>#NumberFormat(MaxPossibleAttendance,'99.99')#</td>
 			<td>#includestudent#</td>
@@ -96,11 +100,11 @@
             	columns:[{data:'crn'},{data:'crse'},{data:'subj'}
             			,{data:'schooldistrict'}, {data:'program'},{data:'bannerGNumber'}
             			,{data:'firstname'},{data:'lastname'},{data:'attendance'},{data:'maxpossibleattendance'}
-            			,{data:'includestudent'},{data:'includeclass'}],
+            			,{data:'includestudent'},{data:'includeclass'}, {data:'exitDate'}],
             	rowGroup: {
     				dataSrc: 'crn'
     			},
-    			columDef:[{target:3, visible:false}]
+    			columDefs:[{target:3, visible:false}]
 		    });
 
 		    $('a.group-by').on( 'click', function (e) {

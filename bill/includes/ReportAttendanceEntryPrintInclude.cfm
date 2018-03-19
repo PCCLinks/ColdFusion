@@ -11,10 +11,10 @@
 
 <cfset ss = spreadsheetNew("ByCRN", "true")>
 <cfset filename="#Session.attendanceEntryTitle#.xlsx">
-<cfheader name="Content-Disposition" value="attachment; filename=#filename#" >
+<cfheader name="Content-Disposition" value="attachment; filename=""#filename#""" >
 
 <cfset SpreadsheetAddRow(ss, "#Session.attendanceEntryTitle#")>
-<cfset SpreadsheetAddRow(ss, "CRN, G,Firstname,Lastname, Attendance,Scheduled,Exclude Student,Exclude Class") >
+<cfset SpreadsheetAddRow(ss, "CRN, G,Firstname,Lastname, Exit Date, Attendance,Scheduled,Exclude Student,Exclude Class") >
 <cfset spreadsheetFormatRow(ss, {bold=true}, 1)>
 <cfset spreadsheetFormatRow(ss, {bold=true}, 2)>
 <cfset rowNum = 3>
@@ -30,17 +30,18 @@
 	<cfset spreadsheetFormatCell(ss, {bold=true, fgcolor="grey_25_percent" }, #rowNum#,6)>
 	<cfset spreadsheetFormatCell(ss, {bold=true, fgcolor="grey_25_percent" }, #rowNum#,7)>
 	<cfset spreadsheetFormatCell(ss, {bold=true, fgcolor="grey_25_percent" }, #rowNum#,8)>
+	<cfset spreadsheetFormatCell(ss, {bold=true, fgcolor="grey_25_percent" }, #rowNum#,9)>
 	<cfset rowNum = rowNum + 1>
 		<!---><tr style="background-color:rgb(241,241,241)">
 			<td >#crn# #subj#: #crse# #title#</td>
 		</tr>--->
 		<cfquery name="class" dbtype="query">
-			select crn, crse, subj, title, bannergnumber, firstname, lastname, attendance, MaxPossibleAttendance, includestudent, includeclass
+			select crn, crse, subj, title, bannergnumber, firstname, lastname, exitDate, attendance, MaxPossibleAttendance, includestudent, includeclass
 			from data
 			where crn = '#classes.crn#'
 		</cfquery>
 		<cfloop query="class">
-			<cfset SpreadsheetAddRow(ss, "#crn#,#bannerGNumber#,#firstname#,#lastname#,#attendance#,#MaxPossibleAttendance#,#includestudent#,#includeclass#")>
+			<cfset SpreadsheetAddRow(ss, "#crn#,#bannerGNumber#,#firstname#,#lastname#,#DateFormat(exitDate,'m/d/yyyy')#,#attendance#,#MaxPossibleAttendance#,#includestudent#,#includeclass#")>
 			<cfset rowNum = rowNum + 1>
 		</cfloop>
 </cfoutput>
@@ -71,15 +72,15 @@
 	<cfset SpreadsheetFormatCellRange(ss, {bold=true, fgcolor="grey_25_percent" }, #rowNum#,1,#rowNum#,4)>
 	<cfset rowNum = rowNum + 1>
 	<cfquery name="students" dbtype="query">
-		select bannerGNumber, firstname, lastname, includestudent
+		select bannerGNumber, firstname, lastname, exitDate, includestudent
 		from data
 		where schooldistrict = '#districtprogram.schooldistrict#'
 			and program = '#districtprogram.program#'
-		group by bannerGNumber, firstname, lastname, includestudent
+		group by bannerGNumber, firstname, lastname, exitDate, includestudent
 		order by lastname
 	</cfquery>
 	<cfloop query="students">
-		<cfset SpreadsheetAddRow(ss, "#bannerGNumber#, #firstname#, #lastname#, #includestudent#") >
+		<cfset SpreadsheetAddRow(ss, "#bannerGNumber#, #firstname#, #lastname#, #DateFormat(exitDate,'m/d/yyyy')#, #includestudent#") >
 		<cfset spreadsheetFormatCellRange(ss, {bold=true}, #rowNum#,1,#rowNum#,7)>
 		<cfset rowNum = rowNum + 1>
 		<cfquery name="studentclass" dbtype="query">
@@ -100,13 +101,13 @@
 <cfset SpreadsheetSetActiveSheet(ss, "Data") >
 
 
-<cfset SpreadsheetAddRow(ss, "CRN,School District, Program, G,Firstname,Lastname, Attendance,Scheduled,Exclude Class") >
+<cfset SpreadsheetAddRow(ss, "CRN,School District, Program, G,Firstname,Lastname, exitDate, Attendance,Scheduled,Exclude Class") >
 <cfset spreadsheetFormatRow(ss, {bold=true}, 1)>
 <cfset spreadsheetFormatRow(ss, {bold=true}, 3)>
 <cfset rowNum = 2>
 <cfset spreadsheetFormatRow(ss, {bold=true}, rowNum)>
 <cfoutput query="data">
-	<cfset SpreadsheetAddRow(ss, "#crn#,#schooldistrict#,#program#,#bannerGNumber#,#firstname#,#lastname#,#attendance#,#MaxPossibleAttendance#,#includestudent#,#includeclass#")>
+	<cfset SpreadsheetAddRow(ss, "#crn#,#schooldistrict#,#program#,#bannerGNumber#,#firstname#,#lastname#,#DateFormat(exitDate,'m/d/yyyy')#,#attendance#,#MaxPossibleAttendance#,#includestudent#,#includeclass#")>
 	<cfset rowNum = rowNum + 1>
 </cfoutput>
 

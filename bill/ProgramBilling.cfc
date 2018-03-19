@@ -1213,6 +1213,18 @@
 		<cfreturn data>
 	</cffunction>
 
+	<cffunction name="getExitDateList3" returnformat="json" access="remote">
+		<cfargument name="billingStartDate" required="true">
+
+		<cfstoredproc procedure="spGetBillingStudentExitData" >
+			<cfprocparam value="#arguments.billingStartDate#" cfsqltype="CF_SQL_DATE">
+			<cfprocparam value="0" cfsqltype="CF_SQL_STRING">
+			<cfprocresult name="data">
+		</cfstoredproc>
+
+		<cfreturn data>
+	</cffunction>
+
 	<cffunction name="updateExitDates" access="remote" >
 		<cfargument name="termBeginDate" required="true">
 		<cfargument name="termEndDate" required="true">
