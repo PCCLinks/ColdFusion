@@ -108,12 +108,9 @@
 		$(document).ready(function() {
 			setUpTable();
 			$('#program').change(function(){
-				table.column(7).search($('#program').val()).draw();
+				table.column(7).search($('#program').val(),false,false).draw();
 			});
 			table.column(8).search("<cfoutput>#Variables.MaxTerm#</cfoutput>").draw();
-			//$('#term').change(function(){
-			//	table.column(8).search($('#term').val()).draw();
-			//});
 		});
 		function setUpTable(program){
 			table = $('#dt_table').DataTable({

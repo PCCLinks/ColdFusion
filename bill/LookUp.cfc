@@ -147,6 +147,15 @@
 		</cfquery>
 		<cfreturn data>
 	</cffunction>
+	<cffunction name="getLastAttendancePeriodClosed" access="remote" returnType="date">
+		<cfquery datasource="pcclinks" name="data">
+			SELECT MAX(billingStartDate) billingStartDate
+			FROM billingStudent
+			WHERE billingStatus = 'BILLED'
+	        	and program like '%Attendance%'
+		</cfquery>
+		<cfreturn data.billingStartDate>
+	</cffunction>
 	<cffunction name="getNextTermToBill" access="remote">
 		<cfquery datasource="pcclinks" name="data">
 			SELECT *
@@ -154,7 +163,8 @@
 			WHERE Term = (SELECT MIN(Term) Term
 			FROM bannerCalendar c
 			WHERE Term > (SELECT MAX(Term) Term
-					FROM billingStudent))
+					FROM billingStudent
+					WHERE BillingStatus = 'BILLED'))
 		</cfquery>
 		<cfreturn data>
 	</cffunction>
@@ -256,6 +266,16 @@
 				ORDER BY billingStartDate desc
 		</cfquery>
 		<cfreturn data>
+	</cffunction>
+	<cffunction name="getFirstOpenAttendanceDate" access="remote" >
+		<cfquery name="data">
+			select min(billingStartDate) lastAttendanceBillDate
+			FROM billingStudent
+			WHERE program like '%attendance%'
+				and billingStatus = 'IN PROGRESS'
+			ORDER BY billingStartDate desc
+		</cfquery>
+		<cfreturn data.lastAttendanceBillDate>
 	</cffunction>
 	<cffunction name="getLatestDateAttendanceMonth" access="remote" returntype="date">
 		<cfquery name="data">

@@ -157,6 +157,24 @@ on a single page
 			</div>
 		</div>
 	</div> <!-- END EXIT STATUS -->
+	<!-- PROGRAM --->
+	<div class="callout">
+		<div class="row">
+			<div class="small-12 columns">
+				<label>Program:
+					<select name="Program" id="Program#billingStudentId#" style="max-width:85%"
+						onChange='javascript:saveValues("frm#billingStudentId#")'>
+					<option  selected value="" >
+						--Select Program--
+					</option>
+					<cfloop query="programs">
+						<option value="#programName#" <cfif #qryBillingStudentRecord.program# EQ #programName#> selected </cfif> > #programName# </option>
+					</cfloop>
+				</select>
+				</label>
+			</div>
+		</div>
+	</div> <!-- END PROGRAM -->
 	<div class="callout">
 		<div class="row">
 			<div class="small-12 columns" >

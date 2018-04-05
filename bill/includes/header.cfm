@@ -47,6 +47,8 @@
 				<li><a href="ReportADM.cfm">ADM Report</a></li>
 				<li><a href="ReportPPS.cfm">PPS Report</a></li>
 				<li><a href="ReportEnrollment.cfm">Enrollment Report</a></li>
+				<li><a href="ReportSIDNYComparison.cfm">SIDNY Comparison Report</a></li>
+				<li><a href="ReportPreviousPeriodComparison.cfm">Check for Differences from Previous Month</a></li>
 				<li><a href="ReportOverage.cfm?program=GtC">GtC Overage Report</a></li>
 				<li><a href="ReportOverage.cfm?program=YtC">YtC Overage Report</a></li>
 			</ul>

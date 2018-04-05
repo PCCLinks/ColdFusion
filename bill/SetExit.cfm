@@ -31,9 +31,9 @@
 	<p><b>Update Exit Date and Reason</b></p>
 	<label for="billingStartDate">Attendance Entry for:&nbsp;&nbsp;
 	<select name="billingStartDate" id="billingStartDate" onChange="javascript:filter();" style="width:200px">
-		<option disabled selected value="" > --Select Month Start Date-- </option>
+		<option selected value="" > --Select All-- </option>
 		<cfoutput query="billingDates">
-			<option value="#billingStartDate#" <cfif billingStartDate EQ dates.billingStartDate> selected </cfif>  > #DateFormat(billingStartDate,'yyyy-mm-dd')# </option>
+			<option value="#billingStartDate#" > #DateFormat(billingStartDate,'yyyy-mm-dd')# </option>
 		</cfoutput>
 	</select>
 	</div>
@@ -60,8 +60,6 @@
 		</tr>
 		<tr>
 			<th>Name</th>
-			<th>Program</th>
-			<th>District</th>
 			<th>Billing Date</th>
 			<th>Exit Date</th>
 			<th>Exit Reason</th>
@@ -69,6 +67,8 @@
 			<th>SIDNY Exit Date</th>
 			<th>SIDNY Exit Reason</th>
 			<th>Attendance</th>
+			<th>Program</th>
+			<th>District</th>
 		</tr>
 		</thead>
 		<tbody>
@@ -76,7 +76,7 @@
 	</table>
 </div>
 <div id="edit" class="large-5 columns">
-	<br><br><br><br><br><br><br><br>
+	<br><br>
 	<div class="callout primary">
 		<div id="selectedGNumber"></div>
 		<div id="target"></div>
@@ -89,15 +89,15 @@
 <script>
 	var table;
 	var idx_billingStudentId = 0;
-	var idx_program = 1;
-	var idx_schooldistrict = 2;
-	var idx_billingStartDate = 3;
-	var idx_exitDate = 4;
-	var idx_bsExitReasonDesc = 5;
-	var idx_adjustedDays = 6;
-	var idx_sidnyExitDate = 7;
-	var idx_sidnyExitReason = 8;
-	var idx_attendance = 9;
+	var idx_billingStartDate = 1;
+	var idx_exitDate = 2;
+	var idx_bsExitReasonDesc = 3;
+	var idx_adjustedDays = 4;
+	var idx_sidnyExitDate = 5;
+	var idx_sidnyExitReason = 6;
+	var idx_attendance = 7;
+	var idx_program = 8;
+	var idx_schooldistrict = 9;
 	var idx_firstname = 10;
 	var idx_lastname = 11;
 	var idx_bannerGNumber = 12;
@@ -105,14 +105,15 @@
 	var idx_SidnyExitKeyStatusReasonID = 14;
 	var idx_contactId = 15;
 	var idx_reasonCode = 16;
+	var idx_sidnySecondaryReason = 17;
+	var idx_sidnyExitNote = 18;
 
 	var currentIndex = 0;
 
 	$(document).ready(function() {
 	    table = $('#dt_table').DataTable({
 			ajax:{
-				url: "programbilling.cfc?method=getExitDateList3",
-				data: {billingStartDate:'<cfoutput>#DateFormat(dates.billingStartDate,"yyyy-mm-dd")#</cfoutput>'},
+				url: "programbilling.cfc?method=getExitDateList",
 				dataSrc:'DATA',
 				error: function (xhr, textStatus, thrownError) {
 				        handleAjaxError(xhr, textStatus, thrownError);
@@ -121,6 +122,7 @@
 			select: {
             	style: 'single'
         	},
+        	lengthMenu: [[100, 50, , 10, 5, -1], [100, 50, 10, 5, "All"]],
 			language: {emptyTable: 'Please wait...updating...will take a few minutes...'},
 	    	dom: '<"top"if>rt<"bottom"lp>',
 	    	columnDefs:[
@@ -129,13 +131,20 @@
 	    			return row[idx_firstname] + ' ' + row[idx_lastname] + '<br>' + row[idx_bannerGNumber];
 	    			}
 	    		},
-        		{targets:[10,11,12,13,14,15,16], visible:false}
+        		{targets:[10,11,12,13,14,15,16,17,18], visible:false}
         	],
-        	//scrollY:        "300px",
+        	rowCallback: function(row, data, index){
+            	color = '';
+            	if(data[idx_sidnyExitDate] <  data[idx_billingStartDate] || data[idx_sidnyExitDate] != data[idx_exitDate]){
+            		color = '#f78989';
+            	}
+            	if(color.length>0){
+            		//find the cell for idx_sidnyExitDate and set the background to the specified color
+    				$(row).find('td:eq(' + idx_sidnyExitDate + ')').css('background-color', '"' + color +'"' );
+            	}
+        	},
 	        scrollX:        true,
-	        //scrollCollapse: true,
-	       // paging:         false,
-	       pageLength:5,
+	        pageLength:5,
 	        fixedColumns:   {
 	            leftColumns: 1,
 	        },
@@ -148,21 +157,20 @@
 	    	}
 
 	    });
-		//$('#dt_table tbody').on( 'click', 'tr', function () {
-			//if ( $(this).hasClass('selected') ) {
-           // 	$(this).removeClass('selected');
-        	//}
-       		//else {
-            	//table.$('tr.selected').removeClass('selected');
-            	//$(this).addClass('selected');
-         //   	currentRow = this;
-    	//		getStudent();
-        	//}
-		//} );
 		table.on( 'select', function ( e, dt, type, indexes ) {
 			currentIndex = indexes[0];
            	getStudent();
-        } )
+        } );
+        table.on( 'page.dt', function ( e, dt, type, indexes ) {
+			currentIndex = -1;
+           	$("#selectedGNumber").html("");
+        	$("#target").html("");
+        } );
+        table.on( 'search.dt', function () {
+			currentIndex = -1;
+           	$("#selectedGNumber").html("");
+        	$("#target").html("");
+        } );
 
 		filter();
 	} );
@@ -181,8 +189,10 @@
 	}
 	function filter(){
 		var d = $('#billingStartDate').val();
-		d = d.replace(' 00:00:00.0','');
-		table.columns(idx_billingStartDate) .search(d) .draw();
+		if(d != ''){
+			d = d.replace(' 00:00:00.0','');
+			table.columns(idx_billingStartDate) .search(d) .draw();
+		}
 	}
 	function getStudent(){
 		rowData = table.rows( currentIndex ).data()[0];
@@ -190,13 +200,14 @@
 		heading += '<b>Billing Period:</b> ' + rowData[idx_billingStartDate] + '<br>';
 		heading += rowData[idx_program] + ' / ' + rowData[idx_schooldistrict] + '<br>';
 		heading += 'Attendance: ' + (rowData[idx_attendance] ? rowData[idx_attendance] : "") + '<br>';
-		heading += '<b>SIDNY Exit: </b>' + (rowData[idx_sidnyExitDate] ? rowData[idx_sidnyExitDate] : "") + '<br>';
-		heading += '<b>SIDNY Reason: </b>' + (rowData[idx_sidnyExitReason] ? rowData[idx_sidnyExitReason] : "") + '<br>';
-
+		heading += '<div class="callout primary"><b>SIDNY Exit: </b>' + (rowData[idx_sidnyExitDate] ? rowData[idx_sidnyExitDate] : "") + '<br>';
+		heading += '<b>Reason: </b>' + (rowData[idx_sidnyExitReason] ? rowData[idx_sidnyExitReason] : "") + '<br>';
+		heading += '<b>Sec. Reason: </b>' + (rowData[idx_sidnySecondaryReason] ? rowData[idx_sidnySecondaryReason] : "") + '<br>';
+		heading += '<b>Exit Note: </b>' + (rowData[idx_sidnyExitNote] ? rowData[idx_sidnyExitNote] : "") + '</div>';
 		var url = "includes/exitReasonInclude.cfm?billingStudentId=" + rowData[idx_billingStudentId];
 		var v = rowData[idx_adjustedDays] ? rowData[idx_adjustedDays] : '';
 		url +=  '&adjustedDaysPerMonth=' + v;
-	 	v = rowData[idx_exitDate] ? rowData[idx_exitDate] : '';
+	 	v = rowData[idx_exitDate] ? rowData[idx_exitDate] : (rowData[idx_sidnyExitDate] ? rowData[idx_sidnyExitDate] : '');
 		url +=  '&exitDate=' + v;
 	 	v = rowData[idx_reasonCode] ? rowData[idx_reasonCode] : '';
 		url +=  '&billingStudentExitReasonCode=' + v;
@@ -205,7 +216,7 @@
 			url: url,
        		cache: false,
 			error: function (xhr, textStatus, thrownError) {
-				        handleAjaxError(xhr, textStatus, thrownError);
+						handleAjaxError(xhr, textStatus, thrownError);
 				}
     	}).done(function(data) {
         	$("#selectedGNumber").html(heading);

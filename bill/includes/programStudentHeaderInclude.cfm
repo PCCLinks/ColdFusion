@@ -15,19 +15,19 @@
 	<div class=<cfif readonly EQ 'BILLED'>"callout alert"<cfelse>"callout primary"</cfif> >
 		<div class="row">
 			<div class="small-1 columns"><b>G</b></div>
-			<div class="small-1 columns"><b>Name</b></div>
+			<div class="small-2 columns"><b>Name</b></div>
 			<div class="small-2 columns"><b>Program</b></div>
 			<div class="small-1 columns"><b>Enrolled Date</b></div>
 			<div class="small-1 columns"><b>Exit Date </b></div>
 			<div class="small-1 columns"><b>Term</b></div>
-			<div class="small-2 columns"><b>School</b></div>
+			<div class="small-1 columns"><b>School</b></div>
 			<div class="small-1 columns"><b>Status</b></div>
 			<div class="small-1 columns"><b>Review with Coach</b></div>
 			<div class="small-1 columns"><b>Include in Billing</b></div>
 		</div>
 		<div class="row">
 			<div class="small-1 columns">#bannerGNumber#</div>
-			<div class="small-1 columns">#FIRSTNAME# #LASTNAME#</div>
+			<div class="small-2 columns">#FIRSTNAME# #LASTNAME#</div>
 			<div class="small-2 columns">
 				<cfif readonly>
 					#program#
@@ -47,7 +47,7 @@
 				</cfif>
 			</div>
 			<div class="small-1 columns">#term#<br/>#DateFormat(billingStartDate,'m/d/yy')#</div>
-			<div class="small-2 columns">#schooldistrict#</div>
+			<div class="small-1 columns">#schooldistrict#</div>
 			<div class="small-1 columns">#billingstatus#</div>
 			<div class="small-1 columns">
 				<cfif NOT readonly>
