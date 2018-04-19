@@ -1,5 +1,5 @@
 <cfinclude template="includes/header.cfm">
-<cfinvoke component="LookUp" method="getLatestAttendanceDates" returnvariable="dates"></cfinvoke>
+<cfinvoke component="LookUp" method="getFirstOpenAttendanceDates" returnvariable="dates"></cfinvoke>
 <cfinvoke component="LookUp" method="getAttendanceBillingStartDates" returnvariable="billingDates"></cfinvoke>
 
 <cfparam name="billingStartDate" default="#dates.billingStartDate#">

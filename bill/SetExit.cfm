@@ -1,5 +1,4 @@
 <cfinclude template="includes/header.cfm">
-<cfinvoke component="LookUp" method="getLatestAttendanceDates" returnvariable="dates"></cfinvoke>
 
 <cfinvoke component="LookUp" method="getAttendanceBillingStartDates" returnvariable="billingDates"></cfinvoke>
 <cfinvoke component="pcclinks.bill.LookUp" method="getExitReasons" returnvariable="exitReasons"></cfinvoke>
@@ -31,9 +30,9 @@
 	<p><b>Update Exit Date and Reason</b></p>
 	<label for="billingStartDate">Attendance Entry for:&nbsp;&nbsp;
 	<select name="billingStartDate" id="billingStartDate" onChange="javascript:filter();" style="width:200px">
-		<option selected value="" > --Select All-- </option>
+		<option selected value="" selected > --Select All-- </option>
 		<cfoutput query="billingDates">
-			<option value="#billingStartDate#" > #DateFormat(billingStartDate,'yyyy-mm-dd')# </option>
+			<option value="#billingStartDate#"> #DateFormat(billingStartDate,'yyyy-mm-dd')# </option>
 		</cfoutput>
 	</select>
 	</div>
@@ -191,7 +190,9 @@
 		var d = $('#billingStartDate').val();
 		if(d != ''){
 			d = d.replace(' 00:00:00.0','');
-			table.columns(idx_billingStartDate) .search(d) .draw();
+			table.columns(idx_billingStartDate).search(d).draw();
+		}else{
+			table.columns(idx_billingStartDate).search('').draw();
 		}
 	}
 	function getStudent(){

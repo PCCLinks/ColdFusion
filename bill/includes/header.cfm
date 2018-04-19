@@ -15,7 +15,12 @@
 <cfset pcc_title = 'PCC Links' /> 	<!--- Page title & h3 --->
 <cfsavecontent variable="pcc_menu">	 <!--- List items for menu --->
 	<ul class="dropdown menu" data-dropdown-menu>
-		 <li><a href="index.cfm">Home</a></li>
+		 <li><a href="index.cfm">Home</a>
+			<ul class="menu">
+				<li><a href="index.cfm?type=Term">Term</a></li>
+		 		<li><a href="index.cfm?type=Attendance">Attendance</a></li>
+			</ul>
+		</li>
 		 <li><a>Term Billing</a>
 			<ul class="menu">
 				<li><a href="SetUpBilling.cfm?type=Term">Set Up Billing</a></li>
@@ -38,6 +43,8 @@
 			<ul class="menu">
 				<li><a href="ProgramStudent.cfm">Review Billing</a></li>
 		 		<li><a href="ProgramReview.cfm">Coach Review</a></li>
+				<li><a href="ReportSIDNYComparison.cfm">SIDNY Comparison Report</a></li>
+				<li><a href="ReportPreviousPeriodComparison.cfm">Check for Differences from Previous Period</a></li>
 		 		<li><a href="Transcript.cfm">Transcript</a></li>
 			</ul>
 		</li>
@@ -48,7 +55,7 @@
 				<li><a href="ReportPPS.cfm">PPS Report</a></li>
 				<li><a href="ReportEnrollment.cfm">Enrollment Report</a></li>
 				<li><a href="ReportSIDNYComparison.cfm">SIDNY Comparison Report</a></li>
-				<li><a href="ReportPreviousPeriodComparison.cfm">Check for Differences from Previous Month</a></li>
+				<li><a href="ReportPreviousPeriodComparison.cfm">Check for Differences from Previous Period</a></li>
 				<li><a href="ReportOverage.cfm?program=GtC">GtC Overage Report</a></li>
 				<li><a href="ReportOverage.cfm?program=YtC">YtC Overage Report</a></li>
 			</ul>

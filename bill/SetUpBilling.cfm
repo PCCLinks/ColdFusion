@@ -177,7 +177,7 @@
         	jqXHR = jqDef.promise();
         	jqXHR.statusText = "Error with SetUpBilling.";
 		}else{
-			window.location="index.cfm";
+			window.location=<cfoutput>"index.cfm?Type=#url.type#";</cfoutput>
 		}
 	}
 

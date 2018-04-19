@@ -1,5 +1,5 @@
 <cfset data = Session.reportAttendanceData>
-
+<cfset reportDates = Session.reportDatesAttendanceData>
 
 <style>
 
@@ -68,7 +68,7 @@
 			<tr>
 				<th class="no-border" style="text-align:center" colspan="19">
 					<h3 style="margin:1px;font-size:18px">Monthly Attendance And Days Enrolled - Public School Days</h3>
-					<cfoutput><b>All Students at <cfif data.Program EQ "gtc">PCC/HSC<cfelse>#data.Program#</cfif> Between #data.ReportStartDate# and #data.ReportEndDate#</b></cfoutput>
+					<cfoutput><b>All Students at <cfif data.Program EQ "gtc">PCC/HSC<cfelse>#data.Program#</cfif> Between #DateFormat(reportDates.ReportStartDate,'m/d/yyyy')# and #DateFormat(reportDates.ReportMonthEndDate,'m/d/yyyy')#</b></cfoutput>
 				</th>
 			</tr></cfoutput>
 		<tr>

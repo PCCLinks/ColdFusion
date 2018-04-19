@@ -9,11 +9,24 @@
 	<cfset StructDelete(Session, "SchoolDistrict")>
 </cflock>
 
+<cfparam name="type" default="attendance">
+<cfif isDefined("url.type")>
+	<cfset type = url.type>
+</cfif>
+
+
 <!-- Tabs -->
 <ul class="tabs" data-tabs id="index-tabs">
-	<li class="tabs-title is-active"><a href="#attendanceTab" aria-selected="true">Attendance Steps</a></li>
-	<li class="tabs-title"><a href="#termTab">Term</a></li>
+	<li class="tabs-title
+		<cfoutput><cfif type EQ "attendance">is-active</cfif></cfoutput>" onClick="javascript:setType('attendance')";>
+		<a href="#attendanceTab" <cfoutput><cfif type EQ "attendance">aria-selected="true"</cfif></cfoutput>>Attendance Steps</a>
+	</li>
+	<li class="tabs-title
+		<cfoutput><cfif type EQ "term">is-active</cfif></cfoutput>" onClick="javascript:setType('term')";>
+		<a href="#termTab" <cfoutput><cfif type EQ "term">aria-selected="true"</cfif></cfoutput>>Term</a>
+	</li>
 </ul>
+
 
 <!-- billing tab content -->
 <div class="tabs-content" data-tabs-content="index-tabs">
@@ -23,48 +36,55 @@
   	</div>
 	<!-- term content -->
 	<div class = "tabs-panel" id="termTab">
-		<!--- main content --->
-		<div class="row">
-			<div class="callout primary">
-				<cfoutput>Billing for Term: #qryData.Term#</cfoutput>
-			</div>
-		</div>
-		<div class="row">
-			<table id="dt_table" class="stripe compact" cellspacing="0" width="100%">
-				<thead>
-		        	<tr>
-		            	<th id="SchoolDistrict">School District</th>
-						<th id="Program">Program</th>
-						<th id="StudentsStillBeingReviewed">Review in Progress</th>
-						<th id="StudentsReviewed">Reviewed</th>
-		           </tr>
-		        </thead>
-		        <tbody>
-				<cfif not isNull(qryData)>
-		        	<cfoutput query="qryData">
-		            <tr>
-		            	<td>#qryData.schoolDistrict#</td>
-						<td>#qryData.program#</td>
-						<td>#qryData.StudentsStillBeingReviewed#</td>
-						<td>#qryData.StudentsReviewed#</td>
-		            </tr>
-		            </cfoutput>
-				</cfif>
-		        </tbody>
-			</table>
-		</div>
-	</div>
+    	<cfmodule template="includes/indexTermInclude.cfm" >
+  	</div>
 </div>
 
 <!--- scripts referenced in footer --->
 <cfsavecontent variable="pcc_scripts">
 <script>
+	var type = <cfoutput>'#type#';</cfoutput>
+
 	$(document).ready(function() {
 		$('#dt_table').dataTable({
 			paging:false,
 			searching:false
 		});
 	});
+
+	function setType(typeToSet){
+		type = typeToSet
+	}
+
+	function saveValues(formName){
+	 	var $form = $('#'+formName);
+	    $.ajax({
+	       	url:$form.attr('action'),
+	       	type: 'POST',
+	       	async: false,
+	       	data: $form.serialize(),
+	       	success: function (data, textStatus, jqXHR) {
+	       		if(formName.substring(1,10) == 'frmCalculateBilling'){
+					rePopulateBillingInfo();
+					closeForm();
+	       		}else{
+	       			location = "index.cfm?type=" + type;
+	       		}
+	    	},
+			error: function (jqXHR, exception) {
+	      		handleAjaxError(jqXHR, exception);
+			}
+	    });
+	}
+	function showForm(idName){
+		$('#'+idName).show();
+	}
+	function closeForm(idName){
+		$('#'+idName).hide();
+	}
+
+
+
 </script>
 </cfsavecontent>
 

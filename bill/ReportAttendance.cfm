@@ -1,14 +1,18 @@
 
 <cfinclude template="includes/header.cfm">
-<cfinvoke component="LookUp" method="getLatestDateAttendanceMonth"  returnvariable="attendanceMonth"></cfinvoke>
+<cfinvoke component="LookUp" method="getFirstOpenAttendanceDate"  returnvariable="attendanceMonth"></cfinvoke>
 <cfinvoke component="Report" method="attendanceReport" returnvariable="data">
-	<cfinvokeargument name="monthStartDate" value="#attendanceMonth#">
+	<cfinvokeargument name="billingStartDate" value="#attendanceMonth#">
 	<cfinvokeargument name="term" value="#url.term#">
 	<cfinvokeargument name="program" value="#url.program#">
 	<cfinvokeargument name="schooldistrict" value="#url.schooldistrict#">
 </cfinvoke>
 <cfset Session.reportAttendancePrintTable = data>
-
+<cfinvoke component="LookUp" method="getReportDates"  returnvariable="reportDates">
+	<cfinvokeargument name="term" value="#url.term#">
+	<cfinvokeargument name="billingStartDate" value="#attendanceMonth#">
+</cfinvoke>
+<cfset Session.reportDatesAttendanceData = reportDates>
 
 <style>
 	.dataTables_wrapper .dataTables_processing{
@@ -44,7 +48,7 @@
 			<tr>
 				<td colspan="2" class="no-border" style="text-align:center; font-size:12px">
 					<h4>Monthly Attendance And Days Enrolled - Public School Days</h4>
-					<cfoutput><b>All Students at #url.Program# between #data.ReportStartDate# and #data.ReportEndDate#</b></cfoutput>
+					<cfoutput><b>All Students at #url.Program# between #DateFormat(reportDates.ReportStartDate,'m/d/yyyy')# and #DateFormat(reportDates.ReportMonthEndDate,'m/d/yyyy')#</b></cfoutput>
 				</td>
 			</tr>
 		</table>

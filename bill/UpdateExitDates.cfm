@@ -1,7 +1,7 @@
 <cfinclude template="includes/header.cfm" />
 
 <cfinvoke component="LookUp" method="getTerms" returnvariable="qryTerms"></cfinvoke>
-<cfinvoke component="LookUp" method="getLatestAttendanceDates" returnvariable="qryBillingDates"></cfinvoke>
+<cfinvoke component="LookUp" method="getFirstOpenAttendanceDates" returnvariable="qryBillingDates"></cfinvoke>
 
 <cfif CGI.REQUEST_METHOD EQ "POST">
 	<cfinvoke component="ProgramBilling" method="updateExitDates">

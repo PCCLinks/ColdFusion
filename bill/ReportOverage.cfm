@@ -26,11 +26,12 @@
 <div class="callout primary">
 <cfif url.program EQ 'gtc'>GtC<cfelse>YtC</cfif> Overage Report
 </div>
-<cfif url.program EQ 'gtc'>
+<cfset desc = 'Credits'>
+<!---><cfif url.program EQ 'gtc'>
 	<cfset desc = 'Credits'>
 <cfelse>
 	<cfset desc = 'Days'>
-</cfif>
+</cfif>--->
 
 <table id="dt_table">
 	<thead>
@@ -65,8 +66,8 @@
 			<th><input type="text" placeholder="G" style="width:100px"/></th>
 			<th><input type="text" placeholder="Max Term" id="maxterm"  /></th>
 			<th><input type="text" placeholder="Coach" /></th>
-			<th></th>
-			<th></th>
+			<th><input type="text" placeholder="Total" /></th>
+			<th><input type="text" placeholder="Remaining" /></th>
 			<th style="display:none;"></th>
 		</tr>
 	</thead>
@@ -78,13 +79,13 @@
 			<td><a href="javascript:goToDetail(#billingStudentId#);">#bannerGNumber#</a></td>
 			<td>#MaxTerm#</td>
 			<td>#coach#</td>
-			<cfif url.program EQ 'gtc'>
+			<!---><cfif url.program EQ 'gtc'>--->
 			<td>#NumberFormat(credits,'99.99')#</td>
 			<td>#36.00-credits#</td>
-			<cfelse>
+			<!---><cfelse>
 			<td>#NumberFormat(days,'99.99')#</td>
 			<td>#NumberFormat(175.00-days,'99.99')#</td>
-			</cfif>
+			</cfif>--->
 			<td style="display:none;">#billingStudentId#</td>
 		</tr>
 		</cfoutput>
@@ -140,13 +141,13 @@
 	        button.text(buttonText);
 		}
 		function goToDetail(billingStudentId){
-			var dt = $('#dt_table').DataTable();
-			var billingStudentList = dt.columns({search:'applied'}).data()[5];
-			sessionStorage.setItem("billingStudentList", billingStudentList);
-			var data = $.param({data:encodeURIComponent(JSON.stringify(sessionStorage))});
-  			$.post("SaveSession.cfm", data, function(){
-  				window.open('programStudentDetail.cfm?billingStudentId='+billingStudentId + 'showNext=true');
-  			});
+			//var dt = $('#dt_table').DataTable();
+			//var billingStudentList = dt.columns({search:'applied'}).data()[5];
+			//sessionStorage.setItem("billingStudentList", billingStudentList);
+			//var data = $.param({data:encodeURIComponent(JSON.stringify(sessionStorage))});
+  			//$.post("SaveSession.cfm", data, function(){
+  				window.open('programStudentDetail.cfm?billingStudentId='+billingStudentId + '&showNext=false');
+  			//});
 		}
 
 	</script>

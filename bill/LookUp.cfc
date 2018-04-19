@@ -55,10 +55,12 @@
 								when 1 then '-Winter'
 								when 2 then '-Spring'
 			                    when 3 then '-Summer'
-			                    when 4 then '-Fall' end) TermDescription
+			                    when 4 then '-Fall' end) TermDescription,
+			     billingStartDate
 			from billingStudent
-			where billingStatus = 'IN PROGRESS'
+			where billingStatus IN ('IN PROGRESS', 'REVIEWED')
 				and program not like '%attendance%'
+				and includeFlag = 1
 			order by term
 		</cfquery>
 		<cfreturn data>
@@ -137,6 +139,7 @@
 		</cfquery>
 		<cfreturn data>
 	</cffunction>
+	<!--->
 	<cffunction name="getLastTermClosed" access="remote">
 		<cfquery datasource="pcclinks" name="data">
 			SELECT ProgramQuarter, ProgramYear, maxTerm.Term MaxTerm
@@ -147,6 +150,7 @@
 		</cfquery>
 		<cfreturn data>
 	</cffunction>
+	--->
 	<cffunction name="getLastAttendancePeriodClosed" access="remote" returnType="date">
 		<cfquery datasource="pcclinks" name="data">
 			SELECT MAX(billingStartDate) billingStartDate
@@ -155,6 +159,22 @@
 	        	and program like '%Attendance%'
 		</cfquery>
 		<cfreturn data.billingStartDate>
+	</cffunction>
+	<cffunction name="getLastTermClosed" access="remote" >
+		<cfquery datasource="pcclinks" name="data">
+			select concat(Term, case right(Term,1)
+								when 1 then '-Winter'
+								when 2 then '-Spring'
+			                    when 3 then '-Summer'
+			                    when 4 then '-Fall' end) TermDescription
+			FROM (
+			SELECT MAX(Term) Term
+			FROM billingStudent
+			WHERE billingStatus = 'BILLED'
+	        	and program not like '%Attendance%'
+	        ) data
+		</cfquery>
+		<cfreturn data.TermDescription>
 	</cffunction>
 	<cffunction name="getNextTermToBill" access="remote">
 		<cfquery datasource="pcclinks" name="data">
@@ -253,10 +273,29 @@
 				SELECT distinct billingStartDate
 				FROM billingStudent
 				WHERE program like '%attendance%'
-					and billingStatus = 'IN PROGRESS'
+					and billingStatus IN ('IN PROGRESS', 'REVIEWED')
+					and includeFlag = 1
 				ORDER BY billingStartDate desc
 		</cfquery>
 		<cfreturn data>
+	</cffunction>
+	<cffunction  name="getOpenBillingStartDates" access="remote"  >
+		<cfquery name="data" >
+				SELECT distinct billingStartDate
+				FROM billingStudent
+				WHERE billingStatus IN ('IN PROGRESS', 'REVIEWED')
+					and includeFlag = 1
+				ORDER BY billingStartDate desc
+		</cfquery>
+		<cfreturn data>
+	</cffunction>
+	<cffunction name="getLatesBillingStartDate" access="remote" returntype="date">
+		<cfquery name="data">
+			select max(billingStartDate) billingStartDate
+			from billingStudent
+			where includeFlag = 1
+		</cfquery>
+		<cfreturn data.billingStartDate>
 	</cffunction>
 	<cffunction  name="getAttendanceBillingStartDates" access="remote"  >
 		<cfquery name="data" >
@@ -272,7 +311,8 @@
 			select min(billingStartDate) lastAttendanceBillDate
 			FROM billingStudent
 			WHERE program like '%attendance%'
-				and billingStatus = 'IN PROGRESS'
+				and billingStatus IN ('IN PROGRESS', 'REVIEWED')
+				and includeFlag = 1
 			ORDER BY billingStartDate desc
 		</cfquery>
 		<cfreturn data.lastAttendanceBillDate>
@@ -282,6 +322,7 @@
 			select max(billingStartDate) lastAttendanceBillDate
 			from billingStudent
 			where program like '%attendance%'
+				and includeFlag = 1
 		</cfquery>
 		<cfreturn data.lastAttendanceBillDate>
 	</cffunction>
@@ -307,18 +348,43 @@
 		</cfquery>
 		<cfreturn data>
 	</cffunction>
-
-	<cffunction name="getLatestAttendanceDates" access="remote">
+	<cffunction name="getFirstOpenAttendanceDates" access="remote">
 		<cfquery name="data">
-			select max(billingStartDate) billingStartDate
-				,max(bs.Term) Term
-			    ,max(billingEndDate) billingEndDate
-			    ,max(termBeginDate) TermBeginDate
-			    ,max(termDropDate) TermDropDate
-			    ,max(termEndDate) TermEndDate
+			select min(billingStartDate) billingStartDate
+				,min(bs.Term) Term
+			    ,min(billingEndDate) billingEndDate
+			    ,min(termBeginDate) TermBeginDate
+			    ,min(termDropDate) TermDropDate
+			    ,min(termEndDate) TermEndDate
 			from billingStudent bs
 				join bannerCalendar bc on bs.term = bc.Term
-			where bs.program like '%attendance%'
+			WHERE program like '%attendance%'
+				and billingStatus IN ('IN PROGRESS', 'REVIEWED')
+				and includeFlag = 1
+		</cfquery>
+		<cfreturn data>
+	</cffunction>
+	<cffunction name="getBillingStatusForDate" access="remote" >
+		<cfargument name="term" required="true">
+		<cfquery name="data" >
+            select billingStatus, count(*) NumRecords
+            from billingStudent
+            where term = <cfqueryparam value="#arguments.term#">
+				and program not like '%attendance%'
+			group by billingStatus
+			order by billingStatus
+		</cfquery>
+		<cfreturn data>
+	</cffunction>
+	<cffunction name="getReportDates" access="remote" >
+		<cfargument name="term" requred="true">
+		<cfargument name="billingStartDate">
+		<cfquery name="data" >
+			SELECT min(termBeginDate) ReportStartDate, max(termEndDate) ReportEndDate
+				<cfif isDefined("arguments.billingStartDate")>, LAST_DAY(<cfqueryparam value="#arguments.billingStartDate#">) ReportMonthEndDate</cfif>
+			FROM bannerCalendar
+            where ProgramYear = (select ProgramYear from bannerCalendar where term = <cfqueryparam value="#arguments.term#">)
+				and term <= <cfqueryparam value="#arguments.term#">
 		</cfquery>
 		<cfreturn data>
 	</cffunction>

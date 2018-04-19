@@ -1,7 +1,7 @@
 <cfinclude template="includes/header.cfm">
 
-<cfinvoke component="LookUp" method="getAttendanceBillingStartDates" returnvariable="billingDates"></cfinvoke>
-<cfinvoke component="LookUp" method="getLatestDateAttendanceMonth" returnvariable="latestMonth"></cfinvoke>
+<cfinvoke component="LookUp" method="getOpenBillingStartDates" returnvariable="billingDates"></cfinvoke>
+<cfinvoke component="LookUp" method="getLatesBillingStartDate" returnvariable="latestMonth"></cfinvoke>
 <cfparam name="selectedBillingDate" default="#latestMonth#">
 <cfif IsDefined("form.billingStartDate")>
 	<cfset selectedBillingDate = form.billingStartDate>
@@ -31,6 +31,13 @@
 </style>
 
 <div class="callout primary">Discrepancy Report between Previous and Current Billing Periods</div>
+<div class="callout">
+<ul><li>Displays student entries which are assigned to a different program than the last billing cycle, and do not seem to have an exit date for the previous program.</li>
+<li>It also shows student entries which have no entry in this current billing period, and do not seem to have exited the program billed in the previous period.
+(These latter ones show up with "Missing!" in the current program.</li>
+<li>To change the current program assignment, click the "G Number" of the student, and edit the program in the next screen.</li>
+</ul>
+</div>
 <div class="callout row">
 <form action="ReportPreviousPeriodComparison.cfm" method="post">
 	<label for="billingStartDate">

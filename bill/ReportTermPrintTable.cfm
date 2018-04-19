@@ -1,4 +1,5 @@
 <cfset data = Session.reportTermData>
+<cfset reportDates = Session.reportDatesTermData>
 <style>
 
 		table thead th, table tbody td, table tfoot td {
@@ -67,7 +68,7 @@
 			<tr>
 				<th class="no-border" style="text-align:center" colspan="19">
 					<h3 style="margin:0px">College Quarterly Credit - Equivalent Instructional Days</h3>
-					<cfoutput><b>All Students at <cfif data.Program EQ "gtc">PCC/HSC<cfelse>#data.Program#</cfif> for #data.BillingStartDate# and #data.BillingEndDate#</b></cfoutput>
+					<cfoutput><b>All Students at <cfif data.Program EQ "gtc">PCC/HSC<cfelse>#data.Program#</cfif> for #DateFormat(reportDates.ReportStartDate,'m/d/yyyy')# and #DateFormat(reportDates.ReportEndDate,'m/d/yyyy')#</b></cfoutput>
 					<br><br>
 				</th>
 			</tr></cfoutput>

@@ -8,7 +8,12 @@
 <cfinvoke component="LookUp" method="getSchools" returnvariable="schools"></cfinvoke>
 <cfinvoke component="LookUp" method="getOpenTerms" returnvariable="qryTerms"></cfinvoke>
 <cfinvoke component="LookUp" method="getOpenAttendanceBillingStartDates" returnvariable="billingDates"></cfinvoke>
-<cfinvoke component="pcclinks.bill.LookUp" method="getFirstOpenAttendanceDate" returnvariable="openAttendanceDate"></cfinvoke>
+<cfif url.type EQ 'Term'>
+	<cfinvoke component="pcclinks.bill.LookUp" method="getOpenTerms" returnvariable="openTerms"></cfinvoke>
+	<cfset openBillingStartDate = openTerms.billingStartDate>
+<cfelse>
+	<cfinvoke component="pcclinks.bill.LookUp" method="getFirstOpenAttendanceDate" returnvariable="openBillingStartDate"></cfinvoke>
+</cfif>
 
 <div class="callout primary">
 	<div class="row">
@@ -16,10 +21,10 @@
 			<cfoutput>Billing for Program Year: #terms.ProgramYear#</cfoutput>
 		</div>
 		<div class="medium-2 columns">
-			<input class="button" value="Display Calculate Billing" onClick="javascript:showCalculateBilling();">
+			<input class="button" value="Display Calculate Billing" onClick="javascript:showForm('calculateBilling');">
 		</div>
 		<div class="medium-3 columns">
-			<input class="button" value="Display Close Billing" onClick="javascript:showCloseBillingCycle();">
+			<input class="button" value="Display Close Billing" onClick="javascript:showForm('closeBillingCycle');">
 		</div>
 	</div>
 </div>
@@ -30,7 +35,8 @@
 	billingDates = "#billingDates#"
 	qryTerms = "#qryTerms#"
 	billingType = "#url.type#"
-	openAttendanceDate = "#openAttendanceDate#">
+	openBillingStartDate = "#openBillingStartDate#"
+		divIdName = "closeBillingCycle">
 </div>
 
 <!-- CALCULATE BILLING -->
@@ -39,7 +45,8 @@
 	billingDates = "#billingDates#"
 	qryTerms = "#qryTerms#"
 	billingType = "#url.type#"
-	openAttendanceDate = "#openAttendanceDate#">
+	openBillingStartDate = "#openBillingStartDate#"
+	divIdName = "calculateBilling">
 </div>
 
 <div class="row">
@@ -131,9 +138,8 @@
          	]
 		});
 	});
-	function closeForm(){
-		$('#calculateBilling').hide();
-		$('#closeBillingCycle').hide();
+	function closeForm(idName){
+		$('#' + idName).hide();
 	}
 	function goToBillingReport(schooldistrict, program){
 		var url = 'ReportTerm.cfm';
@@ -181,14 +187,13 @@
 			}
 		});
 	}*/
-	function showCloseBillingCycle(){
-		$('#closeBillingCycle').show();
-		$('#calculateBilling').hide();
+	function showForm(idName){
+		$('#'+idName).show();
 	}
-	function showCalculateBilling(){
-		$('#calculateBilling').show();
-		$('#closeBillingCycle').hide();
+	function closeForm(idName){
+		$('#'+idName).hide();
 	}
+
 	function addZero($time) {
   		if ($time < 10) {
     		$time = "0" + $time;

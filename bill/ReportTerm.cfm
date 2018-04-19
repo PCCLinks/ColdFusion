@@ -13,6 +13,10 @@
 </cfinvoke>
 
 <cfinvoke component="LookUp" method="getProgramYearTerms" value="terms"></cfinvoke>
+<cfinvoke component="LookUp" method="getReportDates"  returnvariable="reportDates">
+	<cfinvokeargument name="term" value="#Variables.term#">
+</cfinvoke>
+<cfset Session.reportDatesTermData = reportDates>
 
 <div class="row" id="tableheader">
 	<table width="100%" style="border-style:none;" >
@@ -27,7 +31,7 @@
 		<tr>
 			<td colspan="2" class="no-border" style="text-align:center; font-size:12px; border-style:none;">
 				<h4>College Quarterly Credit - Equivalent Instructional Days</h4>
-				<cfoutput><b>All Students at #Program# between #qryData.BillingStartDate# and #qryData.BillingEndDate#</b></cfoutput>
+				<cfoutput><b>All Students at #Program# between #DateFormat(reportDates.ReportStartDate,'m/d/yyyy')# and #DateFormat(reportDates.ReportEndDate,'m/d/yyyy')#</b></cfoutput>
 			</td>
 		</tr>
 	</table>

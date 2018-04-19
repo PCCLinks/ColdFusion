@@ -2,7 +2,7 @@
 <cfinclude template="includes/header.cfm">
 
 <cfinvoke component="LookUp" method="getTerms" returnvariable="qryTerms"></cfinvoke>
-<cfinvoke component="LookUp" method="getLatestAttendanceDates" returnvariable="qryDates"></cfinvoke>
+<cfinvoke component="LookUp" method="getFirstOpenAttendanceDates" returnvariable="qryDates"></cfinvoke>
 
 <cfparam name="selectedCRN" default="">
 <cfif structKeyExists(Session, "selectedCRN")>
@@ -197,7 +197,11 @@
                  },
                 {targets: 7,
 			 	render: function ( data, type, row ) {
-                 			return '<a href="javascript:addStudent(\''+data+'\')">Select</a>';
+			 				if(row[8] != 0){
+                 				return '<a href="javascript:addStudent(\''+data+'\')">Select</a>';
+			 				}else{
+			 					return '<span style="color:red">Cannot Add without Banner Attribute</span>';
+			 				}
             			}
 			 	},
                ]

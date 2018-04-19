@@ -2,7 +2,7 @@
 
 <cfinvoke component="LookUp" method="getSchools" returnvariable="schools"></cfinvoke>
 <cfinvoke component="LookUp" method="getAttendanceBillingStartDates" returnvariable="billingDates"></cfinvoke>
-<cfinvoke component="LookUp" method="getLatestDateAttendanceMonth" returnvariable="latestMonth"></cfinvoke>
+<cfinvoke component="LookUp" method="getFirstOpenAttendanceDate" returnvariable="latestMonth"></cfinvoke>
 
 <div class="callout primary">ADM Report</div>
 <!-- Filter -->
