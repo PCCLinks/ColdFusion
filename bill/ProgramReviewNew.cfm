@@ -1,4 +1,3 @@
-<cfinclude template="includes/header.cfm" />
 
 <cfinvoke component="LookUp" method="getMaxTerm" returnvariable="maxTerm"></cfinvoke>
 <cfset Variables.MaxTerm = #maxTerm#>
@@ -82,7 +81,7 @@
 	</div>
 </div>
 
-<cfsavecontent variable="pcc_scripts">
+<!---><cfsavecontent variable="pcc_scripts">--->
 	<script>
 		var indexOfGNumber = 1;
 		var indexOfProgram = 5;
@@ -165,6 +164,16 @@
 		 	return {term: '<cfoutput>#Variables.maxTerm#</cfoutput>', program: $('#program').val()};
 		}
 		function goToDetail(billingStudentId){
+			$.ajax({
+	       		url: 'programStudentDetail.cfm?billingStudentId='+billingStudentId+'&showNext=true'
+	    	}).done(function(data) {
+	       		$("#detail").html(data);
+	    	});
+			$('#grid').hide();
+			$('#btnGrid').show();
+			$('#detail').show();
+		}
+		function goToDetail1(billingStudentId){
 			var dt = $('#dt_table').DataTable();
 			var billingStudentList = dt.columns({search:'applied'}).data()[indexOfBillingStudentId];
 			sessionStorage.setItem("billingStudentList", billingStudentList);
@@ -182,5 +191,5 @@
 		}
 
 	</script>
-</cfsavecontent>
-<cfinclude template="includes/footer.cfm" />
+<!---></cfsavecontent>--->
+

@@ -46,9 +46,9 @@
 		<cfargument name="req">
 		<cfset logEntry(value="OnRequestStart", level=2)>
 		<cfset logEntry(value="req=" & arguments.req, level=2)>
-		<CFLOCK SCOPE="SESSION" TYPE="READONLY" TIMEOUT="5">
-	        <cfset session.pccsource = Variables.pcc_source>
-        </CFLOCK>
+		<cfif structKeyExists(url, "method")>
+			<cfset logEntry(value="method=" & url.method, level=2)>
+		</cfif>
 
 		<cfif structKeyExists(url, "accessdenied")>
 			<cfset logEntry(value="url contains accessdenied for user " & #session.username#)>
@@ -60,8 +60,6 @@
 		<cfif url.action eq "logout">
 			 <!--- session reset --->
 			 <cflock scope="session" timeout="30" type="exclusive">
-	 		    <cfset StructClear(Session)>
-	   		 	<cfset session.authorized = "0">
 	     		<cfset sessionInvalidate() >
 	 		</cflock>
 	 		<cfset cas_url = cas_path & "logout">
@@ -74,19 +72,27 @@
 
 		<cfset logEntry(value="username=" & session.username, level=2)>
 		<cfset logEntry(value="sessionid=" & session.sessionid, level=2)>
-	 	<cfif not len(trim(session.username)) or session.authorized NEQ 1
-	 		or (This.application NEQ 'Billing' and This.application NEQ 'FutureConnect')>
+	 	<cfif not len(trim(session.username)) or session.authorized NEQ 1>
+	 		<!--->or (This.application NEQ 'Billing' and This.application NEQ 'FutureConnect')>--->
 		 	<cfset isAjax = isAjaxCall()>
 		 	<cfif isAjax>
 			 	<cfset logEntry(value="Ajax call", level=2)>
 			 	<cflocation url="SessionTimeoutError.cfm">
+			 	<cfset logEntry(value="Ajax call complete", level=2)>
 			<cfelse>
 			 	<cfset logEntry(value="Not Ajax call", level=2)>
 	 			<cfinclude template="#pcc_source#/includes/auth.cfm">
+			 	<cfset logEntry(value="Not Ajax call complete", level=2)>
 	 		</cfif>
 	 	</cfif>
+
+	 	<CFLOCK SCOPE="SESSION" TYPE="READONLY" TIMEOUT="5">
+	        <cfset session.pccsource = Variables.pcc_source>
+        </CFLOCK>
+
 		<cfreturn "true">
 	</cffunction>
+
 
 	<cffunction name="onError">
 		<cfargument name="exception" >

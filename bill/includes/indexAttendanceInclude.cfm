@@ -51,7 +51,7 @@
 	<hr>
 	<a href="ReportSIDNYComparison.cfm?billingStartDate=<cfoutput>#openAttendanceDate#</cfoutput>" >Check for SIDNY Differences</a><br>
 	<a href="ReportPreviousPeriodComparison.cfm?billingStartDate=<cfoutput>#openAttendanceDate#</cfoutput>" >Check for Differences from Previous Month</a><br>
-	Attendance Scenarios
+	<a href="AddScenario.cfm">Attendance Scenarios</a>
 	<hr>
 	<a href="AttendanceEntry.cfm">Enter Attendance</a><br>
 	<ul class="circle">
@@ -77,6 +77,7 @@
 			</cfoutput>
 			</tbody>
 		</table>
+		<a href="javascript:exportNoHours()" class="button">Export</a>
 		</div>
 		</li>
 		<li># classes entered: <cfoutput>#attendanceEnteredByClass.NumClassesEntered#</cfoutput></li>
@@ -90,6 +91,7 @@
 						<th>Crse</th>
 						<th>CRN</th>
 						<th>Title</th>
+						<th>## Students</th>
 					</tr>
 					</thead>
 					<tbody>
@@ -99,14 +101,16 @@
 						<td>#crse#</td>
 						<td>#crn#</td>
 						<td>#Title#</td>
+						<td>#NumOfStudents#</td>
 					</tr>
 					</cfoutput>
 					</tbody>
 				</table>
+				<a href="javascript:exportNoHours()" class="button">Export</a>
 			</div>
 		</li>
 	</ul>
-	<a href="ReportAttendanceEntry.cfm" >Review Attendance</a><br>
+	<a href="ReportAttendanceEntry.cfm" >Review Attendance - Summary Report</a><br>
 	<hr>
 	<a href="SetExit.cfm" >Set Exit Reason and Dates</a><br>
 	<hr>
@@ -190,6 +194,16 @@
 			$('#showStudentsLink').text(linkStudentTextShow);
 			$('#studentsMissingHours').hide();
 		}
+	}
+	function exportNoHours(){
+		 $.ajax({
+		 	url: 'Report.cfc?method=attendanceEntry&billingStartDate=<cfoutput>#openAttendanceDate#</cfoutput>&noHoursOnly=true',
+		 	type:'get',
+		 	cache:false,
+		 	success: function(data){
+		 		window.open('includes/ReportAttendanceEntryPrintInclude.cfm');
+		 	}
+		 });
 	}
 </script>
 

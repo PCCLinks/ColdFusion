@@ -43,6 +43,7 @@
 				,bs.reviewWithCoachFlag
 				,bs.billingNotes
 				,bs.reviewNotes
+				,SIDNYExitDate.exitDate SIDNYExitDate
 			FROM billingStudent bs
 				JOIN billingStudentProfile bsp on bs.contactId = bsp.contactId
  				JOIN keySchoolDistrict sd on bs.districtid = sd.keyschooldistrictid
@@ -57,6 +58,19 @@
 						JOIN keyResourceSpecialist res
 							ON sres.keyResourceSpecialistID = res.keyResourceSpecialistID) res
 					ON coachLastStatus.statusID = res.statusID
+				JOIN (SELECT enrolled.contactId, exitDate
+					  FROM (select contactId, max(statusDate) enrolledDate
+						from status s
+						where keyStatusID in (2,13,14,15,16)
+							and undoneStatusID is null
+						 and contactId = <cfqueryparam value="#qryInfo.contactId#">) enrolled
+							left outer join (select contactId, max(statusDate) exitDate
+											from status s
+											where keyStatusID in (3,12)
+											 and undoneStatusID IS NULL
+											 and contactId = <cfqueryparam value="#qryInfo.contactId#">) exited
+					  ON enrolledDate < exitDate ) SIDNYExitDate
+				 ON SIDNYExitDate.contactId = bs.contactId
 			WHERE bs.contactId = <cfqueryparam value="#qryInfo.contactId#">
 				and bs.term in (select term from bannerCalendar
 									where ProgramYear = (select ProgramYear
@@ -100,9 +114,8 @@
 				,bsp.firstname
 				,bsp.lastname
 				,schooldistrict
-				,Date_Format(bs.enrolledDate, '%m/%d/%Y') EnrolledDate
-				,Date_Format(bs.exitDate, '%m/%d/%Y') ExitDate
 				,bs.Program
+				,Date_Format(bs.exitDate, '%m/%d/%Y') ExitDate
 				,bs.term MaxTerm
 				,IFNULL(bsi.credits, 0) CurrentTermNoOfCredits
    				,IFNULL(bsiPrev.credits,0) PrevTermNoOfCredits
@@ -892,10 +905,12 @@
 		<cfargument name="billingStudentItemId" required="true">
 		<cfargument name="attendance" required="true">
 		<cfargument name="maxPossibleAttendance" required="true">
+		<cfargument name="notes" required="true">
 		<cfquery name="update">
 			update billingStudentItem
 			set attendance = <cfif arguments.attendance EQ "">NULL<cfelse><cfqueryparam value="#arguments.attendance#"></cfif>
 				,maxPossibleAttendance = <cfif arguments.maxPossibleAttendance EQ "">NULL<cfelse><cfqueryparam value="#arguments.maxPossibleAttendance#"></cfif>
+				,billingStudentItemNotes = <cfqueryparam value="#arguments.notes#">
 				,lastUpdatedBy=<cfqueryparam value=#Session.username#>
 				,dateLastUpdated=current_timestamp
 			where billingStudentItemId = <cfqueryparam value="#arguments.billingStudentItemId#">
@@ -907,10 +922,10 @@
 		<cfargument name="billingStartDate" type="date" required="true">
 		<cfargument name="crn" required="true">
 		<cfquery name="data" >
-			select bsp.firstName, bsp.lastName, bs.bannerGNumber
+			select bsp.firstName, bsp.lastName, bs.bannerGNumber, bs.exitDate
 				,crn, crse, subj, title
 				,bsi.attendance, bsi.billingStudentItemId, bs.billingStudentId
-				,billingStartDate, bsi.MaxPossibleAttendance
+				,billingStartDate, bsi.MaxPossibleAttendance, bsi.billingStudentItemNotes
 			from billingStudent bs
 				JOIN billingStudentProfile bsp on bs.contactId = bsp.contactId
 				join billingStudentItem bsi on bs.billingStudentId = bsi.billingStudentId

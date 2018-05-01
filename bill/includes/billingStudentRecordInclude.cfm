@@ -26,6 +26,7 @@ on a single page
 --->
 <form id="frm#Variables.billingStudentID#" action='javascript:saveValues("frm#Variables.billingStudentID#");' method="post">
 	<input type="hidden" id="billingStudentId#billingStudentId#" name="billingStudentId" value="#billingStudentId#">
+	<cfif qryBillingStudentRecord.includeFlag EQ 0><div class="callout alert">Student Not Included In Billing for this Period.</div></cfif>
 	<cfif qryBillingStudentRecord.program DOES NOT CONTAIN 'attendance'>
 	<!-- UNITS -->
 	<div class="callout">

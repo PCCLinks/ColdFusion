@@ -61,9 +61,8 @@
 					<th id="firstname">First name</th>
 					<th id="LASTNAME">Last name</th>
 					<th id="SchoolDistrict">School District</th>
-					<th id="EnrolledDate">Enrolled Date</th>
-					<th id="ExitDate">Exit Date</th>
 					<th id="Program">Program</th>
+					<th id="ExitDate">Program Exit</th>
 					<th id="Program">Latest Term</th>
 					<th id="CurrentTermNoOfCredits">Current Term Credits</th>
 					<th id="PrevTermNoOfCredits">Prev Term Credits</th>
@@ -76,9 +75,8 @@
 					<th><input type="text" placeholder="First name" /></th>
 					<th><input type="text" placeholder="Last name" /></th>
 					<th><input type="text" placeholder="School District" /></th>
-					<th><input type="text" placeholder="Enrolled Date" /></th>
-					<th><input type="text" placeholder="Exit Date" /></th>
 					<th><input type="text" placeholder="Program" /></th>
+					<th><input type="text" placeholder="Exit Date" /></th>
 					<th><input type="text" id="termPlaceholder" placeholder="Term" value="<cfoutput>#Variables.MaxTerm#</cfoutput>" /></th>
 					<!---><th><input type="text" placeholder="Term" value=<cfoutput>#Variables.MaxTerm#</cfoutput> /></th>--->
 					<th><input type="text" placeholder="Current Term Credits" /></th>
@@ -97,7 +95,9 @@
 <cfsavecontent variable="pcc_scripts">
 	<script>
 		var indexOfGNumber = 1;
-		var indexOfBillingStudentId = 12;
+		var indexOfBillingStudentId = 11;
+		var indexOfProgram = 5;
+		var indexOfMaxTerm = 7;
 		var table;
 		var txtShowActive = 'Show Active Only';
 		var txtShowAll = 'Include Non-Active Students';
@@ -108,9 +108,9 @@
 		$(document).ready(function() {
 			setUpTable();
 			$('#program').change(function(){
-				table.column(7).search($('#program').val(),false,false).draw();
+				table.column(indexOfProgram).search($('#program').val(),false,false).draw();
 			});
-			table.column(8).search("<cfoutput>#Variables.MaxTerm#</cfoutput>").draw();
+			table.column(indexOfMaxTerm).search("<cfoutput>#Variables.MaxTerm#</cfoutput>").draw();
 		});
 		function setUpTable(program){
 			table = $('#dt_table').DataTable({
@@ -178,14 +178,14 @@
 		}
 		function filterShowActive(table, button) {
 			filter =  button.text() == txtShowActive ? "<cfoutput>#Variables.MaxTerm#</cfoutput>" : "";
-			table.column(8).search(filter).draw();
+			table.column(indexOfMaxTerm).search(filter).draw();
 			$('#termPlaceholder').val(filter);
 			buttonText = button.text() == txtShowActive ? txtShowAll : txtShowActive;
 	        button.text(buttonText);
 		}
 		function filterShowReview(table, button) {
 			filter =  button.text() == txtShowInProgress ? "IN PROGRESS" : "";
-			table.column(11).search(filter).draw();
+			table.column(indexOfBillingStudentId).search(filter).draw();
 			$('#billingStatusPlaceholder').val(filter);
 			buttonText = (button.text() == txtShowAllStatus ? txtShowInProgress : txtShowAllStatus);
 	        button.text(buttonText);

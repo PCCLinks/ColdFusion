@@ -10,7 +10,7 @@
 <cfinvoke component="Report" method="attendanceEntry" returnvariable="data">
 	<cfinvokeargument name="billingStartDate" value="#Variables.billingStartDate#">
 </cfinvoke>
-<cfset Session.attendanceEntryPrint = data>
+
 
 <style>
 
@@ -56,9 +56,11 @@
 			<th>G</th>
 			<th>First Name</th>
 			<th>Last Name</th>
-			<th>Exit Date</th>
+			<th>Program Exit</th>
+			<th>Current Exit</th>
 			<th>Attend.</th>
 			<th>Sched.</th>
+			<th>Notes</th>
 			<th>Exclude Student</th>
 			<th>Exclude Class</th>
 		</tr>
@@ -75,8 +77,10 @@
 			<td>#firstname#</td>
 			<td>#lastname#</td>
 			<td>#DateFormat(exitDate,'m/d/yyyy')#</td>
+			<td>#DateFormat(sidnyExitDate,'m/d/yyyy')#</td>
 			<td>#NumberFormat(attendance,'99.99')#</td>
 			<td>#NumberFormat(MaxPossibleAttendance,'99.99')#</td>
+			<td>#notes#</td>
 			<td>#includestudent#</td>
 			<td>#includeclass#</td>
 		</tr>
@@ -100,7 +104,8 @@
             	columns:[{data:'crn'},{data:'crse'},{data:'subj'}
             			,{data:'schooldistrict'}, {data:'program'},{data:'bannerGNumber'}
             			,{data:'firstname'},{data:'lastname'},{data:'attendance'},{data:'maxpossibleattendance'}
-            			,{data:'includestudent'},{data:'includeclass'}, {data:'exitDate'}],
+            			,{data:'notes'}, {data:'includestudent'},{data:'includeclass'}, {data:'exitDate'}
+            			,{data:'sidnyExitDate'}],
             	rowGroup: {
     				dataSrc: 'crn'
     			},

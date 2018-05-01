@@ -126,10 +126,11 @@
 	function saveEntry(id){
 		var attendance = $('#attendance'+id).val();
 		var maxPossAttendance = $('#numberOfDays'+id).val();
+		var notes = $('#notes'+id).val();
 		$.ajax({
 	          type: 'post',
 	          url: 'programBilling.cfc?method=updateAttendance',
-	          data: {billingStudentItemId: id, attendance: attendance, maxPossibleAttendance: maxPossAttendance},
+	          data: {billingStudentItemId: id, attendance: attendance, maxPossibleAttendance: maxPossAttendance, notes: notes},
 	          datatype:'json',
 	          error: function (jqXHR, exception) {
 				handleAjaxError(jqXHR, exception);

@@ -10,15 +10,25 @@
 <cfif #qryStudent.BillingStatus# EQ 'BILLED'>
 	<cfset readonly=true>
 </cfif>
+<cfset local.sidnyExitDateAlert = false>
+<cfif LEN(qryStudent.SIDNYExitDate) GT 0 AND qryStudent.SIDNYExitDate LT qryStudent.BillingStartDate>
+	<cfset local.sidnyExitDateAlert = true>
+</cfif>
+
 
 <cfoutput query="qryStudent">
-	<div class=<cfif readonly EQ 'BILLED'>"callout alert"<cfelse>"callout primary"</cfif> >
+	<div class="callout
+				<cfif local.sidnyExitDateAlert OR includeFlag EQ 0> alert
+				<cfelse><cfif billingStatus EQ 'BILLED'>secondary
+						<cfelse> primary</cfif>
+				</cfif>
+		"> <!--- end callout div --->
 		<div class="row">
 			<div class="small-1 columns"><b>G</b></div>
 			<div class="small-2 columns"><b>Name</b></div>
 			<div class="small-2 columns"><b>Program</b></div>
-			<div class="small-1 columns"><b>Enrolled Date</b></div>
-			<div class="small-1 columns"><b>Exit Date </b></div>
+			<div class="small-1 columns"><b>Billing Exit Date </b></div>
+			<div class="small-1 columns"><b>Current Exit Date</b></div>
 			<div class="small-1 columns"><b>Term</b></div>
 			<div class="small-1 columns"><b>School</b></div>
 			<div class="small-1 columns"><b>Status</b></div>
@@ -39,13 +49,13 @@
 				</select>
 				</cfif>
 			</div>
-			<div class="small-1 columns">#DateFormat(ENROLLEDDATE,"m/d/yy")#</div>
 			<div class="small-1 columns">
 				<cfif readonly>
 					<cfif LEN(#EXITDATE#) EQ 0>None<cfelse>#DateFormat(EXITDATE,"m/d/yy")#</cfif>
 				<cfelse><input id="exitDate#attributes.billingStudentId#" name="exitDate#attributes.billingStudentId#" value="#DateFormat(EXITDATE,"m/d/yy")#" style="width:75px;" type="text" class="fdatepicker">
 				</cfif>
 			</div>
+			<div class="small-1 columns"><cfif LEN(#SIDNYExitDate#) EQ 0>None<cfelse>#DateFormat(SIDNYExitDate,"m/d/yy")#</cfif></div>
 			<div class="small-1 columns">#term#<br/>#DateFormat(billingStartDate,'m/d/yy')#</div>
 			<div class="small-1 columns">#schooldistrict#</div>
 			<div class="small-1 columns">#billingstatus#</div>
@@ -70,7 +80,9 @@
 		</div>
 		<div class="row">
 			<div class="small-12 columns" style="color:red">
-				#ErrorMessage#
+				#ErrorMessage#<cfif len(#ErrorMessage#) GT 0>.<br></cfif>
+				<cfif local.sidnyExitDateAlert>SIDNY data indicates student has exited before term start. </cfif>
+				<cfif includeFlag EQ 0>Student NOT included in billing for this period.</cfif>
 			</div>
 		</div>
 	</div> <!-- end header data -->

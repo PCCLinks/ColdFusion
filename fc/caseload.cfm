@@ -114,6 +114,7 @@ select {
 			ajax:{
 				url:"fc.cfc?method=getCaseloadList",
 				dataSrc:'DATA',
+				columns:'COLUMN',
 				error: function (xhr, textStatus, thrownError) {
 				        handleAjaxError(xhr, textStatus, thrownError);
 					}
@@ -173,9 +174,8 @@ select {
             	  action: function( e, dt, node, config ){
 					filterContract(dt, this);
             	  }
-            	}
+            	},
             	<cfoutput><cfif Session.userPosition EQ "Coach">
-				,
             	//Flag Button
             	{
             	  text: txt_flaggedOnly,
@@ -189,8 +189,9 @@ select {
             	  action: function( e, dt, node, config ){
             	  	filterCoach(dt, this);
             	  }
-            	}
+            	},
             	</cfif></cfoutput>
+            	'colvis'
             ],
             <!--- conditional coloring based on value--->
             rowCallback: function(row, data, index){

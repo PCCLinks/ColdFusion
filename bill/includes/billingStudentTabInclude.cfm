@@ -10,7 +10,7 @@
 <!-- Start of UI -->
 
 <!-- Billing Tabs -->
-<ul class="tabs" data-tabs id="billing-tabs">
+<ul class="tabs" data-tabs id="billing-tabs" >
 	<cfoutput query="data">
 		<cfset key = #billingStudentId# & "B">
 		<cfset liClass = "tabs-title">
@@ -22,7 +22,7 @@
 <!-- billing tab content -->
 <div class="tabs-content" data-tabs-content="billing-tabs">
 <cfoutput query="data">
-  	<div class= "tabs-panel<cfif billingStudentId EQ selectedBillingStudentId> is-active</cfif>" id="#billingStudentId#B">
+  	<div class= "tabs-panel<cfif billingStudentId EQ selectedBillingStudentId> is-active</cfif>" id="#billingStudentId#B" >
     	<cfmodule template="billingStudentRecordInclude.cfm" billingStudentId = #billingStudentId#>
   	</div>
 </cfoutput>

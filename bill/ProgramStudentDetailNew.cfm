@@ -1,5 +1,11 @@
-<cfinclude template="includes/header.cfm" />
 
+
+
+<style>
+ .backgroundAlert{
+	background-color: #f7e4e1;
+ }
+</style>
 
 <!---  ---------------- INITIAL SETUP ---------------- --->
 <cfparam name="showNext" default=false>
@@ -136,11 +142,11 @@
 </div> <!-- End Class vs Billing Header Content Container -->
 
 
-<cfsavecontent variable="pcc_scripts">
+
 <script>
 	var billingStudentId = <cfoutput>#url.BillingStudentID#</cfoutput>;
 
-	$(document).ready(function() {
+	//$(document).ready(function() {
 
 		// save review with coach checkbox changes
 
@@ -164,7 +170,7 @@
     		  $('#header-tabs').foundation('selectTab', $('#'+tabId.replace('B','H')), false);
   		 });
 
-	});
+	//});
 
 	function getAttendanceDetail(crn){
 		<cfoutput>window.open('AttendanceDetail.cfm?crn=' + crn + '&billingStartDate=#qryStudent.billingStartDate#');</cfoutput>
@@ -191,7 +197,7 @@
 
 
  </script>
-</cfsavecontent>
 
 
-<cfinclude template="includes/footer.cfm" />
+
+

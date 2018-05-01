@@ -28,12 +28,6 @@
 				select *
 				from applicationUser
 				where username = <cfqueryparam value="#username#">
-				<cfif This.application EQ 'Billing'>
-					and hasBillAccess = 1
-				</cfif>
-				<cfif This.application EQ 'FC'>
-					and hasFCAccess = 1
-				</cfif>
 			</cfquery>
 			<!--- find the user as an authorized user --->
 			<cfif qryUser.recordcount EQ 1>
@@ -66,40 +60,48 @@
 
 <!--- LOCALHOST --->
 <cfelse>
-<cfif url.action eq "logout">
-	 <!--- session reset --->
-	 <cflock scope="session" timeout="30" type="exclusive">
-	     <cfset StructClear(Session)>
-	     <cfset session.authorized = "0">
-	 </cflock>
+<cfset logEntry(value = "LOCALHOST")>
+<cfset logEntry(label="url.action", value="#url.action#")>
+<cfif IsDefined("session.username")>
+	<cfset logEntry(label="session.username", value="#session.username#")>
 <cfelse>
-	<cfif not len(trim(session.username))>
-		<cfset username="arlette.slachmuylder">
-		<cfquery name="qryUser" >
-			select *
-			from applicationUser
-			where username = <cfqueryparam value="#username#">
-			<cfif This.application EQ 'Billing'>
-				and hasBillAccess = 1
-			</cfif>
-			<cfif This.application EQ 'FC'>
-				and hasFCAccess = 1
-			</cfif>
-		</cfquery>
-		<!---<cfset logEntry(value="Search results from CAS did not provide key information")>
-		<cfset Session.Error = "Search results from CAS did not provide key information">--->
-		<cflock scope="session" timeout="30" type="exclusive">
-			<cfset session.username = username>
-			<cfset session.authorized = "1">
-			<cfset session.userRole = "#qryUser.role#">
-			<cfset session.userDisplayName = "#qryUser.displayName#">
-			<cfset session.userPosition = "#qryUser.position#">
-		</cflock>
-	</cfif>
+	<cfset logEntry(value="session does not have username")>
+</cfif>
+<cfif not len(trim(session.username))>
+	<cfset username="arlette.slachmuylder">
+	<cfset logEntry(label="username", value="#username#")>
+	<cfquery name="qryUser" >
+		select *
+		from applicationUser
+		where username = <cfqueryparam value="#username#">
+	</cfquery>
+	<!---<cfset logEntry(value="Search results from CAS did not provide key information")>
+	<cfset Session.Error = "Search results from CAS did not provide key information">--->
+	<cfif qryUser.recordcount EQ 1>
+		<cfset logEntry(value=#username# & " logged in at " & #now()#)>
+          	<cflock scope="session" timeout="30" type="exclusive">
+        	    	<cfset session.username = username>
+        	       	<cfset session.authorized = "1">
+        	       	<cfset session.userRole = "#qryUser.role#">
+        	       	<cfset session.userDisplayName = "#qryUser.displayName#">
+        	       	<cfset session.userPosition = "#qryUser.position#">
+        	   	</cflock>
+        	 <!--- not valid application user --->
+       <cfelse>
+		<cfset logEntry(value=#username# & " not a valid user: " & #now()#)>
+		<cfset Session.Error = "You are not an authorized user of this application.  Please see your manager if you believe this is in error.">
+	</cfif> <!--- end qryUser.rowcount --->
 </cfif>
 </cfif>  <!--- end if not localhost --->
+
+<cfif IsDefined("session.authorized")>
+	<cfset logEntry(label="session.authorized", value="#session.authorized#")>
+<cfelse>
+	<cfset logEntry(value="session does not have authorized")>
+</cfif>
 
 <cfif Session.authorized NEQ 1>
 	<cfset logEntry(value = "Unauthorized session for " & session.username)>
 	<cflocation url="../UnauthorizedError.cfm">
 </cfif>
+<cfset logEntry(value="auth.cfm complete")>

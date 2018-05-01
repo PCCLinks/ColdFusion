@@ -708,13 +708,14 @@
 		<cfargument name="programyear" required="true">
 		<cfargument name="program">
 		<cfargument name="districtid">
-		<cfset bannerYear = left(arguments.programyear,4)>
+		<cfset bannerYear = LEFT(arguments.programyear,4)>
+
 		<cfquery name="data">
 			select bs.contactId,
 				bs.Program,
 				bsp.LastName,
 				bsp.FirstName,
-				fnGetGrade(dob, 2017) Grade,
+				fnGetGrade(dob, #bannerYear#) Grade,
 				DATE_FORMAT(bs.EntryDate, '%m/%d/%Y'),
 				DATE_FORMAT(bs.ExitDate, '%m/%d/%Y') ExitDate,
 				IFNULL(bs.billingStudentExitReasonCode,0) 'ExitReason',
@@ -766,20 +767,50 @@
 
 	<cffunction name="attendanceEntry" returntype="query" returnformat="json"  access="remote">
 		<cfargument name="billingStartDate" required="true">
+		<cfargument name="noHoursOnly" required="false" default="false">
 		<cfquery name="data">
 			select CRN, CRSE, SUBJ, Title, CASE WHEN bs.IncludeFlag=0 OR bs.IncludeFlag IS NULL THEN 'Student NOT Billed' ELSE NULL END IncludeStudent
 				,bsp.bannerGNumber, bsp.firstName, bsp.lastName, bs.billingStudentId, Attendance, MaxPossibleAttendance
 				,schoolDistrict, bs.Program
 			    ,CASE WHEN bsi.IncludeFlag=0 OR bsi.IncludeFlag IS NULL THEN 'Class NOT Billed' ELSE NULL END IncludeClass
 			    ,bs.exitDate
+			    ,bsi.billingStudentItemNotes Notes
+			    ,sidnyExitDate.exitDate sidnyExitDate
 			from billingStudent bs
 				join billingStudentItem bsi on bs.billingStudentId = bsi.billingStudentId
 			    left outer join billingStudentProfile bsp on bs.contactid = bsp.contactId
 			    left outer join keySchoolDistrict sd on bs.districtId = sd.keySchoolDistrictId
+			    join (select enrolled.contactId, exitDate
+					  from (select contactId, max(statusDate) enrolledDate
+							from status s
+							where keyStatusID in (2,13,14,15,16)
+								and undoneStatusID is null
+							group by contactId) enrolled
+						 left outer join (select contactId, max(statusDate) exitDate
+										  from status s
+										  where keyStatusID in (3,12)
+											 and undoneStatusID IS NULL
+										  group by contactId) exited
+								on enrolled.contactId = exited.contactId
+									and enrolledDate < exitDate) sidnyExitDate
+					on bs.contactId = sidnyExitDate.contactId
 			where bs.billingStartDate = <cfqueryparam value="#arguments.billingStartDate#">
-			and bs.program like '%attendance%'
+				and bs.program like '%attendance%'
+				<cfif arguments.noHoursOnly>
+				and bs.billingStudentId IN (select bs.billingStudentId
+				                            from billingStudent bs
+				                              left outer join billingStudentItem bsi on bs.billingStudentId = bsi.billingStudentId
+				                            where bs.billingStartDate = <cfqueryparam value="#arguments.billingStartDate#">
+												and bs.program like '%attendance%'
+				                            group by bs.billingStudentId
+				                            having sum(IFNULL(attendance,0)) = 0)
+				</cfif>
 			order by CRN, lastname
 		</cfquery>
+		<cfset Session.attendanceEntryPrint = data>
+		<cfif arguments.noHoursOnly>
+			<cfset Session.attendanceEntryTitle = "Classes and Students with Zero Attendance Hours for " & DateFormat(arguments.billingStartDate,'mm-dd-yy')>
+		</cfif>
 		<cfreturn data>
 	</cffunction>
 
@@ -840,6 +871,7 @@
 			from billingStudent bs
 				left outer join billingStudentItem bsi on bs.billingStudentId = bsi.billingStudentId
 			where bs.billingStartDate = <cfqueryparam value="#DateFormat(arguments.billingStartDate,'yyyy-mm-dd')#">
+				and bs.program like '%attendance%'
 			group by bs.billingStudentId) data
 		</cfquery>
 		<cfreturn data>
@@ -854,6 +886,7 @@
 			from billingStudent bs
 				left outer join billingStudentItem bsi on bs.billingStudentId = bsi.billingStudentId
 			where bs.billingStartDate = <cfqueryparam value="#DateFormat(arguments.billingStartDate,'yyyy-mm-dd')#">
+				and bs.program like '%attendance%'
 			group by bsi.crn) data
 		</cfquery>
 		<cfreturn data>
@@ -866,6 +899,7 @@
 				join billingStudentProfile bsp on bs.contactId = bsp.contactId
 				left outer join billingStudentItem bsi on bs.billingStudentId = bsi.billingStudentId
 			where bs.billingStartDate = <cfqueryparam value="#DateFormat(arguments.billingStartDate,'yyyy-mm-dd')#">
+				and bs.program like '%attendance%'
 			group by bs.bannerGNumber, bsp.FirstName, bsp.LastName
 			having sum(IFNULL(Attendance,0)) = 0
 			order by bsp.LastName, bsp.FirstName
@@ -875,11 +909,12 @@
 	<cffunction name="getClassesNoHours" access="remote" >
 		<cfargument name="billingStartDate" required="true">
 		<cfquery name="data">
-			select crn, subj, crse, Title
+			select crn, subj, crse, Title, count(*) NumOfStudents
 			from billingStudent bs
-				left outer join billingStudentItem bsi on bs.billingStudentId = bsi.billingStudentId
+				join billingStudentItem bsi on bs.billingStudentId = bsi.billingStudentId
 			where bs.billingStartDate = <cfqueryparam value="#DateFormat(arguments.billingStartDate,'yyyy-mm-dd')#">
-			group by bsi.crn
+				and bs.program like '%attendance%'
+			group by crn, subj, crse, Title
 			having sum(IFNULL(Attendance,0)) = 0
 			order by subj, crse
 		</cfquery>
