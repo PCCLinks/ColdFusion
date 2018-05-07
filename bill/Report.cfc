@@ -180,6 +180,7 @@
 			SELECT bs.firstname, bs.lastname, bs.bannergnumber
 				,bs.Program
 				,schooldistrict.schoolDistrict
+                ,bsOther.Days OtherDaysBilled
 				,MIN(Date_Format(bs.billingStartDate, '%m/%d/%Y')) EntryDate
 				,MAX(Date_Format(bs.billingStartDate, '%m/%d/%Y')) billingStartDate
 				,MAX(Date_Format(bs.billingEndDate, '%m/%d/%Y')) billingEndDate
@@ -202,14 +203,14 @@
 				,MAX(bs.billingStudentId) BillingStudentIdMostCurrent
 				,SUM(bs.Credits+bs.CreditsOver) FYTotalNoOfCredits
 				,SUM(bs.Credits) FYMaxTotalNoOfCredits
-				,SUM(bs.Days+bs.DaysOver) FYTotalNoOfDays
-				,SUM(bs.Days) FYMaxTotalNoOfDays
+				,SUM(bs.Days+bs.DaysOver) + IFNULL(bsOther.Days,0) FYTotalNoOfDays
+				,CASE WHEN (SUM(bs.Days) + IFNULL(bsOther.Days,0)) > 175 THEN 175 ELSE (SUM(bs.Days) + IFNULL(bsOther.Days,0)) END FYMaxTotalNoOfDays
 			FROM (SELECT billingStudent.contactId, billingStudent.billingStudentId, firstname, lastname, billingStudent.bannerGNumber,
 							Term, DistrictID, Program, ExitDate, billingStartDate, billingEndDate,
 						    COALESCE(FinalBilledUnits, CorrectedBilledUnits, GeneratedBilledUnits) Credits,
 							COALESCE(FinalOverageUnits, CorrectedOverageUnits, GeneratedOverageUnits) CreditsOver,
 							COALESCE(PostBillCorrectedBilledAmount, FinalBilledAmount, CorrectedBilledAmount, GeneratedBilledAmount) Days,
-							COALESCE(FinalOverageAmount, CorrectedOverageAmount, GeneratedOverageAmount) DaysOver
+							COALESCE(PostBillCorrectedOverageAmount, FinalOverageAmount, CorrectedOverageAmount, GeneratedOverageAmount) DaysOver
 						FROM billingStudent
 							JOIN billingStudentProfile bsp on billingStudent.contactId = bsp.contactId
 						join keySchoolDistrict schooldistrict on billingStudent.DistrictID = schooldistrict.keyschooldistrictid
@@ -218,11 +219,25 @@
 								and term in (select term from bannerCalendar where programYear = (select programYear from bannerCalendar where term = <cfqueryparam value=#arguments.term#>))
 								and COALESCE(PostBillCorrectedBilledAmount, FinalBilledAmount, CorrectedBilledAmount, GeneratedBilledAmount) != 0
 					 ) bs
+				left outer join (SELECT billingStudent.contactId,
+						sum(
+							COALESCE(PostBillCorrectedBilledAmount, FinalBilledAmount, CorrectedBilledAmount, GeneratedBilledAmount)) Days
+						FROM billingStudent
+							JOIN billingStudentProfile bsp on billingStudent.contactId = bsp.contactId
+						join keySchoolDistrict schooldistrict on billingStudent.DistrictID = schooldistrict.keyschooldistrictid
+						WHERE includeFlag = 1 and program != <cfqueryparam value=#arguments.program#>
+								and schooldistrict.schooldistrict = <cfqueryparam value=#arguments.schooldistrict#>
+								and term in (select term from bannerCalendar where programYear = (select programYear from bannerCalendar where term = 201802))
+								and COALESCE(PostBillCorrectedBilledAmount, FinalBilledAmount, CorrectedBilledAmount, GeneratedBilledAmount) != 0
+						group by billingStudent.contactId
+					 ) bsOther
+					on bs.contactId = bsOther.contactId
 				join bannerCalendar cal on bs.term = cal.Term
 				join keySchoolDistrict schooldistrict on bs.DistrictID = schooldistrict.keyschooldistrictid
 			GROUP BY bs.firstname, bs.lastname, bs.bannergnumber
 				,bs.Program
 				,schooldistrict.schoolDistrict
+				,bsOther.Days
 			HAVING sum(bs.Credits) <> 0
 			ORDER BY bs.lastname, bs.firstname, bs.billingStartDate
 		</cfquery>
@@ -951,6 +966,59 @@
             from billingStudent
             where billingStartDate = <cfqueryparam value="#DateFormat(arguments.billingStartDate,'yyyy-mm-dd')#">
 				and program like '%attendance%'
+		</cfquery>
+		<cfreturn data>
+	</cffunction>
+	<cffunction name="compareCurrentAttendance" access="remote" returnformat="json" >
+		<cfargument name="billingStartDate" required="true">
+		<cfquery name="billing">
+			select CRN, bs.bannerGNumber, pidm, CRSE, SUBJ, Title, firstname, lastname, bs.Program,  CASE WHEN bs.Program LIKE '%Attendance%' THEN 'Attendance' ELSE 'Term' END BillingType
+			from billingStudent bs
+				join billingStudentItem bsi on bs.billingStudentId = bsi.billingStudentId
+				join billingStudentProfile bsp on bs.contactId = bsp.contactId
+			where billingStartDate = <cfqueryparam value="#DateFormat(arguments.billingStartDate,'yyyy-mm-dd')#">
+				and CRN REGEXP '^[0-9]+$'
+		</cfquery>
+		<cfquery name="students" dbtype="query">
+			select bannerGNumber, firstname, lastname, program, billingType
+			from billing
+			group by bannerGNumber, firstname, lastname, program, billingType
+		</cfquery>
+		<cfquery name="billingStudent" dbtype="query">
+			select pidm
+			from billing
+			group by pidm
+		</cfquery>
+		<cfset local.inList =  ValueList(billingStudent.pidm,",")>
+		<cfquery name="calendar">
+			select Term, termEndDate
+			from bannerCalendar
+			where <cfqueryparam value="#DateFormat(arguments.billingStartDate,'yyyy-mm-dd')#"> between termBeginDate and termEndDate
+		</cfquery>
+		<cfquery name="bannerClasses" datasource="bannerpcclinks" >
+			select distinct CRN, STU_ID, CRSE, SUBJ, Title
+			from swvlinks_course
+			where term = <cfqueryparam value ="#calendar.term#">
+				and pidm IN  (<cfqueryparam value="#local.inList#" list="yes" cfsqltype="String">)
+		</cfquery>
+		<cfquery name="combined" dbtype="query">
+			select CRN, CRSE, SUBJ, Title, bannerGNumber, 'Billing' billingSource, 'X' bannerSource
+			from billing
+			union all
+			select CRN, CRSE, SUBJ, Title, STU_ID, 'X' billingSource, 'Banner' bannerSource
+			from bannerClasses
+		</cfquery>
+		<cfquery name="data1" dbtype="query" >
+			select CRN, bannerGNumber, CRSE, SUBJ, Title, CAST(MIN(billingSource) AS varchar) billingSource, CAST(MIN(bannerSource) as varchar) bannerSource
+			from combined
+			group by CRN, CRSE, SUBJ, Title, bannerGNumber
+		</cfquery>
+		<cfquery name="data" dbtype="query">
+			select students.billingType, students.bannerGNumber, students.firstname, students.lastname,Program, CRN, CRSE, SUBJ, Title
+				,billingSource, bannerSource
+			from data1, students
+			where data1.bannerGNumber = students.bannerGNumber
+				and (billingSource = 'X' or bannerSource = 'X')
 		</cfquery>
 		<cfreturn data>
 	</cffunction>

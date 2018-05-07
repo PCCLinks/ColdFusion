@@ -46,19 +46,19 @@
 				,SIDNYExitDate.exitDate SIDNYExitDate
 			FROM billingStudent bs
 				JOIN billingStudentProfile bsp on bs.contactId = bsp.contactId
- 				JOIN keySchoolDistrict sd on bs.districtid = sd.keyschooldistrictid
-				JOIN (SELECT contactID, max(statusID) statusID
+ 				LEFT OUTER JOIN keySchoolDistrict sd on bs.districtid = sd.keyschooldistrictid
+				LEFT OUTER JOIN (SELECT contactID, max(statusID) statusID
 		   			  FROM status
            			  WHERE keyStatusID = 6
 						and undoneStatusID is null
           			  GROUP BY contactID) coachLastStatus
 			    	ON coachLastStatus.contactID = bs.contactID
-				JOIN (SELECT sres.statusID, res.rsName
+				LEFT OUTER JOIN (SELECT sres.statusID, res.rsName
 		  			  FROM statusResourceSpecialist sres
 						JOIN keyResourceSpecialist res
 							ON sres.keyResourceSpecialistID = res.keyResourceSpecialistID) res
 					ON coachLastStatus.statusID = res.statusID
-				JOIN (SELECT enrolled.contactId, exitDate
+				LEFT OUTER JOIN (SELECT enrolled.contactId, exitDate
 					  FROM (select contactId, max(statusDate) enrolledDate
 						from status s
 						where keyStatusID in (2,13,14,15,16)
@@ -439,9 +439,9 @@
 		</cfif>
 		<!--- main query --->
 		<cfquery name="data">
-			select bs.billingStudentId, bs.Program, bs.Term, bs.billingStatus
+			select bs.billingStudentId, bs.pidm, bs.Program, bs.Term, bs.billingStatus
 				,bsi.billingStudentItemId, bsi.TakenPreviousTerm, bsi.IncludeFlag, bsi.CRN, bsi.Subj, bsi.CRSE, bsi.Title, bsi.Credits
-				,sum(bsiAttend.Attendance) AttendanceToDate
+				,sum(bsiAttend.Attendance) AttendanceToDate, 1 inBilling, 0 inBanner
 			from billingStudentItem bsi
 				join billingStudent bs on bsi.BillingStudentId=bs.BillingStudentId
 				join billingStudent bsAttend on bs.contactId = bsAttend.contactID
@@ -451,10 +451,42 @@
 				join billingStudentItem bsiAttend on bsAttend.billingStudentId = bsiAttend.billingStudentId
 					and bsi.CRN = bsiAttend.CRN
 			where bs.billingstudentid = <cfqueryparam value="#arguments.billingstudentid#">
-            group by bs.billingStudentId, bs.Program, bs.Term, bs.billingStatus,
+            group by bs.billingStudentId, bs.pidm, bs.Program, bs.Term, bs.billingStatus,
 				bsi.TakenPreviousTerm, bsi.IncludeFlag,
 				bsi.CRN, bsi.Subj, bsi.Title, bsi.Credits
 		</cfquery>
+		<cfset local.inList =  ValueList(data.crn,",")>
+		<cfquery name="banner" datasource="bannerpcclinks" >
+			select distinct Term, CRN, Subj, CRSE, Title, Credits
+			from swvlinks_course
+			where pidm = <cfqueryparam value="#data.pidm#">
+				and term = <cfqueryparam value="#data.term#">
+		</cfquery>
+		<cfquery name="notinbilling" dbtype="query">
+			select *
+			from banner
+			where crn not in (<cfqueryparam value="#local.inList#" list="yes" cfsqltype="String">)
+		</cfquery>
+		<cfoutput query="notinbilling">
+			<cfset QueryAddRow(data)>
+			<cfset QuerySetCell(data, "billingStatus", "Missing from Billing System, recently added in Banner")>
+			<cfset QuerySetCell(data, "Term", term)>
+			<cfset QuerySetCell(data, "CRN", crn)>
+			<cfset QuerySetCell(data, "Subj", subj)>
+			<cfset QuerySetCell(data, "CRSE", crse)>
+			<cfset QuerySetCell(data, "Title", title)>
+			<cfset QuerySetCell(data, "Credits", credits)>
+			<cfset QuerySetCell(data, "inBilling", 0)>
+			<cfset QuerySetCell(data, "inBanner", 1)>
+		</cfoutput>
+		<cfset local.inList =  ValueList(banner.crn,",")>
+		<cfset rownum = 1>
+		<cfoutput query="data">
+			<cfif ListContains(local.inList, crn)>
+				<cfset QuerySetCell(data, "inBanner", 1, rownum)>
+			</cfif>
+			<cfset rownum = rownum+1>
+		</cfoutput>
 		<cfreturn data>
 	</cffunction>
 
@@ -939,6 +971,26 @@
 		<cfreturn data>
 	</cffunction>
 
+	<cffunction name="getBannerClassForTerm" access="remote" returnFormat="json">
+		<cfargument name="billingStartDate" type="date" required="true">
+		<cfargument name="crn" required="true">
+		<cfif IsNumeric(arguments.crn)>
+			<cfquery name="term">
+				select min(term) Term
+				from bannerCalendar
+				where termBeginDate >= <cfqueryparam value="#DateFormat(arguments.billingStartDate, 'yyyy-mm-dd')#">
+			</cfquery>
+			<cfquery name="data" datasource="bannerpcclinks">
+				select crn, stu_id
+				from swvlinks_course
+				where crn = <cfqueryparam value="#arguments.crn#">
+					and term = <cfqueryparam value="#term.Term#">
+			</cfquery>
+			<cfreturn data>
+		<cfelse>
+			<cfreturn QueryNew("crn, stu_id")>
+		</cfif>
+	</cffunction>
 
 	<cffunction name="getAttendanceStudentsForCRN" access="remote" returnFormat="json">
 		<cfargument name="billingStartDate" type="date" required="true">

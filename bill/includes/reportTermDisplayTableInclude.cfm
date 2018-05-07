@@ -38,6 +38,7 @@
 				<!-- ROW TOTALS -->
 				<th class="border-no-top bold-left-border">Total Credit</th>
 				<th class="border-no-top" >Max&nbsp;Total Credit</th>
+				<th class="border-no-top">Atten- dance</th>
 				<th class="border-no-top" >Total Days</th>
 				<th class="border-no-top" >Max&nbsp;Bill Days</th>
                </tr>
@@ -72,6 +73,7 @@
 					<td class="bold-left-border">#NumberFormat(FYTotalNoOfCredits,'_._')#</td>
 					<!-- Max Total Credits -->
 					<td>#NumberFormat(FYMaxTotalNoOfCredits,'_._')#</td>
+					<td>#NumberFormat(OtherDaysBilled, '_._')#</td>
 					<!-- Total Days -->
 					<td>#NumberFormat(FYTotalNoOfDays,'_._')#</td>
 					<!-- Max Total Days -->
@@ -92,6 +94,7 @@
 						,sum(SpringNoOfDays) SpringNoOfDays, sum(SpringNoOfDaysOver) SpringNoOfDaysOver
 						,sum(FYTotalNoOfCredits) FYTotalNoOfCredits, sum(FYMaxTotalNoOfCredits) FYMaxTotalNoOfCredits
 						,sum(FYTotalNoOfDays) FYTotalNoOfDays, sum(FYMaxTotalNoOfDays) FYMaxTotalNoOfDays
+						,sum(OtherDaysBilled) OtherDaysBilled
 				from data
 			</cfquery>
 			<cfoutput query="totals">
@@ -121,6 +124,7 @@
 				<!-- Grand Totals -->
 				<td class="bold-left-border">#NumberFormat(Replace(DecimalFormat(FYTotalNoOfCredits),',',''),'_._')#</td>
 				<td>#NumberFormat(Replace(DecimalFormat(FYMaxTotalNoOfCredits),',',''),'_._')#</td>
+				<td>#NumberFormat(Replace(DecimalFormat(OtherDaysBilled),',',''),'_._')#</td>
 				<td>#NumberFormat(Replace(DecimalFormat(FYTotalNoOfDays),',',''),'_._')#</td>
 				<td>#NumberFormat(Replace(DecimalFormat(FYMaxTotalNoOfDays),',',''),'_._')#</td>
 			</tr>
@@ -135,6 +139,7 @@
 				<td colspan="4" style="text-align:center;"  class="bold-left-border">#NumberFormat(Replace(DecimalFormat(WinterNoOfDays-WinterNoOfDaysOver),',',''),'_._')#</td>
 				<!-- Spring -->
 				<td colspan="4" style="text-align:center;"  class="bold-left-border">#NumberFormat(Replace(DecimalFormat(SpringNoOfDays-SpringNoOfDaysOver),',',''),'_._')#</td>
+				<td class="no-border"></td>
 				<td class="no-border"></td>
 				<td class="no-border"></td>
 				<td class="no-border"></td>

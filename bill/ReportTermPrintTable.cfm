@@ -6,7 +6,7 @@
 			border-color:black;
 			border-style:solid solid none none;
 			border-width: 0.5px;
-			padding:4px;
+			padding:3px;
 		}
 		table{
 			margin:0px;
@@ -60,7 +60,7 @@
 				<th class="border-bottom-only" style="text-align:left; font-size:x-small" colspan="9">
 					<cfoutput>#data.schooldistrict#</cfoutput>
 				</th>
-				<th class="border-bottom-only" style="text-align:right; font-size:x-small" colspan="10">
+				<th class="border-bottom-only" style="text-align:right; font-size:x-small" colspan="11">
 					Alternative Education Program
 				</th>
 			</tr>
@@ -103,6 +103,7 @@
 			<!-- ROW TOTALS -->
 			<th class="border-no-top bold-left-border">Total<br/>Credit</th>
 			<th class="border-no-top" >Max<br/>Total<br/>Credit</th>
+			<th class="border-no-top">Atten-<br>dance</th>
 			<th class="border-no-top" >Total<br/>Days</th>
 			<th class="border-no-top" >Max<br/>Bill<br/>Days</th>
 		</tr>
@@ -137,6 +138,7 @@
 			<!-- Max Total Credits -->
 			<td>#NumberFormat(FYMaxTotalNoOfCredits,'_._')#</td>
 			<!-- Total Days -->
+			<td>#NumberFormat(OtherDaysBilled, '_._')#</td>
 			<td>#NumberFormat(FYTotalNoOfDays,'_._')#</td>
 			<!-- Max Total Days -->
 			<td>#NumberFormat(FYMaxTotalNoOfDays,'_._')#</td>
@@ -153,6 +155,7 @@
 			,sum(SpringNoOfDays) SpringNoOfDays, sum(SpringNoOfDaysOver) SpringNoOfDaysOver
 			,sum(FYTotalNoOfCredits) FYTotalNoOfCredits, sum(FYMaxTotalNoOfCredits) FYMaxTotalNoOfCredits
 			,sum(FYTotalNoOfDays) FYTotalNoOfDays, sum(FYMaxTotalNoOfDays) FYMaxTotalNoOfDays
+			,sum(OtherDaysBilled) OtherDaysBilled
 	from data
 	</cfquery>
 	<cfoutput query="totals">
@@ -180,6 +183,7 @@
 	<!-- Grand Totals -->
 	<td class="bold-left-border">#NumberFormat(Replace(DecimalFormat(FYTotalNoOfCredits),',',''),'_._')#</td>
 	<td>#NumberFormat(Replace(DecimalFormat(FYMaxTotalNoOfCredits),',',''),'_._')#</td>
+	<td>#NumberFormat(Replace(DecimalFormat(OtherDaysBilled),',',''),'_._')#</td>
 	<td>#NumberFormat(Replace(DecimalFormat(FYTotalNoOfDays),',',''),'_._')#</td>
 	<td>#NumberFormat(Replace(DecimalFormat(FYMaxTotalNoOfDays),',',''),'_._')#</td>
 	</tr>

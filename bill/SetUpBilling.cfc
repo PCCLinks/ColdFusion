@@ -655,7 +655,7 @@
 		<cfreturn local.billingStudentId>
 	</cffunction>
 
-	<cffunction name="getSIDNYData" returnformat="json" access="remote">
+	''<cffunction name="getSIDNYData" returnformat="json" access="remote">
 		<cfargument name="bannerGNumber" required="true">
 		<!--- debug --->
 		<cfset appObj.logEntry(value="FUNCTION getSIDNYData #Now()#", level=5) >
@@ -731,10 +731,21 @@
 
 	<cffunction name="addBillingStudent" returnformat="json" returntype="numeric" access="remote">
 		<cfargument name="bannerGNumber" default="" required="true">
-		<cfargument name= "term" required="true">
 		<cfargument name = "billingStartDate" type="date" required="true">
-		<cfargument name="billingEndDate" type="date" required="true">
 		<cfargument name="crn" default="">
+		<cfargument name= "term" default="">
+		<cfargument name="billingEndDate" type="date" default="1900-01-01">
+
+		<cfif term EQ "" OR billingEndDate EQ "1900-01-01">
+			<cfquery name="dates">
+				select distinct term, billingEndDate
+				from billingStudent
+				where program like '%attendance%'
+				and billingStartDate = <cfqueryparam value="#DateFormat(arguments.billingStartDate, 'yyyy-mm-dd')#">
+			</cfquery>
+			<cfset arguments.billingEndDate = dates.billingEndDate>
+			<cfset arguments.term = dates.term>
+		</cfif>
 
 		<!---wide range of dates to force getting of student event if has exited --->
 		<cfset local.billingStudentId = setUpStudent(billingEndDate='#arguments.billingEndDate#', billingStartDate='#arguments.billingStartDate#',

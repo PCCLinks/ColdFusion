@@ -3,7 +3,6 @@
 	<cfinvokeargument name="billingStudentId" value="#attributes.billingStudentId#">
 </cfinvoke>
 
-
 <cfset Variables.programType = "term">
 <cfif data.program CONTAINS "attendance" >
 	<cfset Variables.programType = "attendance">
@@ -40,13 +39,20 @@
 				</cfif>
 			</td>
             <td>
-				<cfif billingStatus EQ 'BILLED'>
-					<cfif IncludeFlag EQ 1>TRUE<cfelse>FALSE</cfif>
+				<cfif inBilling EQ 0>
+					<span style="color:red">#billingStatus#</span>
 				<cfelse>
-					<input type="checkbox" id="IncludeFlag"  <cfif #IncludeFlag# EQ 1>checked</cfif>>
+					<cfif billingStatus EQ 'BILLED'>
+						<cfif IncludeFlag EQ 1>TRUE<cfelse>FALSE</cfif>
+					<cfelse>
+						<input type="checkbox" id="IncludeFlag"  <cfif #IncludeFlag# EQ 1>checked</cfif>>
+					</cfif>
 				</cfif>
 			</td>
 		</tr>
+		<cfif inBanner EQ 0>
+			<tr><td colspan="7"><span style="color:red; line-height:50%">CRN #crn# billed but has been dropped in Banner</span></small></td></tr>
+		</cfif>
 		</cfoutput>
 	</tbody>
 </table>

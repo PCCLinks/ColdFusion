@@ -37,7 +37,7 @@
 <div class="callout primary">
 	<div class="row">
 		<div class="small-12 columns">
-			Add Student: <input id="bannerGNumber" name="bannerGNumber" type="text" readonly style="max-width:25%;display:inline-block">
+			Add Student: <input id="bannerGNumber" name="bannerGNumber" type="text" readonly style="max-width:25%;display:inline-block" >
 		</div>
 	</div>
 	<div class="row">
@@ -160,6 +160,8 @@
 	<cfif IsDefined("Session.addStudentReturnPage")>returnPage = '<cfoutput>#Session.addStudentReturnPage#</cfoutput>';</cfif>
 	var table;
 	var selectedCRN = '<cfoutput>#selectedCRN#</cfoutput>';
+
+	//document ready
 	$(document).ready(function() {
 		//intialize table
 		$.fn.dataTable.ext.errMode = 'throw';
@@ -256,7 +258,10 @@
 		 	setDate(termValue, 'TermBeginDate', 'termBeginDate');
 		 	setDate(termValue, 'TermDropDate', 'termDropDate');
 		 });
+
 	})
+	//end document ready
+
 	function addStudentToBilling(){
 		$('#addStudentToBilling').attr('disabled',true);
 		$('#addStudentToBilling').val("Please wait ...");
