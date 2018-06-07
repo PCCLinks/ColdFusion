@@ -17,15 +17,15 @@
 
 
 <cfoutput query="data">
-	<cfset enrolledTag = "&nbsp;">
+	<cfset enrolledTag = '<span style="color:red">No longer enrolled in Banner</span>' >
 	<cfif bannerdata.recordcount GT 0>
 		<cfquery name="banner" dbtype="query">
 			select *
 			from bannerdata
 			where stu_id = <cfqueryparam value="#data.bannerGNumber#">
 		</cfquery>
-		<cfif banner.recordcount EQ 0>
-			<cfset enrolledTag = '<span style="color:red">No longer enrolled in Banner</span>'>
+		<cfif banner.recordcount GT 0>
+			<cfset enrolledTag = '&nbsp;'>
 		</cfif>
 	</cfif>
 <div class="row">

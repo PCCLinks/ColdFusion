@@ -38,12 +38,12 @@
 </cfquery>
 
 <cfset rowHeight = 20>
-<cfset filename="#programs.schooldistrict# #DateFormat(data.billingStartDate,'mmmm')# #DateFormat(data.billingStartDate,'yyyy')#.xlsx">
+<cfset filename="#programs.schooldistrict# exit status #DateFormat(data.billingStartDate,'mmmm')# #DateFormat(data.billingStartDate,'yyyy')#.xlsx">
 <cfheader name="Content-Disposition" value="attachment; filename=""#filename#""" >
 
 <cfset i = 1>
 <cfloop query="programs">
-	<cfset tabName = replace(replace(replace(programs.program, 'ATTENDANCE', 'GED'),'YTC', 'YtC'),'GtC', 'HSC')>
+	<cfset tabName = replace(replace(replace(replace(programs.program, 'ATTENDANCE', 'GED'),'YTC', 'YtC'),'GtC', 'HSC'),'CREDIT', 'Credit')>
 	<cfif i EQ 1>
 		<cfset ss = spreadsheetNew("#tabName#", "true")>
 	<cfelse>

@@ -204,7 +204,6 @@
 	            success: function(newCRN){
 	            	selectedCRN = newCRN;
 	            	getCRN();
-	            	getCRNChanged();
 	            },
 	            error: function (jqXHR, exception) {
 					handleAjaxError(jqXHR, exception);

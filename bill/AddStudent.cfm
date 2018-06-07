@@ -227,7 +227,7 @@
 				dataSrc:'DATA',
 				error: function (xhr, textStatus, thrownError) {
 				        handleAjaxError(xhr, textStatus, thrownError);
-					}
+				}
 			}
 		});
 

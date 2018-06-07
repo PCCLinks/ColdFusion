@@ -655,7 +655,7 @@
 		<cfreturn local.billingStudentId>
 	</cffunction>
 
-	''<cffunction name="getSIDNYData" returnformat="json" access="remote">
+	<cffunction name="getSIDNYData" returnformat="json" access="remote">
 		<cfargument name="bannerGNumber" required="true">
 		<!--- debug --->
 		<cfset appObj.logEntry(value="FUNCTION getSIDNYData #Now()#", level=5) >

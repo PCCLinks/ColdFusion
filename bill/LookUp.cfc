@@ -1,4 +1,6 @@
 <cfcomponent displayname="LookUp">
+	<cfobject name="appObj" component="application">
+
 	<cffunction name="select" access="remote">
 	    <cfargument name="page" type="numeric" required="yes">
 	    <cfargument name="pageSize" type="numeric" required="yes">
@@ -313,8 +315,15 @@
 			WHERE program like '%attendance%'
 				and billingStatus IN ('IN PROGRESS', 'REVIEWED')
 				and includeFlag = 1
-			ORDER BY billingStartDate desc
 		</cfquery>
+		<cfif LEN(data.lastAttendanceBillDate) EQ 0>
+			<cfquery name="data">
+				select max(billingStartDate) lastAttendanceBillDate
+				FROM billingStudent
+				WHERE program like '%attendance%'
+					and includeFlag = 1
+			</cfquery>
+		</cfif>
 		<cfreturn data.lastAttendanceBillDate>
 	</cffunction>
 	<cffunction name="getLatestDateAttendanceMonth" access="remote" returntype="date">

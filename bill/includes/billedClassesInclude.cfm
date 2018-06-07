@@ -50,7 +50,7 @@
 				</cfif>
 			</td>
 		</tr>
-		<cfif inBanner EQ 0>
+		<cfif inBanner EQ 0 AND REFind("^[0-9]*$",CRN)>
 			<tr><td colspan="7"><span style="color:red; line-height:50%">CRN #crn# billed but has been dropped in Banner</span></small></td></tr>
 		</cfif>
 		</cfoutput>

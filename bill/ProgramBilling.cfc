@@ -455,6 +455,7 @@
 				bsi.TakenPreviousTerm, bsi.IncludeFlag,
 				bsi.CRN, bsi.Subj, bsi.Title, bsi.Credits
 		</cfquery>
+
 		<cfset local.inList =  ValueList(data.crn,",")>
 		<cfquery name="banner" datasource="bannerpcclinks" >
 			select distinct Term, CRN, Subj, CRSE, Title, Credits
@@ -978,7 +979,7 @@
 			<cfquery name="term">
 				select min(term) Term
 				from bannerCalendar
-				where termBeginDate >= <cfqueryparam value="#DateFormat(arguments.billingStartDate, 'yyyy-mm-dd')#">
+				where <cfqueryparam value="#DateFormat(arguments.billingStartDate, 'yyyy-mm-dd')#"> between termBeginDate and termEndDate
 			</cfquery>
 			<cfquery name="data" datasource="bannerpcclinks">
 				select crn, stu_id
