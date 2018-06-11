@@ -18,7 +18,7 @@
 	<cfparam name="pcc_source" default='/pcclinks' />
 
     <cffunction name="OnSessionStart">
-		<cfset logEntry(value="OnSessionStart", level=2)>
+		<cfset logEntry(value="ApplicationIncludes: OnSessionStart", level=2)>
         <CFLOCK SCOPE="SESSION" TYPE="READONLY" TIMEOUT="5">
 	        <cfset SESSION.DateInitialized = Now() />
  			<cfset session.username = "">
@@ -30,7 +30,7 @@
 
 	<cffunction name="OnRequestStart">
 		<cfargument name="req">
-		<cfset logEntry(value="OnRequestStart", level=2)>
+		<cfset logEntry(value="ApplicationIncludes: OnRequestStart", level=2)>
 		<cfset logEntry(value="req=" & arguments.req, level=2)>
 		<cfset session.pccsource = Variables.pcc_source>
 
@@ -150,6 +150,7 @@
 
 	<cffunction name="isAjaxCall" returntype="boolean">
 		<cfset Variables.reqData = getHTTPRequestData() >
+		<cfset logDump(label="HTTPRequestData", value="#Variables.reqData#", level=2)>
     	<cfif structKeyExists(Variables.reqData.headers,"X-Requested-With")
 					&& reqData.headers["X-Requested-With"] eq "XMLHttpRequest">
 			<cfset logEntry(value="IsAjaxCall", level=2)>

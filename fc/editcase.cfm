@@ -1,9 +1,10 @@
 <!--- called by student.cfm as a cfinclude
  pidm and cohort variable set by student.cfm
 --->
-<cfparam name="studentparam_pidm">
-<cfparam name="studentparam_cohort">
 
+<cfparam name="studentparam_pidm" default="#FORM.pidm#">
+<cfparam name="studentparam_cohort" default="#FORM.cohort#">
+<cfinvoke component="fc" method="getEditCase" pidm="#studentparam_pidm#" returnvariable="caseload_banner"></cfinvoke>
 <cfinvoke component="fc" method="getFirstYearMetrics" pidm="#studentparam_pidm#" cohort="#studentparam_cohort#" returnvariable="firstYearMetrics"></cfinvoke>
 <cfinvoke component="fc" method="getCGPassed" pidm="#studentparam_pidm#" cohort="#studentparam_cohort#" returnvariable="cgPassed"></cfinvoke>
 
@@ -18,7 +19,7 @@
 </cfquery>
 
 <!--- FORM ---->
-<form action="javascript:saveContent();" method="post" id="editForm" name="editForm">
+<form id="editForm" name="editForm" action="javascript:saveStudentContent();">
 	<input name="method" type="hidden" value="update" />
 	<cfoutput>
 		<input name="contactID" type="hidden" value="#caseload_banner.contactID#" />
@@ -49,7 +50,7 @@
 
 			<!-- Gender Select -->
 			<cfset values=["Female", "Male", "Non-binary", "Choose not to say"]>
-			<cfmodule template="#pcc_source#/includes/selectOption.cfm"
+			<cfmodule template="includes/selectOption.cfm"
 				so_values="#values#"
 				so_selectedvalue="#caseload_banner.gender#"
 				so_label = "Gender"
@@ -83,7 +84,7 @@
 
 			<!-- Parental status Select -->
 			<cfset values=["Yes", "No"]>
-			<cfmodule template="#pcc_source#/includes/selectOption.cfm"
+			<cfmodule template="includes/selectOption.cfm"
 				so_values="#values#"
 				so_selectedvalue="#caseload_banner.parentalStatus#"
 				so_label = "Parental status"
@@ -123,7 +124,7 @@
 
 			<!-- Weekly Work Hours Select -->
 			<cfset values=["none", "less than 20", "20 to 29","30 to 39","40 or more"]>
-			<cfmodule template="#pcc_source#/includes/selectOption.cfm"
+			<cfmodule template="includes/selectOption.cfm"
 				so_values="#values#"
 				so_selectedvalue="#caseload_banner.weeklyWorkHours#"
 				so_label = "Weekly Work Hours"
@@ -150,7 +151,7 @@
 		<!-- Living Situation checkboxes -->
 		<!-- ajax jquery refreshes div -->
 		<div id="livingsituation">
-		<cfmodule template="#pcc_source#/includes/multiSelectCheckboxes.cfm"
+		<cfmodule template="includes/multiSelectCheckboxes.cfm"
 			mscb_description = 'Living Situation'
 			mscb_fieldName = 'livingSituationID'
 			mscb_componentname = "fc"
@@ -162,7 +163,7 @@
 		<!-- Enrichment Programs Checkboxes -->
 		<!-- refreshed by jquery -->
 		<div id="enrichmentprograms">
-		<cfmodule template="#pcc_source#/includes/multiSelectCheckboxes.cfm"
+		<cfmodule template="includes/multiSelectCheckboxes.cfm"
 			mscb_description = 'Enrichment Programs'
 			mscb_fieldName = 'enrichmentProgramID'
 			mscb_componentname = "fc"
@@ -181,7 +182,7 @@
 
 			<!-- Status Internal Select -->
 			<cfset values=["A", "B", "C", "X"]>
-			<cfmodule template="#pcc_source#/includes/selectOption.cfm"
+			<cfmodule template="includes/selectOption.cfm"
 				so_values="#values#"
 				so_selectedvalue="#caseload_banner.statusInternal#"
 				so_label = "Status Internal"
@@ -196,7 +197,7 @@
 							,"Housing insecurity / homeless","Incarcerated","Leaving school to work"
 							,"Left without contact","Mental health barriers","Moving out of PCC district"
 							,"Non-Clearinghouse Transfer or Completion", "Parenting responsibilities"]>
-			<cfmodule template="#pcc_source#/includes/selectOption.cfm"
+			<cfmodule template="includes/selectOption.cfm"
 				so_values="#values#"
 				so_selectedvalue="#caseload_banner.exitReason#"
 				so_label = "Exit Reason"
@@ -323,7 +324,7 @@
 		<div class="large-4 columns">
 			<!-- Coach Select -->
 			<cfset values= ListToArray(ValueList(list_coach.coach))>
-			<cfmodule template="#pcc_source#/includes/selectOption.cfm"
+			<cfmodule template="includes/selectOption.cfm"
 				so_values="#values#"
 				so_selectedvalue="#caseload_banner.coach#"
 				so_label = "Coach"
@@ -360,7 +361,7 @@
 			<div id="notes">
 			<cfparam  name="tableName" default="futureConnect">
 			<cfparam  name="contactID" default="#caseload_banner.contactID#">
-			<cfinclude template="#pcc_source#/includes/notes.cfm" />
+			<cfinclude template="includes/notes.cfm" />
 			</div>
 			<!-- end div notes -->
 
@@ -377,80 +378,5 @@
 		<!---- END COLUMN 3 --->
 	</div> 	<!--- end row class --->
 </form>
-<cfsavecontent variable="editcase_script">
-<script>
-	//milliseconds - save every 5 minutes
-   var saveInterval = 1000*60*5;
-   var doSave = setInterval(saveContent, saveInterval);
-
-   //save before leaving
-   $(window).bind('beforeunload', function(){
-  		saveContent();
-	});
-
-   function saveContent(){
-   		form = {};
-   		flagCheckBoxFound = false;
-   		flagFieldName = 'flagged';
-   		//build a form object of all items on page
-   		//used to send a generic collection to the cfc update method
-   		$.each($('form').serializeArray(), function(index, field) {
-   			if(field.name == flagFieldName){
-   				flagCheckBoxFound = true;
-   				//we know it is a checked value - field won't have that value in it
-   				form[field.name] = 1;
-   			}else{
-      			form[field.name] = field.value;
-   			}
-      	});
-      	//checkboxes only show up as posted values when checked
-      	//if it was not found, add the unchecked value now
-      	if(flagCheckBoxFound == false){
-      		form[flagFieldName] = 0;
-      	}
 
 
-   		//form[flagFieldName] = isFlagged;
-		//$.blockUI({ message: 'Saving...' });
-		 $.ajax({
-            type: 'post',
-            url: 'fc.cfc?method=updateCase',
-            data: {data : JSON.stringify(form), isAjax:'yes'},
-            datatype:'json',
-            async:false,
-            success: function (data, textStatus, jqXHR) {
-            	updateContent();
-            	var d = new Date();
-				$('#savemessage').html('Last saved ' + addZero(d.getHours()) + ':' + addZero(d.getMinutes()) + ':' + addZero(d.getSeconds()));
-		    },
-            error: function (xhr, textStatus, thrownError) {
-				 handleAjaxError(xhr, textStatus, thrownError);
-			}
-          });
-
-
-		//$.unblockUI();
-	}
-	function updateContent(){
-		//notes
-		//url = "<cfoutput>#pcc_source#/includes/notes.cfm?contactid=#contactid#&tablename=#tablename#</cfoutput>";
-		url = "<cfoutput>#pcc_source#/includes/notes.cfm?contactid=#contactid#&tablename=#tablename#</cfoutput>";
-		$('#notes').load(url);
-		//household
-		url = "<cfoutput>#pcc_source#/includes/multiselectcheckboxes.cfm?contactid=#contactid#&mscb_componentname=pcclinks.fc.fc&mscb_methodname=getHouseholdWithAssignments&mscb_fieldName=householdID&mscb_description=Household%20Information</cfoutput>";
-		$('#householdInfo').load(url, function(){$(this).foundation();});
-		//living
-		url = "<cfoutput>#pcc_source#/includes/multiselectcheckboxes.cfm?contactid=#contactid#&mscb_componentname=pcclinks.fc.fc&mscb_methodname=getLivingSituationWithAssignments&mscb_fieldName=livingSituationID&mscb_description=Living%20Situation</cfoutput>";
-		$('#livingsituation').load(url, function(){$(this).foundation();});
-		//enrichment
-		url = "<cfoutput>#pcc_source#/includes/multiselectcheckboxes.cfm?contactid=#contactid#&mscb_componentname=pcclinks.fc.fc&mscb_methodname=getEnrichmentProgramsWithAssignments&mscb_fieldName=enrichmentProgramId&mscb_description=Enrichment%20Program</cfoutput>";
-		$('#enrichmentprograms').load(url, function(){$(this).foundation();});
-	}
-	function addZero($time) {
-	  if ($time < 10) {
-	    $time = "0" + $time;
-	  }
-	  return $time;
-	}
-</script>
-</cfsavecontent>

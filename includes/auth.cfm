@@ -12,7 +12,7 @@
     <cflocation url="#cas_url#" addtoken="no">
 <!--- got ticket now get user info --->
 <cfelse>
-	<cfset logEntry(value="Auth no ticket", level=2)>
+	<cfset logEntry(value="Auth with ticket", level=2)>
 	<cfset cas_url = #cas_path# & "serviceValidate?ticket=" & url.ticket & "&" & "service=" & app_path & "/">
 	<cfhttp url="#cas_url#" method="get" />
     <cfset objXML = xmlParse(cfhttp.filecontent)>
@@ -38,6 +38,7 @@
           	       	<cfset session.userRole = "#qryUser.role#">
           	       	<cfset session.userDisplayName = "#qryUser.displayName#">
           	       	<cfset session.userPosition = "#qryUser.position#">
+					<cfset session.casTicket = "#url.ticket#">
           	   	</cflock>
           	 <!--- not valid application user --->
          	 <cfelse>
@@ -85,7 +86,7 @@
         	       	<cfset session.userRole = "#qryUser.role#">
         	       	<cfset session.userDisplayName = "#qryUser.displayName#">
         	       	<cfset session.userPosition = "#qryUser.position#">
-        	   	</cflock>
+        	 </cflock>
         	 <!--- not valid application user --->
        <cfelse>
 		<cfset logEntry(value=#username# & " not a valid user: " & #now()#)>

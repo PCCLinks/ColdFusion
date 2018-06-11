@@ -1,9 +1,8 @@
-<!--- header --->
-<cfinclude template="includes/header.cfm" />
+
 
 <!--- main content --->
 <script>
-function buildChart(type, labels, data, ctx, bgcolors, bcolors, ymax, title){
+function buildDashboardChart(type, labels, data, ctx, bgcolors, bcolors, ymax, title){
 	var myChart = new Chart(ctx, {
 		type: type,
 		data: {
@@ -120,7 +119,7 @@ function buildChart(type, labels, data, ctx, bgcolors, bcolors, ymax, title){
 				</div>
 				<!--- Build chart with Status as labels, and Outcome as data --->
 				<script>
-					buildChart('bar',['#ValueList(fcOutcomeBySource.StatusInternal, "','")#']
+					buildDashboardChart('bar',['#ValueList(fcOutcomeBySource.StatusInternal, "','")#']
 							,[#ValueList(fcOutcomeBySource.outcomeByFund,",")#]
 							,"#graphId#"
 							, ['rgba(190, 190, 190, 1.0)',
@@ -157,7 +156,7 @@ function buildChart(type, labels, data, ctx, bgcolors, bcolors, ymax, title){
 			</div>
 			<!--- Build chart with Status as labels, and Outcome as data --->
 			<script>
-				buildChart('line',['#ValueList(fcOutcomeTrend.Cohort, "','")#']
+				buildDashboardChart('line',['#ValueList(fcOutcomeTrend.Cohort, "','")#']
 					,[#ValueList(fcOutcomeTrend.nonExits,",")#]
 					,"#graphId#"
 					,'rgba(144, 103, 167, 1.0)'
@@ -169,5 +168,3 @@ function buildChart(type, labels, data, ctx, bgcolors, bcolors, ymax, title){
 </cfloop> <!--- End Loop fcFundingSource --->
 
 
-<!--- footer --->
-<cfinclude template="includes/footer.cfm" />

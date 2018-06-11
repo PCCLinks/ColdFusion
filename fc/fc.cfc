@@ -6,7 +6,7 @@ Banner views have an ATTS attribute that identify what program a student is in. 
 all the banner queries need to force a distinct by PIDM
 --->
 
-	<cfobject name="mscbCFC" component="pcclinks.includes.multiSelectCheckbox">
+	<cfobject name="mscbCFC" component="includes/multiSelectCheckbox">
 	<cfobject name="appObj" component="application">
 
 	<cffunction name="getTermByStudent" returntype="query" access="remote" >
@@ -37,7 +37,7 @@ all the banner queries need to force a distinct by PIDM
 		<cfreturn termByStudent>
 	</cffunction>
 
-	<cffunction name="getCoursesByStudent" returntype="query" access="remote" >
+	<cffunction name="getCoursesByStudent" returntype="query" >
 		<cfargument name="pidm" type="numeric" required="yes" >
 		<cfargument name="cohort" type="string" required="yes" >
 		<cfset firstYearBeginningTerm = LEFT(arguments.cohort,4) & '04' >
@@ -70,9 +70,20 @@ all the banner queries need to force a distinct by PIDM
 			FROM swvlinks_course
 			WHERE PIDM = <cfqueryparam  value="#arguments.pidm#">
 		</cfquery>
+
+		<cfset appObj.logEntry(value="finished getCoursesByStudent", level=2)>
 		<cfreturn coursesByStudent>
 	</cffunction>
-
+	<cffunction name="getCoursesByStudentDashboardList" access="remote" returnformat="json" >
+		<cfargument name="pidm" type="numeric" required="yes" >
+		<cfargument name="cohort" type="string" required="yes" >
+		<cfset data = getCoursesByStudent(pidm=#arguments.pidm#, cohort=#arguments.cohort#)>
+		<cfquery name="coursesByStudent" dbtype="query">
+			select Term, CRSE, Subj, Title, Credits, Grade, Passed
+			from data
+		</cfquery>
+		<cfreturn coursesByStudent>
+	</cffunction>
 	<cffunction name="getFirstYearMetrics" access="remote" returntype="query" >
 		<cfargument name="pidm" type="numeric" required="yes" >
 		<cfargument name="cohort" type="string" required="yes" >
@@ -96,7 +107,26 @@ all the banner queries need to force a distinct by PIDM
 			GROUP BY STU_ID
 			HAVING SUM(BannerCourses.creditsForGPA) = 0--->
 			</cfquery>
+		<cfset Session.firstYearMetrics = firstYearMetrics>
 		<cfreturn firstYearMetrics>
+	</cffunction>
+
+	<cffunction name="getTermData" returntype="query" >
+		<cfif NOT isDefined("session.termData")>
+			<cfquery name="termData" datasource="bannerpcclinks" cachedWithin="#createTimeSpan( 0, 1, 0, 0 )#">
+			   SELECT distinct swvlinks_term.STU_ID
+					, TERM
+					, T_GPA
+					, T_EARNED
+					, P_DEGREE
+					, to_char(EFC,'$99,999') as EFC
+					, coalesce(OUTGOING_SAP, INCOMING_SAP) AS ASAP_STATUS
+	                ,rank() over (partition by stu_id order by term desc) as rnk
+				FROM swvlinks_term
+			</cfquery>
+			<cfset session.termData = termData>
+		</cfif>
+		<cfreturn session.termData>
 	</cffunction>
 	<cffunction name="getMaxTermData" returntype="query" >
 		<cfargument name="bannerGNumber" type="string" required="no" default="">
@@ -124,15 +154,7 @@ all the banner queries need to force a distinct by PIDM
 				AND TERM = <cfqueryparam value="#maxData.maxTerm#">
 			</cfif>
 		</cfquery>--->
-		<cfquery name="termData" datasource="bannerpcclinks" cachedWithin="#createTimeSpan( 0, 1, 0, 0 )#">
-		   SELECT distinct swvlinks_term.STU_ID
-				, TERM
-				, P_DEGREE
-				, to_char(EFC,'$99,999') as EFC
-				, coalesce(OUTGOING_SAP, INCOMING_SAP) AS ASAP_STATUS
-                ,rank() over (partition by stu_id order by term desc) as rnk
-			FROM swvlinks_term
-		</cfquery>
+		<cfset termData = getTermData()>
 		<cfset appObj.logEntry(value="finished termData")>
 		<cfquery name="MaxTermDataUnion" dbType="query" cachedWithin="#createTimeSpan( 0, 1, 0, 0 )#">
 			SELECT termData.STU_ID
@@ -199,7 +221,8 @@ all the banner queries need to force a distinct by PIDM
 		</cfquery>--->
 		<cfreturn MaxTermData>
 	</cffunction>
-	<cffunction name="getMaxRegistration" access="remote" returntype="query" >
+
+	<cffunction name="getMaxRegistration" access="remote" returntype="query" returnformat="json" >
 		<cfargument name="pidm" type="numeric" required="yes" >
 		<cfargument name="maxterm" type="string" required="yes">
 		<cfquery datasource="bannerpcclinks" name="maxRegistration" cachedWithin="#createTimeSpan( 0, 1, 0, 0 )#">
@@ -212,6 +235,8 @@ all the banner queries need to force a distinct by PIDM
 						and Term = <cfqueryparam  value="#arguments.maxterm#">) data
 			GROUP BY STU_ID, TERM
 		</cfquery>
+
+		<cfset appObj.logEntry(value="finished getMaxRegistration", level=2)>
 		<cfreturn maxRegistration >
 	</cffunction>
 	<cffunction name="getCGPassed" access="remote" returntype="query" >
@@ -227,47 +252,46 @@ all the banner queries need to force a distinct by PIDM
 			WHERE PIDM = <cfqueryparam  value="#arguments.pidm#">
 			GROUP BY BannerCourses.STU_ID
 		</cfquery>
+		<cfset appObj.logEntry(value="finished getCGPassed", level=2)>
 		<cfreturn cgPassed>
 	</cffunction>
 	<cffunction name="updateCase" access="remote" returnformat="json" >
 		<cfargument name="data" type="struct">
 
-		<cfset Local.doUpdate = true>
-		<cfset Local.syncSessionObject = false>
 		<!--- Check to see if any data has changed --->
-		<!--- if we have an object for comparison --->
-		<cfif StructKeyExists(session, "fcTbl")>
-			<!--- if it is for the same contact going to be updated --->
-			<cfif session.fcTbl.contactid EQ arguments.data.contactid>
-				<!--- have what is needed to do a compare, start with it set to false --->
-				<cfset Local.doUpdate = false>
-				<cfloop collection=#arguments.data# item="key">
-					<cfif StructKeyExists(session.fcTbl, key)>
-						<!--- see if difference in data exists --->
-						<cfif arguments.data[key] NEQ session.fcTbl[key]>
-							<cfset Local.doUpdate = true>
-							<cfset Local.syncSessionObject = true>
-						</cfif>
-					</cfif>
-				</cfloop>
-			</cfif>
-		</cfif>
+		<!--- if we have an object for comparison
+		<cfif StructKeyExists(session, "fcTbl")>--->
 
-		<cfset appObj.logEntry(value="doUpdate = " & Local.doUpdate & ", syncSessionObject=" & Local.syncSessionObject, level=2)>
-		<cfif Local.doUpdate>
-			<cfquery name="create" >
+		<cfset caseloaddata = getCaseload()>
+		<cfquery name = "fcQuery" dbtype ="query">
+			select *
+			from caseloaddata
+			where contactId = <cfqueryparam value="#arguments.data.contactid#">
+		</cfquery>
+
+		<cfset appObj.logDump(label="fcQuery", value="#data#", level=4)>
+		<cfset fcTbl = QueryGetRow(fcQuery,1)>
+		<cfset appObj.logDump(label="fcTbl", value="#fcTbl#", level=4)>
+
+		<!--- have what is needed to do a compare, start with it set to false --->
+		<cfset changeArray = ArrayNew(1)>
+		<cfloop collection=#arguments.data# item="key">
+			<cfif StructKeyExists(fcTbl, key)>
+				<!--- see if difference in data exists --->
+				<cfif arguments.data[key] NEQ fcTbl[key]>
+					<cfset appObj.logDump(label="key with diff", value="#key#", level=5)>
+					<cfset ArrayAppend(changeArray, key)>
+				</cfif>
+			</cfif>
+		</cfloop>
+
+		<cfif NOT ArrayIsEmpty(changeArray)>
+			<cfquery name="update" result="output">
 				UPDATE futureConnect SET
 					preferredName = <cfqueryparam cfsqltype="cf_sql_varchar" value="#trim(arguments.data.preferredName)#">,
 					gender = <cfqueryparam cfsqltype="cf_sql_varchar" value="#trim(arguments.data.gender)#">,
-	<!--->				campus = <cfqueryparam cfsqltype="cf_sql_varchar" value="#trim(arguments.data.campus)#">, --->
 					parentalStatus = <cfqueryparam cfsqltype="cf_sql_varchar" value="#trim(arguments.data.parentalStatus)#">,
-	<!---
-					Household = <cfqueryparam cfsqltype="cf_sql_varchar" value="#trim(arguments.data.household_information)#">,
-					LivingSituation = <cfqueryparam cfsqltype="cf_sql_varchar" value="#trim(arguments.data.living_situation)#">,
-					<!---citizen_status = <cfqueryparam cfsqltype="cf_sql_varchar" value="#trim(arguments.data.citizen_status)#">, --->
-	--->
 					careerPlan = <cfqueryparam cfsqltype="cf_sql_varchar" value="#trim(arguments.data.careerPlan)#">,
-
 					weeklyWorkHours = <cfqueryparam cfsqltype="cf_sql_varchar" value="#trim(arguments.data.weeklyWorkHours)#">,
 					statusInternal = <cfqueryparam cfsqltype="cf_sql_varchar" value="#trim(arguments.data.statusInternal)#">,
 					exitReason = <cfqueryparam cfsqltype="cf_sql_varchar" value="#trim(arguments.data.exitReason)#">,
@@ -279,14 +303,12 @@ all the banner queries need to force a distinct by PIDM
 					LastUpdatedBy=<cfqueryparam value=#Session.username#>,
 					DateLastUpdated=current_timestamp
 				WHERE futureConnect.contactID =  <cfqueryparam cfsqltype="cf_sql_varchar" value="#trim(arguments.data.contactID)#">
-			  </cfquery>
+			</cfquery>
 
-			<!--- update succeeded, sync with session model --->
-			<cfif Local.syncSessionObject>
-				<cfloop collection=#arguments.data# item="key">
-					<cfset session.fcTbl[key] = arguments.data[key]>
-				</cfloop>
-			</cfif> <!--- synchSessionObject --->
+			<cfset syncWithSessionData(changeArray, arguments.data)>
+
+			<cfset appObj.logDump(label="update", value="#output#", level=5)>
+
 		</cfif><!--- doUpdate --->
 
 		<cfif len(trim(arguments.data.notes)) GT 0>
@@ -394,6 +416,11 @@ all the banner queries need to force a distinct by PIDM
 	<cffunction name="getCaseload" access="remote" returntype="query" returnformat="json" >
 		<cfargument name="pidm" type="string" default="">
 		<cfargument name="in_contract" type="string" default="No">
+
+		<!--- return cached copy if exists --->
+		<cfif StructKeyExists(session, "caseloaddata")>
+			<cfreturn session.caseloaddata>
+		</cfif>
 
 		<!---------------------------------->
 		<!------- Banner Person Data ------->
@@ -560,7 +587,8 @@ all the banner queries need to force a distinct by PIDM
 		</cfquery>
 		<cfset appObj.logEntry(value="finished caseload_banner", level=2)>
 
-		<cfreturn caseload_banner>--->
+		<cfset session.caseloaddata = caseload_banner>
+		<cfreturn caseload_banner>
 	</cffunction>
 
 	<cffunction name="getReportList" access="remote" returnType="query" returnformat="json">
@@ -599,10 +627,12 @@ all the banner queries need to force a distinct by PIDM
 		    ,EFC
 			from caseloaddata
 		</cfquery>
+
 		<cfreturn qryData>
 	</cffunction>
 
-	<cffunction name="getCaseloadList" access="remote" returnType="query" returnformat="json">
+	<cffunction name="getCaseloadList" access="remote" returnformat="json">
+		<cfargument name="contactId" default=-1>
 		<cfset caseloaddata = getCaseload()>
 
 		<cfquery dbtype="query" name="qryData" >
@@ -610,22 +640,59 @@ all the banner queries need to force a distinct by PIDM
 				,ASAP_status, statusinternal, Coach, maxterm, LastContactDate, O_EARNED
 				,pidm, in_contract, pcc_email, flagged
 			from caseloaddata
+			<cfif arguments.contactId NEQ -1>
+			where contactID = <cfqueryparam value="#arguments.contactId#">
+			</cfif>
 		</cfquery>
-		<cfreturn qryData>
+		<cfreturn SerializeJSON(qryData)>
+	</cffunction>
+	<cffunction name="getEditCase" access="remote" returnType="query" returnformat="json">
+		<cfargument name="pidm" type="string" default="">
+
+		<cfset caseloaddata = getCaseload()>
+		<cfquery name="data" dbtype="query">
+			select *
+			from caseloaddata
+			where pidm = <cfqueryparam value="#arguments.pidm#">
+		</cfquery>
+		<cfreturn data>
 	</cffunction>
 
+
+
 	<cffunction name="getStudentTermMetrics" access="remote" returntype="query">
-		<cfargument name="bannerGNumber" required="yes" default="">
-		<cfquery datasource="bannerpcclinks" name="StudentTermMetrics">
-			SELECT distinct STU_ID
+		<cfargument name="bannerGNumber" required="yes" >
+		<cfset termData = getTermData()>
+		<cfquery name="StudentTermMetrics" dbtype="query">
+			SELECT  STU_ID
 				, TERM
 				, T_GPA
 				, T_EARNED
-			FROM swvlinks_term
+			FROM termData
 			WHERE STU_ID = <cfqueryparam  value="#arguments.bannerGNumber#">
 			ORDER BY TERM ASC
-			</cfquery>
+		</cfquery>
+		<cfset appObj.logEntry(value="finished getStudentTermMetrics", level=2)>
 		<cfreturn StudentTermMetrics>
+	</cffunction>
+
+	<cffunction name="getStudentTermArray" access="remote" returnType="String" returnFormat="json">
+		<cfargument name="bannerGNumber" required="yes" >
+		<cfset data = getStudentTermMetrics(arguments.bannerGNumber)>
+		<cfset list = ValueList(data.TERM)>
+		<cfreturn list>
+	</cffunction>
+	<cffunction name="getStudentGPAArray" access="remote" returnType="String" returnFormat="json">
+		<cfargument name="bannerGNumber" required="yes" >
+		<cfset data = getStudentTermMetrics(arguments.bannerGNumber)>
+		<cfset list = ValueList(data.T_GPA)>
+		<cfreturn list>
+	</cffunction>
+	<cffunction name="getStudentCreditsEarnedArray" access="remote" returnType="String" returnFormat="json">
+		<cfargument name="bannerGNumber" required="yes" >
+		<cfset data = getStudentTermMetrics(arguments.bannerGNumber)>
+		<cfset list = ValueList(data.T_EARNED)>
+		<cfreturn list>
 	</cffunction>
 
 	<cffunction name="getNotes">
@@ -700,7 +767,31 @@ all the banner queries need to force a distinct by PIDM
 				dateLastUpdated=current_timestamp
 			WHERE contactid = <cfqueryparam value="#arguments.contactid#">
 		</cfquery>
+		<cfset changeArray = ArrayNew(1, false)>
+		<cfset changeArray[1] = "flagged">
+		<cfset data = StructNew()>
+		<cfset data.contactID = arguments.contactid>
+		<cfset data.flagged = arguments.flagged>
+		<cfset syncWithSessionData(changeArray, data)>
 	</cffunction>
+	<cffunction name="syncWithSessionData">
+		<cfargument name="changeArray" type="array" required="true">
+		<cfargument name="data" type="struct" required="true">
 
-
+		<cfset caseloaddata = getCaseload()>
+		<cfset appObj.logDump(label="changeArray", value="#changeArray#")>
+		<cfloop query="caseloaddata">
+			<cfif arguments.data.contactID EQ contactID>
+				<cfloop array=#arguments.changeArray# index="key">
+					<cfset appObj.logDump(label="key", value="#key#", level=4)>
+					<cfset appObj.logDump(label="caseloaddata pre", value="#caseloaddata.currentRow#")>
+					<cfset QuerySetCell(caseloaddata, key, arguments.data[key], caseloaddata.currentRow)>
+					<cfset appObj.logDump(label="caseloaddata post", value="#caseloaddata.currentRow#")>
+				</cfloop>
+			</cfif>
+		</cfloop>
+	</cffunction>
+	<cffunction name="checkSessionTimeout" access="remote" returntype="boolean" returnformat="json">
+		<cfreturn false>
+	</cffunction>
 </cfcomponent>

@@ -22,7 +22,7 @@
 		<a href="#attendanceTab" <cfoutput><cfif type EQ "attendance">aria-selected="true"</cfif></cfoutput>>Attendance Steps</a>
 	</li>
 	<li class="tabs-title
-		<cfoutput><cfif type EQ "term">is-active</cfif></cfoutput>" onClick="javascript:setType('term')";>
+		<cfoutput><cfif type EQ "term">is-active</cfif></cfoutput> onClick="javascript:setType('term')";>
 		<a href="#termTab" <cfoutput><cfif type EQ "term">aria-selected="true"</cfif></cfoutput>>Term</a>
 	</li>
 </ul>

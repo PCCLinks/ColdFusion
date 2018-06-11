@@ -1,28 +1,10 @@
-<!--- header --->
-<cfinclude template="includes/header.cfm" />
+<!--- pulled into a div in caseload.cfm, so no need for headers or footers --->
 
-<!--- main content --->
-<style>
-	.dataTables_info{
-		margin-right:10px !important;
-	}
-	.dataTables_filter input{
-		width:75%;
-		display: inline-block;
-	}
-	.dataTables_length select {
-		width:auto;
-	}
-</style>
-
-
-
-<table id="dt_table" class="hover" ;>
+<table id="dt_table_report" class="hover" ;>
 	<caption class="visually-hide">Future Connect Caseload</caption>
 	<thead>
-
 		<tr>
-			<!--- note this order should match the order in the query in fc.getCaseloadList --->
+			<!--- note this order should match the order in the query in fc.getReportList --->
 			<th>Name</th>
 			<th>G</th>
 			<th>Cohort</th>
@@ -95,63 +77,52 @@
 	</tbody>
 </table>
 
-<!--- script referenced in include footer --->
-<cfsavecontent variable="pcc_scripts">
-<script>
+<script type="text/javascript">
+function loadReport(){
+	dt_report = $('#dt_table_report').DataTable( {
+		processing:true,
+		ajax:{
+			url:"fc.cfc?method=getReportList",
+			dataSrc:'DATA',
+			error: function (xhr, textStatus, thrownError) {
+			        handleAjaxError(xhr, textStatus, thrownError);
+			}
+		},
+		language:{ processing: "<img src='images/ajax-loader.gif' height=35 width=35 style='opacity:0.5;'>&nbsp;&nbsp;Loading data..."},
+		columnDefs:[{targets:[6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29], visible:false}],
+		dom: '<"top"iB>rt<"bottom"lp>',
+		buttons: [
+
+			//allows for column visibility toggle
+			'colvis',
+
+           	//Export Grid Button
+           	{
+           	  extend: 'csv',
+           	  text: 'export',
+           	  exportOptions: {
+                   columns: ':visible'
+               }
+           	},
+           ],
+	}); //end initialize
 
 
-	$(document).ready(function() {
-		//intialize table
-		$.fn.dataTable.ext.errMode = 'throw';
+	// Apply the search
+	dt_report.columns().every( function () {
+		var that = this;
+		$( 'input', this.footer() ).on( 'keyup change', function () {
+            if ( that.search() !== this.value ) {
+                that.search( this.value ).draw();
+            }
+       	} );
 
+	});// end search
 
-		dt = $('#dt_table').DataTable( {
-			processing:true,
-			ajax:{
-				url:"fc.cfc?method=getReportList",
-				dataSrc:'DATA',
-				error: function (xhr, textStatus, thrownError) {
-				        handleAjaxError(xhr, textStatus, thrownError);
-					}
-			},
-			language:{ processing: "<img src='<cfoutput>#pcc_source#</cfoutput>/images/ajax-loader.gif' height=35 width=35 style='opacity:0.5;'>&nbsp;&nbsp;Loading data..."},
-			columnDefs:[{targets:[6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29], visible:false}],
-			dom: '<"top"iB>rt<"bottom"lp>',
-			buttons: ['colvis',
-
-            	//Export Grid Button
-            	{
-            	  extend: 'csv',
-            	  text: 'export',
-            	  exportOptions: {
-                    columns: ':visible'
-                }
-            	},
-            ],
-		}); //end initialize
-
-
-		// Apply the search
-		dt.columns().every( function () {
-			var that = this;
-			$( 'input', this.footer() ).on( 'keyup change', function () {
-	            if ( that.search() !== this.value ) {
-	                that.search( this.value ).draw();
-	            }
-        	} );
-			//stop it from sorting when you click into the header
-			//$( 'input', this.footer() ).on('click', function(e) {
-        	//	e.stopPropagation();
-    		//});
-		});// end search
-
-	} ); //end document ready
-
-
+	$('#dt_table_report').width("100%");
+}
 
 
 </script>
-</cfsavecontent>
 
-<!--- footer --->
-<cfinclude template="includes/footer.cfm" />
+
