@@ -87,7 +87,7 @@
 	    		{targets:0,
 	    		render: function ( data, type, row ) {
 	    			if(row[5]){
-	    				return '<a href="programStudentDetail.cfm?billingStudentId=' + row[5] + '" target="_blank">' + data + '</a>';
+	    				return '<a href="programStudent.cfm?billingStudentId=' + row[5] + '" target="_blank">' + data + '</a>';
 	    			} else {
 	    				return data;
 	    			}

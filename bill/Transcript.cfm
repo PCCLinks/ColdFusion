@@ -3,6 +3,8 @@
 <cfinvoke component="LookUp" method="getCurrentYearTerms" returnvariable="qryTerms"></cfinvoke>
 <cfinvoke component="LookUp" method="getCurrentProgramYear"  returnvariable="programYear"></cfinvoke>
 <cfinvoke component="Lookup" method="getLastTermClosed" returnvariable="lastTermClosed" />
+
+
 <style>
 
 	.dataTables_info{
@@ -39,7 +41,7 @@
 				--Select Term--
 			</option>
 			<cfoutput query="qryTerms">
-			<option  value="#term#" <cfif qryTerms.term EQ lastTermClosed.maxTerm>selected</cfif> >#termDescription#</option>
+			<option  value="#term#" <cfif qryTerms.term EQ lastTermClosed>selected</cfif> >#termDescription#</option>
 			</cfoutput>
 		</select>
 	</label>
@@ -95,7 +97,7 @@
 <script>
 	var currentRow;
 	var table;
-	var selectedTerm = <cfoutput>#Variables.lastTermClosed.maxTerm#</cfoutput>
+	var selectedTerm = '<cfoutput>#Variables.lastTermClosed#</cfoutput>';
 	var idx_gnumber = 2;
 	var idx_billingStudentId = 6;
 	var idx_creditsEntered = 7;

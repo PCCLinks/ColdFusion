@@ -3,16 +3,15 @@
 <cfinvoke component="LookUp" method="getFirstOpenAttendanceDate"  returnvariable="attendanceMonth"></cfinvoke>
 <cfinvoke component="Report" method="attendanceReport" returnvariable="data">
 	<cfinvokeargument name="billingStartDate" value="#attendanceMonth#">
-	<cfinvokeargument name="term" value="#url.term#">
+	<cfinvokeargument name="programYear" value="#url.programYear#">
 	<cfinvokeargument name="program" value="#url.program#">
 	<cfinvokeargument name="schooldistrict" value="#url.schooldistrict#">
 </cfinvoke>
 <cfset Session.reportAttendancePrintTable = data>
-<cfinvoke component="LookUp" method="getReportDates"  returnvariable="reportDates">
-	<cfinvokeargument name="term" value="#url.term#">
-	<cfinvokeargument name="billingStartDate" value="#attendanceMonth#">
+<cfinvoke component="Report" method="getReportList"  returnvariable="reportListData">
+	<cfinvokeargument name="programYear" value="#url.programYear#">
+	<cfinvokeargument name="billingType" value="#url.type#">
 </cfinvoke>
-<cfset Session.reportDatesAttendanceData = reportDates>
 
 <style>
 	.dataTables_wrapper .dataTables_processing{
@@ -35,26 +34,43 @@
 		padding-right:10px;
 	}
 </style>
-	<div class="row" id="tableheader">
-		<table width="100%" style="border-style:none;">
-			<tr>
-				<td class="bottom-border" style="text-align:left; font-size:12px">
-					<cfoutput>#url.schooldistrict#</cfoutput>
-				</td>
-				<td class="bottom-border" style="text-align:right; font-size:12px">
-					Alternative Education Program
-				</td>
-			</tr>
-			<tr>
-				<td colspan="2" class="no-border" style="text-align:center; font-size:12px">
-					<h4>Monthly Attendance And Days Enrolled - Public School Days</h4>
-					<cfoutput><b>All Students at #url.Program# between #DateFormat(reportDates.ReportStartDate,'m/d/yyyy')# and #DateFormat(reportDates.ReportMonthEndDate,'m/d/yyyy')#</b></cfoutput>
-				</td>
-			</tr>
-		</table>
-	</div>
+<div class="off-canvas-wrapper">
+<div class="off-canvas-wrapper-inner" data-off-canvas-wrapper>
+<div class="off-canvas position-left" id="offCanvasLeft" data-off-canvas>
+<ul class="menu vertical">
+<cfif not isNull(reportListData)>
+	<cfoutput query="reportListData">
+	<li><a href="ReportAttendance.cfm?schooldistrict=#schoolDistrict#&program=#program#&type=#url.type#&programYear=#url.programYear#">#schoolDistrict# - #program#</a></li>
+     </cfoutput>
+</cfif>
+</ul> <!-- end of menu -->
+</div> <!-- end of class=off-canvas position-left -->
 
-<input class="button" id="recalculate" value="Recalculate" onClick="javascript: reCalculate();">
+<!--MAIN REPORT -->
+<div class="off-canvas-content" data-off-canvas-content>
+	<table width="100%" style="border-style:none;">
+		<tr>
+			<td class="bottom-border" style="text-align:left; font-size:12px">
+				<cfoutput>#url.schooldistrict#</cfoutput>
+			</td>
+			<td class="bottom-border" style="text-align:right; font-size:12px">
+				Alternative Education Program
+			</td>
+		</tr>
+		<tr>
+			<td colspan="2" class="no-border" style="text-align:center; font-size:12px">
+				<h4>Monthly Attendance And Days Enrolled - Public School Days</h4>
+				<cfoutput><b>All Students at #url.Program# between #DateFormat(data.ReportStartDate,'m/d/yyyy')# and #DateFormat(data.ReportEndDate,'m/d/yyyy')#</b></cfoutput>
+			</td>
+		</tr>
+	</table>
+</div> <!-- end of class=off-canvas-content -->
+</div> <!-- end of class=off-canvas-wrapper-inner -->
+</div> <!-- end of class=off-canvas-wrapper -->
+
+<!-- Fire Off-canvas -->
+<button type="button" class="button alert" data-toggle="offCanvasLeft">Show Report List</button>
+
 <input class="button" id="print" value="Print Friendly Version" onClick="javascript: print();">
 <!---<input class="button" id="exportToExcel" value="Export to Excel" onClick="javascript: exportToExcel();">--->
 	<div id="displayTable">
@@ -87,29 +103,9 @@
 		window.open('ReportAttendanceExcelExport.cfm');
 	}
 
-	function reCalculate(){
-     	$.ajax({
-			url: "report.cfc?method=reCalculateBilling",
-			data: <cfoutput>{term: #url.term#, billingType: 'attendance', billingStartDate: '#attendanceMonth#',
-								program: '#url.program#', schooldistrict: '#url.schooldistrict#'},</cfoutput>
-			type: "POST",
-     		success: function(){
-			$.ajax({
-	        	url: 'includes/reportAttendanceDisplayTableInclude.cfm?',
-	       		cache: false
-		    	}).done(function(data) {
-		        	$("#displayTable").html(data);
-		        	setUpTable();
-		    	}); //end done
-     				}, //end function success
-			error: function (jqXHR, exception) {
-	        	handleAjaxError(jqXHR, exception);
-			} //end error
-      	})//end ajax
-     } //end recalculate button
 
 	function goToDetail(billingStudentId){
-		window.open('programStudentDetail.cfm?billingStudentId=' + billingStudentId + '&showNext=true#Billing');
+		window.open('javascript:getBillingStudent(' + billingStudentId + ', true);');
 	}
 
 	</script>

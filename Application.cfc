@@ -77,8 +77,7 @@
 
 		<cfreturn "true">
 	</cffunction>
-
-
+<!--->
 	<cffunction name="onError">
 		<cfargument name="exception" >
 		<cfargument name="thrownError" default="">
@@ -158,7 +157,7 @@
 		   	<cflocation url="error.cfm">
 		</cfif>
 	</cffunction>
-
+--->
 	<cffunction name="isAjaxCall" returntype="boolean">
 		<cfset Variables.reqData = getHTTPRequestData() >
 		<cfset logDump(label="HTTPRequestData", value="#Variables.reqData#", level=2)>

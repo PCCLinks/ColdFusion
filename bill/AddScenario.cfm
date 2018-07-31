@@ -122,7 +122,7 @@
 		$.ajax({
             type: 'post',
             url: 'programBilling.cfc?method=insertScenario',
-            data: {billingScenarioName: billingScenarioName, indPercent: indPercent, smallPercent: smallPercent, interPercent: interPercent, largePercent: largePercent, isAjax:'true'},
+            data: {billingScenarioName: billingScenarioName, indPercent: indPercent, smallPercent: smallPercent, interPercent: interPercent, largePercent: largePercent},
             datatype:'json',
             success: function(){
             	getScenarios();
@@ -143,7 +143,7 @@
 		$.ajax({
             type: 'post',
             url: 'programBilling.cfc?method=saveScenario',
-            data: {billingScenarioName: billingScenarioName, indPercent: indPercent, smallPercent: smallPercent, interPercent: interPercent, largePercent: largePercent, isAjax:'true'},
+            data: {billingScenarioName: billingScenarioName, indPercent: indPercent, smallPercent: smallPercent, interPercent: interPercent, largePercent: largePercent},
             datatype:'json',
             error: function (jqXHR, exception) {
 				handleAjaxError(jqXHR, exception);

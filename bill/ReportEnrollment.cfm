@@ -33,7 +33,7 @@
 	<div class="small-3 columns">
 		<label for="District">District:
 			<select name="district" id="district">
-				<option disabled selected value="" > --Select District-- </option>
+				<option disabled selected > --Select District-- </option>
 			<cfoutput query="schools">
 				<option value="#keySchoolDistrictID#" > #schooldistrict# </option>
 			</cfoutput>
@@ -66,14 +66,15 @@
 	<thead>
 		<tr>
 			<th class="notForPrint"></th>
+			<th class="notForPrint">District</th>
 			<th>Program</th>
-			<th>LastName</th>
-			<th>FirstName</th>
+			<th>Last Name</th>
+			<th>First Name</th>
 			<th>Grade</th>
-			<th>EntryDate</th>
-			<th>ExitDate</th>
-			<th>ExitStatus</th>
-			<th>ResourceSpec</th>
+			<th>Entry Date</th>
+			<th>Exit Date</th>
+			<th>Exit Status</th>
+			<th>Resource Spec</th>
 			<th>LEP</th>
 			<th>Gender</th>
 			<th>DOB</th>
@@ -81,7 +82,8 @@
 			<th>City</th>
 			<th>State</th>
 			<th>Zip</th>
-			<th>BannerGNumber</th>
+			<th>Banner G-Number</th>
+			<th></th>
 		</tr>
 	</thead>
 </table>
@@ -91,6 +93,8 @@
 <cfsavecontent variable="pcc_scripts">
 	<script>
 		var idx_contactid = 0;
+		var idx_program = 2;
+		var idx_districtid = 18;
 
 		$(document).ready(function() {
 		    $('#dt_table').DataTable({
@@ -104,7 +108,7 @@
 					}
 				},
 				dom: '<"top"iBf>rt<"bottom"lp>',
-				language:{ processing: "Loading data..."},
+				language:{ processing: 'Please wait...updating...will take a few minutes...'},
 				buttons:[
 					{extend: 'excel',
             	  		text: 'export',
@@ -117,9 +121,10 @@
             	columnDefs:[
             		{targets:idx_contactid,
 				 		render: function ( data, type, row ) {
-                  				return '<a href="billingStudentProfile.cfm?contactId=' + data + '" target="_blank">Edit</a>';
+                  				return '<a href="billingStudentProfile.cfm?contactId=' + data + '" >Click to Edit</a>';
              				}
 				 	},
+				 	{targets: idx_districtid, visible: false}
 				 ]
 		    });
 
@@ -134,9 +139,16 @@
 
 			table = $('#dt_table').DataTable();
 			$('#program').change(function(){
-				table.ajax.reload();
+				var smart = false;
+				if($('#program').val() === 'YtC'){
+					smart = true;
+				}
+				table.column(idx_program).search($('#program').val(), smart).draw();
 			});
 			$('#district').change(function(){
+				table.column(idx_districtid).search($('#district').val(), true).draw();
+			});
+			$('#programyear').change(function(){
 				table.ajax.reload();
 			});
 

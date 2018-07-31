@@ -18,9 +18,53 @@
 <script src="https://cdn.datatables.net/select/1.2.5/js/dataTables.select.min.js"></script>
 
 <script>
-$(document).foundation();
+
 
 $(document).ready(function(){
+	$(document).foundation();
+	formatDatePicker();
+})
+/* Search Functions called from Header.cfm */
+function search(){
+	$('#searchOverlay').fadeIn('fast',function(){
+    	$('#search').animate({'top':'100px'},100);
+    });
+}
+function closeSearch(){
+	$('#search').animate({'top':'-400px'},100,function(){
+    	$('#searchOverlay').fadeOut('fast');
+    });
+}
+function searchBoxDoSearch(){
+	closeSearch();
+	$.post('DoSearch.cfc', {method: 'setSearchCriteria', searchGNumber:$('#searchGNumber').val(),
+							searchFirstName:$('#searchFirstName').val(),
+							searchLastName:$('#searchLastName').val()})
+		.done(function(){
+			window.location = "ProgramStudent.cfm";
+		})
+}
+function getBillingStudent(billingStudentId, newWindow){
+	$.post('DoSearch.cfc', {method: 'setBillingStudentId',
+						searchBillingStudentId:billingStudentId})
+	.done(function(){
+		//if(newWindow){
+		//	window.open("ProgramStudent.cfm");
+		//}else{
+			window.location = "ProgramStudent.cfm";
+		//}
+	})
+	.error(function (xhr, textStatus, thrownError) {
+	        handleAjaxError(xhr, textStatus, thrownError);
+	});
+}
+function addZero($time) {
+	 if ($time < 10) {
+	   $time = "0" + $time;
+	 }
+	 return $time;
+}
+function formatDatePicker(){
 	$('.fdatepicker').fdatepicker({
 		format: 'mm/dd/yyyy',
 		disableDblClickSelection: true,
@@ -29,12 +73,6 @@ $(document).ready(function(){
 		closeIcon:'X',
 		closeButton: true
 	});
-})
-function addZero($time) {
-	 if ($time < 10) {
-	   $time = "0" + $time;
-	 }
-	 return $time;
 }
 function handleAjaxError(jqXHR, exception, thrownError){
 	msg = encodeURIComponent(jqXHR.statusText + ' ' + jqXHR.responseText);

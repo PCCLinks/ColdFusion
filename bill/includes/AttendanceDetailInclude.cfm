@@ -17,6 +17,9 @@ table.attendance thead, table.attendance thead th, table.attendance tbody td, ta
 table.attendance{
 	border-collapse: collapse;
 }
+table.attendance thead th{
+	width:12.5%;
+}
 </style>
 
 <b>Attendance Details</b><br>
@@ -25,6 +28,7 @@ table.attendance{
 		<tr>
 			<th>CRN</th>
 			<th>Attnd</th>
+			<th>Enrl</th>
 			<th>Ind</th>
 			<th>Small</th>
 			<th>Inter</th>
@@ -37,6 +41,7 @@ table.attendance{
 		<tr>
 			<td><a href='AttendanceEntry.cfm?crn=#crn#&billingStartDate=#billingStartDate#' target="_blank">#crn#</a></td>
 			<td>#attendance#</td>
+			<td>#enrollment#</td>
 			<td>#ind#</td>
 			<td>#small#</td>
 			<td>#inter#</td>
@@ -48,14 +53,15 @@ table.attendance{
 	<tfoot>
 		<tr>
 			<cfquery dbtype="query" name="dataTotal">
-				select SmGroupPercent, InterGroupPercent, LargeGroupPercent, CMPercent, GeneratedBilledAmount, GeneratedOverageAmount,
-					sum(attendance) attendance, sum(ind) ind, sum(small) small, sum(inter) inter, sum(large) large, sum(cm) CM
+				select SmGroupPercent, InterGroupPercent, LargeGroupPercent, CMPercent, GeneratedBilledAmount, GeneratedOverageAmount
+					,sum(Enrollment) enrollment, sum(attendance) attendance, sum(ind) ind, sum(small) small, sum(inter) inter, sum(large) large, sum(cm) CM
 				from data
 				group by SmGroupPercent, InterGroupPercent, LargeGroupPercent, CMPercent, GeneratedBilledAmount, GeneratedOverageAmount
 			</cfquery>
 			<cfoutput query="dataTotal">
 			<td></td>
 			<td>#attendance#</td>
+			<td>#enrollment#</td>
 			<td>#ind#</td>
 			<td>#small#</td>
 			<td>#inter#</td>
@@ -70,6 +76,7 @@ table.attendance{
 		<tr>
 			<th>CRN</th>
 			<th>Scnrio</th>
+			<th></th>
 			<th>Ind %</th>
 			<th>Small %</th>
 			<th>Inter %</th>
@@ -81,12 +88,12 @@ table.attendance{
 	<cfoutput query="data">
 		<tr>
 			<td>#crn#</td>
-			<td>#Scenario#</td>
+			<td colspan="2">#Scenario#</td>
 			<td>#IndPercent#</td>
 			<td>#SmallPercent#</td>
 			<td>#InterPercent#</td>
 			<td>#LargePercent#</td>
-			<td>#(IndPercent + SmallPercent + InterPercent + LargePercent)/10#</td>
+			<td>0.1</td>
 		</tr>
 	</cfoutput>
 	</tbody>
@@ -94,27 +101,27 @@ table.attendance{
 <table class="attendance" >
 	<thead><cfoutput query="dataTotal">
 		<tr>
+			<th>Total</th>
+			<th>Ovrg</th>
+			<th>PPS Days</th>
 			<th>Indiv</th>
 			<th>Small * #SmGroupPercent#</th>
 			<th>Inter * #InterGroupPercent#</th>
 			<th>Large * #LargeGroupPercent#</th>
-			<th>CM Total * #CMPercent#</th>
-			<th>Total</th>
-			<th>Ovrg</th>
-			<th>PPS Days</th>
+			<th>CM * #CMPercent#</th>
 		</tr></cfoutput>
 	</thead>
 	<tbody>
 		<tr>
 		<cfoutput query="dataTotal">
+			<td>#NumberFormat(GeneratedBilledAmount+GeneratedOverageAmount,'9.99')#</td>
+			<td>#GeneratedOverageAmount#</td>
+			<td>#GeneratedBilledAmount#</td>
 			<td>#Ind#</td>
 			<td>#Small*SmGroupPercent#</td>
 			<td>#Inter*InterGroupPercent#</td>
 			<td>#Large*LargeGroupPercent#</td>
-			<td>#(Ind+Small+Inter+Large)*CMPercent#</td>
-			<td>#NumberFormat(GeneratedBilledAmount+GeneratedOverageAmount,'9.99')#</td>
-			<td>#GeneratedOverageAmount#</td>
-			<td>#GeneratedBilledAmount#</td>
+			<td>#Enrollment*.1*CMPercent#</td>
 		</cfoutput>
 		</tr>
 	</tbody>

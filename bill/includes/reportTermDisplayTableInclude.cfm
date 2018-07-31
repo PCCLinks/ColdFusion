@@ -48,7 +48,7 @@
 			<cfif not isNull(data)>
 				<cfoutput query="data">
                    <tr>
-                    <td><a href='javascript:goToBillingRecord(#BillingStudentIdMostCurrent#);'>#LASTNAME#,&nbsp;#FIRSTNAME#</a></td>
+                    <td><a href='javascript:getBillingStudent(#BillingStudentIdMostCurrent#, true);'>#LASTNAME#,&nbsp;#FIRSTNAME#</a></td>
 					<td>#bannerGNumber#</td>
                     <td>#EntryDate# <cfif ExitDate NEQ "">-#ExitDate#</cfif></td>
 					<!-- SUMMER -->

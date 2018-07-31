@@ -1,10 +1,31 @@
-<cfparam name="billingDates" default="#attributes.billingDates#">
-<cfparam name="qryTerms" default="#attributes.qryTerms#">
-<cfparam name="billingType" default="#attributes.billingType#">
-<cfparam name="openBillingStartDate" default="#attributes.openBillingStartDate#">
+<cfparam name="qryTerms" default="">
+<cfif isDefined('attributes.qryTerms')>
+	<cfset qryTerms = attributes.qryTerms>
+<cfelse>
+	<cfinvoke component="pcclinks.bill.LookUp" method="getOpenTerms" returnvariable="qryTerms"></cfinvoke>
+</cfif>
+
+<cfparam name="billingDates" default="">
+<cfif isDefined('attributes.billingDates')>
+	<cfset billingDates = attributes.billingDates>
+<cfelse>
+	<cfinvoke component="pcclinks.bill.LookUp" method="getOpenAttendanceBillingStartDates" returnvariable="billingDates"></cfinvoke>
+</cfif>
+
+<cfparam name="billingType" default="">
+<cfif isDefined('url.type')>
+	<cfset billingType = url.type>
+<cfelse>
+	<cfset billingType = attributes.billingType>
+</cfif>
+<cfparam name="openBillingStartDate" default="">
+<cfif isDefined('url.openBillingStartDate')><cfset openBillingStartDate = url.openBillingStartDate></cfif>
+
 <cfparam name="divIdName" default="closeBillingCycle">
+<cfparam name="showCancelButton" default=false>
 <cfif isDefined('attributes.divIdName')>
 	<cfset divIdName = "#attributes.divIdName#">
+	<cfset showCancelButton=true>
 </cfif>
 <cfset formName = "frmCloseBilling" & billingType>
 
@@ -12,7 +33,7 @@
 	<input type="hidden" name="billingType" id="billingType" value=<cfoutput>"#billingType#"</cfoutput>>
 	<div class="row">
 		<cfif billingType EQ "attendance">
-		<div class="small-3 columns">
+		<div class="small-3 medium-3 columns">
 			<label for="billingStartDate">Month Start Date:
 				<select name="billingStartDate" id="billingStartDate">
 					<option disabled selected value="" > --Select Month Start Date-- </option>
@@ -23,7 +44,7 @@
 			</label>
 		</div>
 		<cfelse>
-		<div class="small-3 columns">
+		<div class="small-3 medium-3 columns">
 			<label>Term:<br/>
 				<select name="term" id="term" >
 					<option disabled selected value="" >
@@ -38,10 +59,10 @@
 			</label>
 		</div>
 		</cfif>
-		<div class="small-6 columns">
-			<div id="saveMessagefrmCloseBillingCycle">&nbsp;</div>
-			<input class="button" value="Close Billing Cycle" onClick='javascript:saveValues(<cfoutput>"#formName#"</cfoutput>);' />
-			<input class="button secondary" value="Cancel" onClick='javascript:closeForm(<cfoutput>"#divIdName#"</cfoutput>);' />
+		<div class="small-6 medium-9 columns">
+			<input class="button medium" value="Close Billing Cycle" onClick='javascript:saveValues(<cfoutput>"#formName#"</cfoutput>);' style="margin-top:22px;margin-bottom:0px;"/>
+			<cfif showCancelButton><input class="button secondary" value="Cancel" onClick='javascript:closeForm(<cfoutput>"#divIdName#"</cfoutput>);' style="margin-top:22px;margin-bottom:0px;"/></cfif>
+			<div id="saveMessage<cfoutput>#formName#</cfoutput>">&nbsp;</div>
 		</div>
 	</div>
 </form>

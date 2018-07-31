@@ -76,7 +76,7 @@
 		<tr>
 			<td>#lastname#</td>
 			<td>#firstname#</td>
-			<td><a href="javascript:goToDetail(#billingStudentId#);">#bannerGNumber#</a></td>
+			<td><a href="javascript:getBillingStudent(#billingStudentId#, true);">#bannerGNumber#</a></td>
 			<td>#MaxTerm#</td>
 			<td>#coach#</td>
 			<!---><cfif url.program EQ 'gtc'>--->
@@ -139,15 +139,6 @@
 			$('#maxterm').val(filter);
 			buttonText = button.text() == txtShowActive ? txtShowAll : txtShowActive;
 	        button.text(buttonText);
-		}
-		function goToDetail(billingStudentId){
-			//var dt = $('#dt_table').DataTable();
-			//var billingStudentList = dt.columns({search:'applied'}).data()[5];
-			//sessionStorage.setItem("billingStudentList", billingStudentList);
-			//var data = $.param({data:encodeURIComponent(JSON.stringify(sessionStorage))});
-  			//$.post("SaveSession.cfm", data, function(){
-  				window.open('programStudentDetail.cfm?billingStudentId='+billingStudentId + '&showNext=false');
-  			//});
 		}
 
 	</script>

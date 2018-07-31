@@ -4,8 +4,11 @@
 <cfinvoke component="LookUp" method="getSchools" returnvariable="schools"></cfinvoke>
 <cfinvoke component="LookUp" method="getAttendanceBillingStartDates" returnvariable="billingDates"></cfinvoke>
 <cfinvoke component="LookUp" method="getFirstOpenAttendanceDate" returnvariable="latestMonth"></cfinvoke>
+<cfinvoke component="Lookup" method="getCurrentProgramYear" returnvariable="programyear"></cfinvoke>
 
-<div class="callout primary">PPS Report</div>
+<div class="callout primary"><b><p>PPS Report</p></b>
+<div id="heading"></div>
+</div>
 <!-- Filter -->
 <div class="row">
 	<div class="small-2 columns">
@@ -55,32 +58,8 @@
 			<th>Small Grp.</th>
 			<th>Tutorial</th>
 		</tr>
-		<!---<tr id="searchRow">
-			<th><input type="text" placeholder="Last Name"></th>
-			<th><input type="text" placeholder="First Name" /></th>
-			<th><input type="text" placeholder="DOB" /></th>
-			<th><input type="text" placeholder="Grade" /></th>
-			<th><input type="text" placeholder="Entry Date" /></th>
-			<th><input type="text" placeholder="Exit Date" /></th>
-			<th><input type="text" placeholder="Exit Status" /></th>
-			<th><input type="text" placeholder="Program" /></th>
-			<th><input type="text" placeholder="District" /></th>
-		</tr>--->
 	</thead>
 	<tbody>
-		<!---<cfoutput query="data">
-		<tr>
-			<td>#lastname#</td>
-			<td>#firstname#</td>
-			<td>#dob#</td>
-			<td>#grade#</td>
-			<td>#entrydate#</td>
-			<td>#exitdate#</td>
-			<td>#exitreason#</td>
-			<td>#program#</td>
-			<td>#schooldistrict#</td>
-		</tr>
-		</cfoutput>--->
 	</tbody>
 </table>
 
@@ -114,6 +93,7 @@
 			table = $('#dt_table').DataTable();
 			$('#billingStartDate').change(function(){
 				table.ajax.reload();
+				updateHeader()
 			});
 			$('#program').change(function(){
 				table.ajax.reload();
@@ -122,6 +102,9 @@
 				table.ajax.reload();
 			});
 
+			updateHeader();
+
+		} );
 
 		function getParameters(){
 			param = '&billingStartDate=' + $('#billingStartDate').val();
@@ -131,10 +114,11 @@
 				param = param + '&program=' + $('#program').val();
 		 	return param;
 		}
-
-
-		} );
-
+		function updateHeader(){
+			$.get('Report.cfc?method=getLastBillingGeneratedMessage&includeTitle=false&billingType=attendance&programYear=<cfoutput>#programyear#</cfoutput>', function(data){
+				$('#heading').html(data);
+			});
+		}
 
 	</script>
 </cfsavecontent>

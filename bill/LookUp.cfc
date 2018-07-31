@@ -1,81 +1,53 @@
 <cfcomponent displayname="LookUp">
 	<cfobject name="appObj" component="application">
 
-	<cffunction name="select" access="remote">
-	    <cfargument name="page" type="numeric" required="yes">
-	    <cfargument name="pageSize" type="numeric" required="yes">
-	    <cfargument name="gridsortcolumn" type="string" required="no">
-	    <cfargument name="gridsortdir" type="string" required="no">
-		<cfargument name="LookUpType">
-		<cfquery datasource="pcclinks" name="data" >
-			SELECT LookupID, LookupName
-			FROM LookUp
-			WHERE LookUpType = <cfqueryparam value="#arguments.LookUpType#">
-		</cfquery>
-		<cfreturn QueryConvertForGrid(data, ARGUMENTS.page, ARGUMENTS.pageSize)>
-	</cffunction>
-	<cffunction name="edit" access="remote">
-	    <cfargument name="gridaction" required="yes">
-	    <cfargument name="gridrow"  required="yes">
-	    <cfargument name="gridchanged" required="yes">
-	    <cfargument name="LookUpType" type="string" required="yes">
-    	<cfset var value = structfind(gridrow,"LookupName")>
-    	<cfset var id = structfind(gridrow,"LookupID")>
-		<cfif isStruct(gridrow) and isStruct(gridchanged)>
-        	<cfif gridaction eq "U">
-	            <cfquery name="updateRows" datasource="pcclinks">
-	                UPDATE LookUp
-	                	SET LookUpName = <cfqueryparam value="#value#" CFSQLType = "CF_SQL_VARCHAR"  >
-	                WHERE LookUpID = <cfqueryparam value="#id#" CFSQLType = "CF_SQL_INTEGER">
-	            </cfquery>
-			<cfelseif gridaction eq "I">
- 				<cfquery name="insertRow" datasource="pcclinks">
-					INSERT INTO LookUp(LookupName, LookupType)
-					VALUES('#value#', '#arguments.LookUpType#')
-				</cfquery>
-			</cfif>
-		</cfif>
-	</cffunction>
 	<cffunction name="getTerms" access="remote">
 		<cfquery name="data" datasource="pcclinks">
 			select Term,
-				concat(Term, case right(Term,1)
-								when 1 then '-Winter'
-								when 2 then '-Spring'
-			                    when 3 then '-Summer'
-			                    when 4 then '-Fall' end) TermDescription
+				fnGetTermDescription(Term) TermDescription
 			from bannerCalendar
 			where termBeginDate >= date_add(now(), INTERVAL - 1 YEAR)
 			order by term
 		</cfquery>
 		<cfreturn data>
 	</cffunction>
-		<cffunction name="getOpenTerms" access="remote">
+	<cffunction name="getOpenTerms" access="remote">
 		<cfquery name="data" datasource="pcclinks">
-			select distinct Term,
-				concat(Term, case right(Term,1)
-								when 1 then '-Winter'
-								when 2 then '-Spring'
-			                    when 3 then '-Summer'
-			                    when 4 then '-Fall' end) TermDescription,
+			select Term Term,
+				fnGetTermDescription(Term) TermDescription,
 			     billingStartDate
-			from billingStudent
-			where billingStatus IN ('IN PROGRESS', 'REVIEWED')
-				and program not like '%attendance%'
-				and includeFlag = 1
-			order by term
+			from billingCycle
+			where billingCloseDate IS NULL
+				AND billingType = 'Term'
+			order by Term
+		</cfquery>
+		<cfreturn data>
+	</cffunction>
+	<cffunction name="getClosedTerms" access="remote">
+		<cfset programYear = getCurrentProgramYear()>
+		<cfquery name="data" datasource="pcclinks">
+			select Term Term,
+				fnGetTermDescription(Term) TermDescription,
+			     billingStartDate
+			from billingCycle
+			where billingCloseDate IS NOT NULL
+				AND billingType = 'Term'
+				and ProgramYear = '#programYear#'
+			order by Term
 		</cfquery>
 		<cfreturn data>
 	</cffunction>
 	<cffunction name="getProgramYear" access="remote">
+		<!--- billing system started in 2017/2018 year --->
 		<cfquery name="data" datasource="pcclinks">
 			select distinct ProgramYear
 			from bannerCalendar
-			where termBeginDate >= date_add(now(), INTERVAL - 1 YEAR)
+			where termBeginDate >= '2017-06-01'
 			order by term
 		</cfquery>
 		<cfreturn data>
 	</cffunction>
+
 	<cffunction name="getCurrentProgramYear" access="remote" returntype="string">
 		<cfquery name="data">
 			SELECT max(ProgramYear) ProgramYear
@@ -84,32 +56,17 @@
 		</cfquery>
 		<cfreturn data.ProgramYear>
 	</cffunction>
-	<cffunction name="getFilteredTerm" access="remote" >
-		<cfargument name="term">
-		<cfargument name="displayField">
-		<cfquery name="data" datasource="pcclinks" result="r">
-			select *
-			from bannerCalendar
-			where term = <cfqueryparam value="#arguments.term#">
-		</cfquery>
-		<cfset r=data[#arguments.displayField#] />
-		<cfif arguments.displayField CONTAINS "Date"> <cfset r = dateFormat(r, 'mm/dd/yyyy') /></cfif>
-		<cfreturn r>
-	</cffunction>
+
 	<cffunction name="getCurrentYearTerms" access="remote" >
 		<cfquery name="data" >
 			select c.Term,
-				concat(c.Term, case right(c.Term,1)
-								when 1 then '-Winter'
-								when 2 then '-Spring'
-			                    when 3 then '-Summer'
-			                    when 4 then '-Fall' end) TermDescription,
+				fnGetTermDescription(c.Term) TermDescription,
 				c.TermBeginDate,
 				c.TermDropDate,
 				c.TermEndDate
 			from bannerCalendar c
 				join bannerCalendar c1 on c.ProgramYear = c1.ProgramYear
-			where c1.Term = (select max(Term) from billingStudent)
+			where c1.Term = (select min(Term) from bannerCalendar where termBeginDate >= now() )
 		</cfquery>
 		<cfreturn data>
 	</cffunction>
@@ -132,74 +89,94 @@
 		</cfquery>
 		<cfreturn data>
 	</cffunction>
-	<cffunction name="getLastTermBilled" access="remote">
-		<cfquery datasource="pcclinks" name="data">
-			SELECT ProgramQuarter, ProgramYear, maxTerm.Term MaxTerm
-			FROM bannerCalendar c
-				JOIN (SELECT MAX(Term) Term
-					FROM billingStudent) maxTerm ON c.Term = maxTerm.Term
-		</cfquery>
-		<cfreturn data>
-	</cffunction>
-	<!--->
-	<cffunction name="getLastTermClosed" access="remote">
-		<cfquery datasource="pcclinks" name="data">
-			SELECT ProgramQuarter, ProgramYear, maxTerm.Term MaxTerm
-			FROM bannerCalendar c
-				JOIN (SELECT MAX(Term) Term
-					FROM billingStudent
-					WHERE billingStatus = 'BILLED') maxTerm ON c.Term = maxTerm.Term
-		</cfquery>
-		<cfreturn data>
-	</cffunction>
-	--->
+
 	<cffunction name="getLastAttendancePeriodClosed" access="remote" returnType="date">
 		<cfquery datasource="pcclinks" name="data">
 			SELECT MAX(billingStartDate) billingStartDate
-			FROM billingStudent
-			WHERE billingStatus = 'BILLED'
-	        	and program like '%Attendance%'
+			FROM billingCycle
+			WHERE billingCloseDate IS NOT NULL
+	        	and billingType = 'Attendance'
 		</cfquery>
 		<cfreturn data.billingStartDate>
 	</cffunction>
 	<cffunction name="getLastTermClosed" access="remote" >
 		<cfquery datasource="pcclinks" name="data">
-			select concat(Term, case right(Term,1)
-								when 1 then '-Winter'
-								when 2 then '-Spring'
-			                    when 3 then '-Summer'
-			                    when 4 then '-Fall' end) TermDescription
+			select fnGetTermDescription(Term) TermDescription
 			FROM (
 			SELECT MAX(Term) Term
-			FROM billingStudent
-			WHERE billingStatus = 'BILLED'
-	        	and program not like '%Attendance%'
+			FROM billingCycle
+			WHERE billingCloseDate IS NOT NULL
+	        	and billingType = 'Term'
 	        ) data
 		</cfquery>
 		<cfreturn data.TermDescription>
 	</cffunction>
-	<cffunction name="getNextTermToBill" access="remote">
+	<cffunction name="getNextTermToBill" access="remote" >
 		<cfquery datasource="pcclinks" name="data">
-			SELECT *
-			FROM bannerCalendar
-			WHERE Term = (SELECT MIN(Term) Term
+			SELECT MIN(Term) Term
 			FROM bannerCalendar c
 			WHERE Term > (SELECT MAX(Term) Term
-					FROM billingStudent
-					WHERE BillingStatus = 'BILLED'))
+					FROM billingCycle
+					WHERE billingCloseDate IS NOT NULL
+						AND billingType = 'Term')
+		</cfquery>
+		<cfreturn data.Term>
+	</cffunction>
+	<cffunction name="getBannerCalendarEntry" access="remote" returnformat="JSON">
+		<cfargument name="term" required=true>
+		<cfquery datasource="pcclinks" name="data">
+			SELECT Term
+				,Date_Format(TermBeginDate, '%m/%d/%Y') TermBeginDate
+				,Date_Format(TermEndDate, '%m/%d/%Y') TermEndDate
+				,Date_Format(TermDropDate, '%m/%d/%Y') TermDropDate
+			FROM bannerCalendar
+			WHERE Term = <cfqueryparam value="#arguments.term#">
 		</cfquery>
 		<cfreturn data>
 	</cffunction>
-	<cffunction name="getNextAttendanceDatesToBill" access="remote">
+	<cffunction name="getNextAttendanceDatesToBill" access="remote" >
 		<cfquery datasource="pcclinks" name="data">
-			SELECT *
+			SELECT MAX(billingStartDate) billingStartDate, max(Term) Term
+		  	FROM billingCycle
+		  	WHERE billingType = 'Attendance'
+				and billingCloseDate IS NOT NULL
+		</cfquery>
+		<cfreturn data>
+	</cffunction>
+	<cffunction name="getAttendanceDatesToBill" access="remote" returnformat="JSON">
+		<cfargument name="term" required=true>
+		<cfargument name="billingStartDate" >
+
+		<cfif not structKeyExists(arguments, "billingStartDate")>
+			<cfquery name="getBillingStartDate">
+				select termBeginDate
+				FROM bannerCalendar
+				WHERE Term = <cfqueryparam value="#arguments.term#">
+			</cfquery>
+			<cfset arguments.billingStartDate = getBillingStartDate.TermBeginDate>
+		</cfif>
+		<cfquery datasource="pcclinks" name="data">
+			SELECT bc.Term
+				,Date_Format(bc.TermBeginDate, '%m/%d/%Y') TermBeginDate
+				,Date_Format(bc.TermEndDate, '%m/%d/%Y') TermEndDate
+				,Date_Format(bc.TermDropDate, '%m/%d/%Y') TermDropDate
+				,bc.ProgramYear
+				,Date_Format(COALESCE(cycleInProgress.billingStartDate, proposedNextDate.NextBeginDate, bc.TermBeginDate), '%m/%d/%Y') NextBeginDate
+			    ,Date_Format(COALESCE(cycleInProgress.billingEndDate, LAST_DAY(NextBeginDate), LAST_DAY(bc.TermBeginDate)), '%m/%d/%Y') NextEndDate
+			    ,IFNULL(cycleInProgress.MaxBillableDaysPerBillingPeriod, '') MaxBillableDaysPerBillingPeriod
 			FROM bannerCalendar bc
-				JOIN (SELECT MAX(BillingStartDate) Term
-						,Date_Add(MAX(billingEndDate),INTERVAL 1 Day) NextDate
-						,DATE_ADD(MAX(billingEndDate), INTERVAL (9 - IF(DAYOFWEEK(MAX(billingEndDate))=1, 8, DAYOFWEEK(CURDATE()))) DAY) Next
-						FROM billingStudent
-	               		WHERE program like '%Attendance%') d
-	               	on d.NextDate between termBeginDate and termEndDate
+				LEFT JOIN (SELECT billingCycleId
+						,Term
+						,Date_Add(billingEndDate,INTERVAL 1 Day) NextDate
+						,DATE_ADD(billingEndDate, INTERVAL (8 - IF(DAYOFWEEK(MAX(billingEndDate))=1, 8, DAYOFWEEK(CURDATE()))) DAY) NextBeginDate
+						FROM billingCycle
+						WHERE billingStartDate = <cfqueryparam value="#arguments.billingStartDate#">
+							and billingType = 'Attendance') proposedNextDate
+					on proposedNextDate.NextDate between termBeginDate and termEndDate
+				 LEFT OUTER JOIN billingCycle cycleInProgress on bc.Term  = cycleInProgress.Term
+					and billingCloseDate is null
+			        and billingType = 'Attendance'
+			WHERE bc.Term = <cfqueryparam value="#arguments.term#">
 		</cfquery>
 		<cfreturn data>
 	</cffunction>
@@ -272,11 +249,22 @@
 	</cffunction>
 	<cffunction  name="getOpenAttendanceBillingStartDates" access="remote"  >
 		<cfquery name="data" >
-				SELECT distinct billingStartDate
-				FROM billingStudent
-				WHERE program like '%attendance%'
-					and billingStatus IN ('IN PROGRESS', 'REVIEWED')
-					and includeFlag = 1
+				SELECT billingStartDate
+				FROM billingCycle
+				WHERE billingCloseDate IS NULL
+					AND billingType = 'attendance'
+				ORDER BY billingStartDate desc
+		</cfquery>
+		<cfreturn data>
+	</cffunction>
+	<cffunction  name="getClosedAttendanceBillingStartDates" access="remote"  >
+		<cfset programYear = getCurrentProgramYear()>
+		<cfquery name="data" >
+				SELECT billingStartDate
+				FROM billingCycle
+				WHERE billingCloseDate IS NULL
+					AND billingType = 'attendance'
+					AND ProgramYear = '#programYear#'
 				ORDER BY billingStartDate desc
 		</cfquery>
 		<cfreturn data>
@@ -300,38 +288,40 @@
 		<cfreturn data.billingStartDate>
 	</cffunction>
 	<cffunction  name="getAttendanceBillingStartDates" access="remote"  >
+		<cfargument name="programYear" default="">
+		<cfif arguments.programYear EQ "">
+			<cfset  arguments.programYear = getCurrentProgramYear()>
+		</cfif>
 		<cfquery name="data" >
-				SELECT distinct billingStartDate
-				FROM billingStudent
-				WHERE program like '%attendance%'
+				SELECT billingStartDate, billingEndDate
+				FROM billingCycle
+				WHERE billingType = 'attendance'
+					and ProgramYear = <cfqueryparam value="#arguments.programYear#">
 				ORDER BY billingStartDate desc
 		</cfquery>
 		<cfreturn data>
 	</cffunction>
 	<cffunction name="getFirstOpenAttendanceDate" access="remote" >
 		<cfquery name="data">
-			select min(billingStartDate) lastAttendanceBillDate
-			FROM billingStudent
-			WHERE program like '%attendance%'
-				and billingStatus IN ('IN PROGRESS', 'REVIEWED')
-				and includeFlag = 1
+			SELECT min(billingStartDate) attendanceBillDate
+			FROM billingCycle
+			WHERE billingType = 'attendance'
+				and billingCloseDate IS NULL
 		</cfquery>
-		<cfif LEN(data.lastAttendanceBillDate) EQ 0>
+		<!---><cfif LEN(data.attendanceBillDate) EQ 0>
 			<cfquery name="data">
-				select max(billingStartDate) lastAttendanceBillDate
-				FROM billingStudent
-				WHERE program like '%attendance%'
-					and includeFlag = 1
+				SELECT max(billingStartDate) attendanceBillDate
+				FROM billingCycle
+				WHERE billingType = 'attendance'
 			</cfquery>
-		</cfif>
-		<cfreturn data.lastAttendanceBillDate>
+		</cfif>--->
+		<cfreturn data.attendanceBillDate>
 	</cffunction>
 	<cffunction name="getLatestDateAttendanceMonth" access="remote" returntype="date">
 		<cfquery name="data">
-			select max(billingStartDate) lastAttendanceBillDate
-			from billingStudent
-			where program like '%attendance%'
-				and includeFlag = 1
+				SELECT max(billingStartDate) lastAttendanceBillDate
+				FROM billingCycle
+				WHERE billingType = 'attendance'
 		</cfquery>
 		<cfreturn data.lastAttendanceBillDate>
 	</cffunction>
@@ -376,25 +366,34 @@
 	<cffunction name="getBillingStatusForDate" access="remote" >
 		<cfargument name="term" required="true">
 		<cfquery name="data" >
-            select billingStatus, count(*) NumRecords
+            select fnGetBillingStatus(billingStudentId) billingStatus, count(*) NumRecords
             from billingStudent
             where term = <cfqueryparam value="#arguments.term#">
 				and program not like '%attendance%'
-			group by billingStatus
-			order by billingStatus
+			group by fnGetBillingStatus(billingStudentId)
+			order by fnGetBillingStatus(billingStudentId)
 		</cfquery>
 		<cfreturn data>
 	</cffunction>
-	<cffunction name="getReportDates" access="remote" >
-		<cfargument name="term" requred="true">
-		<cfargument name="billingStartDate">
-		<cfquery name="data" >
-			SELECT min(termBeginDate) ReportStartDate, max(termEndDate) ReportEndDate
-				<cfif isDefined("arguments.billingStartDate")>, LAST_DAY(<cfqueryparam value="#arguments.billingStartDate#">) ReportMonthEndDate</cfif>
-			FROM bannerCalendar
-            where ProgramYear = (select ProgramYear from bannerCalendar where term = <cfqueryparam value="#arguments.term#">)
-				and term <= <cfqueryparam value="#arguments.term#">
-		</cfquery>
-		<cfreturn data>
+
+	<cffunction name="convertTerm">
+		<cfargument name="term" required="true">
+		<cfset d = "">
+		<cfswitch expression = "#right(arguments.Term,1)#">
+			<cfcase value = 1>
+				<cfset d = '-Winter'>
+			</cfcase>
+			<cfcase value = 2>
+				<cfset d = '-Spring'>
+			</cfcase>
+			<cfcase value = 3>
+				<cfset d = '-Summer'>
+			</cfcase>
+			<cfcase value = 4>
+				<cfset d = '-Fall'>
+			</cfcase>
+		</cfswitch>
+		<cfset d = "#arguments.term##d#">
+		<cfreturn d>
 	</cffunction>
 </cfcomponent>

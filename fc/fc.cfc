@@ -131,7 +131,7 @@ all the banner queries need to force a distinct by PIDM
 	<cffunction name="getMaxTermData" returntype="query" >
 		<cfargument name="bannerGNumber" type="string" required="no" default="">
 		<cfargument name="bannerPop" type="query" required="yes" default="">
-		<cfset appObj.logEntry(value="starting getMaxTermData")>
+		<cfset appObj.logEntry(value="starting getMaxTermData", level=5)>
 		<!--- Banner Prod is having performance issues unless it is done that way - might be able to change back in the future --->
 		<!---<cfquery name="maxData" datasource="bannerpcclinks" cachedWithin="#createTimeSpan( 0, 1, 0, 0 )#">
 			SELECT STU_ID, MAX(TERM) AS maxTerm
@@ -155,7 +155,7 @@ all the banner queries need to force a distinct by PIDM
 			</cfif>
 		</cfquery>--->
 		<cfset termData = getTermData()>
-		<cfset appObj.logEntry(value="finished termData")>
+		<cfset appObj.logEntry(value="finished termData", level=5)>
 		<cfquery name="MaxTermDataUnion" dbType="query" cachedWithin="#createTimeSpan( 0, 1, 0, 0 )#">
 			SELECT termData.STU_ID
 				, termData.TERM
@@ -594,6 +594,13 @@ all the banner queries need to force a distinct by PIDM
 	<cffunction name="getReportList" access="remote" returnType="query" returnformat="json">
 		<cfset caseloaddata = getCaseload()>
 
+		<cfquery name="fosterCare" >
+			select fc.contactID, CASE WHEN lsc.contactID IS NULL THEN 'N' ELSE 'Y' END FosterCareYN
+			from futureConnect fc
+				left outer join livingSituationContact lsc
+					on fc.contactID = lsc.contactID and livingSituationID = 3
+		</cfquery>
+
 		<cfquery dbtype="query" name="qryData" >
 			select STU_NAME
 			,bannerGNumber
@@ -625,7 +632,9 @@ all the banner queries need to force a distinct by PIDM
 			,FundedBy
 		    ,P_DEGREE
 		    ,EFC
-			from caseloaddata
+		    ,FosterCareYN
+			from caseloaddata, fosterCare
+			where caseloaddata.contactID = fosterCare.contactID
 		</cfquery>
 
 		<cfreturn qryData>
@@ -779,14 +788,14 @@ all the banner queries need to force a distinct by PIDM
 		<cfargument name="data" type="struct" required="true">
 
 		<cfset caseloaddata = getCaseload()>
-		<cfset appObj.logDump(label="changeArray", value="#changeArray#")>
+		<cfset appObj.logDump(label="changeArray", value="#changeArray#", level=5)>
 		<cfloop query="caseloaddata">
 			<cfif arguments.data.contactID EQ contactID>
 				<cfloop array=#arguments.changeArray# index="key">
 					<cfset appObj.logDump(label="key", value="#key#", level=4)>
-					<cfset appObj.logDump(label="caseloaddata pre", value="#caseloaddata.currentRow#")>
+					<cfset appObj.logDump(label="caseloaddata pre", value="#caseloaddata.currentRow#", level=5)>
 					<cfset QuerySetCell(caseloaddata, key, arguments.data[key], caseloaddata.currentRow)>
-					<cfset appObj.logDump(label="caseloaddata post", value="#caseloaddata.currentRow#")>
+					<cfset appObj.logDump(label="caseloaddata post", value="#caseloaddata.currentRow#", level=5)>
 				</cfloop>
 			</cfif>
 		</cfloop>

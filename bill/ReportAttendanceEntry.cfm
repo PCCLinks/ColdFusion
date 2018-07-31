@@ -73,7 +73,7 @@
 			<td>#subj#</td>
 			<td>#schooldistrict#</td>
 			<td>#program#</td>
-			<td><a href='javascript:goToBillingRecord(#billingStudentId#);'>#bannerGNumber#</a></td>
+			<td><a href='javascript:getBillingStudent(#billingStudentId#, true);'>#bannerGNumber#</a></td>
 			<td>#firstname#</td>
 			<td>#lastname#</td>
 			<td>#DateFormat(exitDate,'m/d/yyyy')#</td>
@@ -119,9 +119,7 @@
 				table.order.fixed( {pre: [[ $(this).data('column')*1, 'asc' ]]} ).draw();
 			});
 		} );
-	function goToBillingRecord(billingStudentId){
-		window.open('programStudentDetail.cfm?billingStudentId='+billingStudentId+'&showNext=true#Billing');
-	}
+
 
 	</script>
 </cfsavecontent>

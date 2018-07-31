@@ -6,8 +6,8 @@
 	<cfargument name="logfilename" default="pcclinks">
 	<cfset debuglevel = 5>
 
-	<cfif IsDefined("session") && StructKeyExists(session, "logfilename")>
-		<cfset arguments.logfilename = "#Session.logfilename#">
+	<cfif IsDefined("this.logfilename")>
+		<cfset arguments.logfilename = "#this.logfilename#">
 	</cfif>
 
 	<cfif debuglevel GTE arguments.level>
@@ -32,4 +32,15 @@
 		<cfdump var="#arguments.value#" format="text">
 	</cfsavecontent>
 	<cfset logEntry(label=arguments.label, value=logtext, level=arguments.level)>
+</cffunction>
+
+<cffunction name="emailError" access="remote">
+	<cfargument name="errorText" required=true>
+	<cfif CGI.SERVER_NAME DOES NOT CONTAIN "intranettest" && CGI.SERVER_NAME DOES NOT CONTAIN "localhost">
+		<cfmail to="arlette.slachmuylder@pcc.edu" from="arlette.slachmuylder@pcc.edu" subject="PCC Links Future Connect Application Error" type="html">
+			#errortext#
+		</cfmail>
+	<cfelse>
+		<cfset logEntry(value=errorText)>
+	</cfif>
 </cffunction>

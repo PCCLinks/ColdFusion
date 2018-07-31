@@ -5,7 +5,11 @@
 
 
 <cfoutput query="data">
-<div class="callout primary">Student Billing Profile for #firstname# #lastname# (#bannerGNumber#)</div>
+<div class="callout primary">
+	Student Billing Profile for #firstname# #lastname# (#bannerGNumber#)<br><br>
+	<a href="ReportEnrollment.cfm"><b><< Return to Enrollment Report</b></a>
+
+</div>
 
 
 <form id="formProfile" name="formProfile">

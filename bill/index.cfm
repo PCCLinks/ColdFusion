@@ -4,6 +4,7 @@
 <cfinvoke component="ProgramBilling" method="getCurrentTermSummary"  returnvariable="qryData">
 </cfinvoke>
 <cfset Session.Term = qryData.Term>
+
 <cflock timeout=20 scope="Session" type="Exclusive">
 	<cfset StructDelete(Session, "Program")>
 	<cfset StructDelete(Session, "SchoolDistrict")>
@@ -19,10 +20,10 @@
 <ul class="tabs" data-tabs id="index-tabs">
 	<li class="tabs-title
 		<cfoutput><cfif type EQ "attendance">is-active</cfif></cfoutput>" onClick="javascript:setType('attendance')";>
-		<a href="#attendanceTab" <cfoutput><cfif type EQ "attendance">aria-selected="true"</cfif></cfoutput>>Attendance Steps</a>
+		<a href="#attendanceTab" <cfoutput><cfif type EQ "attendance">aria-selected="true"</cfif></cfoutput>>Attendance</a>
 	</li>
 	<li class="tabs-title
-		<cfoutput><cfif type EQ "term">is-active</cfif></cfoutput> onClick="javascript:setType('term')";>
+		<cfoutput><cfif type EQ "term">is-active</cfif></cfoutput>" onClick="javascript:setType('term')";>
 		<a href="#termTab" <cfoutput><cfif type EQ "term">aria-selected="true"</cfif></cfoutput>>Term</a>
 	</li>
 </ul>

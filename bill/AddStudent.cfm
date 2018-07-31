@@ -8,6 +8,7 @@
 <cfif structKeyExists(Session, "selectedCRN")>
 	<cfset Variables.selectedCRN = Session.selectedCRN>
 </cfif>
+<cfparam name="billingType" default=#url.type#>
 
 <style>
 
@@ -160,6 +161,7 @@
 	<cfif IsDefined("Session.addStudentReturnPage")>returnPage = '<cfoutput>#Session.addStudentReturnPage#</cfoutput>';</cfif>
 	var table;
 	var selectedCRN = '<cfoutput>#selectedCRN#</cfoutput>';
+	var billingType = '<cfoutput>#billingType#</cfoutput>';
 
 	//document ready
 	$(document).ready(function() {
@@ -271,11 +273,11 @@
             type:'post',
             data:{bannerGNumber:$('#bannerGNumber').val(), term:$('#term').val(),
             		billingStartDate:$('#billingStartDate').val(), billingEndDate:$('#billingEndDate').val(),
-            		crn: $('#crn').val()},
+            		crn: $('#crn').val(), billingType: billingType},
             dataType: 'json',
             async:false,
             success: function(billingStudentId){
-            	window.location = 'programStudentDetail.cfm?billingStudentId='+billingStudentId+'&showNext=false';
+            	window.location = 'javascript:getBillingStudent('+billingStudentId+');';
             },
             error: function (jqXHR, exception) {
 			    handleAjaxError(jqXHR, exception);

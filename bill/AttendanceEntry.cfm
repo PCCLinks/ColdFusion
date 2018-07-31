@@ -118,6 +118,7 @@
         	$('#attendanceEntry').html(data);
 			$('#addStudent').hide();
 			$('#attendanceEntry').show();
+			loadMissingStudents();
 
 			//#showHideButtons(showAddClass, showAddLab, showShowStudent, showShowAttendance)
 			showHideButtons(true, true, true, false);
@@ -199,7 +200,7 @@
 			$.ajax({
 	            type: 'post',
 	            url: 'programBilling.cfc?method=addLab',
-	            data: {crn: selectedCRN, billingStartDate: $('#billingStartDate').val(), isAjax:'true'},
+	            data: {crn: selectedCRN, billingStartDate: $('#billingStartDate').val()},
 	            datatype:'text/plain',
 	            success: function(newCRN){
 	            	selectedCRN = newCRN;
@@ -237,7 +238,7 @@
 		}
 	}
 
-	function  removeItem(billingStudentItemID, billingStudentID)
+	function removeItem(billingStudentItemID, billingStudentID)
 	{
 		var response = window.confirm('Are you sure you want to remove this item?');
 		if(response)
@@ -245,8 +246,8 @@
 			$.blockUI({ message: '<h1>Just a moment...</h1>' });
 			$.ajax({
 	            type: 'post',
-	            url: 'programBilling.cfc?method=removeItem',
-	            data: {billingStudentItemID: billingStudentItemID, isAjax:'true'},
+	            url: 'programBilling.cfc?method=setBillingStudentItemInactive',
+	            data: {billingStudentItemID: billingStudentItemID},
 	            datatype:'json',
 	            async:false,
 	            success: function(){
@@ -264,7 +265,7 @@
 	function addStudent(){
 		var data = $.param({selectedCRN:selectedCRN, addStudentReturnPage:'attendanceEntry.cfm'});
   		$.post("SaveSession.cfm", data, function(){
-  			window.location	='addStudent.cfm';
+  			window.location	='addStudent.cfm?type=Attendance';
   		});
 	}
 </script>

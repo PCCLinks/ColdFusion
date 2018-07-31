@@ -53,7 +53,7 @@
             type: 'post',
             url: 'programBilling.cfc?method=insertClass',
             data: {billingStudentId: billingStudentID, crn: crn, subj: $('#subj_anc').val(), crse: $('#crse_anc').val(), title:$('#title_anc').val(),
-            			billingStudentItemId:billingStudentItemId, isAjax:'true'},
+            			billingStudentItemId:billingStudentItemId},
             datatype:'json',
             success: function(billingStudentItemID){
             	$('#' + billingStudentID).parent().html('<a href="javascript:removeItem(' + billingStudentItemID + ', billingStudentId=' + billingStudentID + ');" id=' + billingStudentID + '>Remove Entry</a>');
@@ -75,7 +75,7 @@
 			$.ajax({
 	            type: 'post',
 	            url: 'programBilling.cfc?method=removeItem',
-	            data: {billingStudentItemID: billingStudentItemID, isAjax:'true'},
+	            data: {billingStudentItemID: billingStudentItemID},
 	            datatype:'json',
 	            success: function(){
 	            	$('#' + billingStudentID).parent().html('<input type="checkbox" id=' + billingStudentID + ' onclick="javascript:insertItem(' + billingStudentID + ', ' + billingStudentItemID + ');">');

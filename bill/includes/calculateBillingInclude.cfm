@@ -1,10 +1,39 @@
-<cfparam name="billingDates" default="#attributes.billingDates#">
-<cfparam name="qryTerms" default="#attributes.qryTerms#">
-<cfparam name="billingType" default="#attributes.billingType#">
-<cfparam name="openBillingStartDate" default="#attributes.openBillingStartDate#">
+<cfparam name="qryTerms" default="">
+<cfif isDefined('attributes.qryTerms')>
+	<cfset qryTerms = attributes.qryTerms>
+<cfelse>
+	<cfinvoke component="pcclinks.bill.LookUp" method="getOpenTerms" returnvariable="qryTerms"></cfinvoke>
+</cfif>
+
+<cfparam name="billingDates" default="">
+<cfif isDefined('attributes.billingDates')>
+	<cfset billingDates = attributes.billingDates>
+<cfelse>
+	<cfinvoke component="pcclinks.bill.LookUp" method="getOpenAttendanceBillingStartDates" returnvariable="billingDates"></cfinvoke>
+</cfif>
+
+<cfparam name="billingType" default="">
+<cfif isDefined('url.type')>
+	<cfset billingType = url.type>
+<cfelse>
+	<cfset billingType = attributes.billingType>
+</cfif>
+
+<cfparam name="openBillingStartDate" default="">
+<cfif isDefined('url.openBillingStartDate')><cfset openBillingStartDate = url.openBillingStartDate></cfif>
+<cfif isDefined('attributes.openBillingStartDate')><cfset openBillingStartDate = attributes.openBillingStartDate></cfif>
+
 <cfparam name="divIdName" default="closeBillingCycle">
+<cfparam name="showCancelButton" default=false>
+
+<cfinvoke component="pcclinks.bill.Report" method="getBillingCycle" returnvariable="billingCycle">
+	<cfinvokeargument name="billingStartDate" value="#openBillingStartDate#">
+	<cfinvokeargument name="billingType" value="#billingType#">
+</cfinvoke>
+
 <cfif isDefined('attributes.divIdName')>
 	<cfset divIdName = "#attributes.divIdName#">
+	<cfset showCancelButton=true>
 </cfif>
 <cfset formName = "frmCalculateBilling" & billingType>
 
@@ -13,7 +42,7 @@
 	<input type="hidden" name="billingType" id="billingType" value=<cfoutput>"#billingType#"</cfoutput>>
 	<div class="row">
 		<cfif billingType EQ 'attendance'>
-			<div class="small-4 columns">
+			<div class="small-4 medium-4 columns">
 				<label for="billingStartDate">Month Start Date:
 					<select name="billingStartDate" id="billingStartDate">
 						<option disabled selected value="" > --Select Month Start Date-- </option>
@@ -23,11 +52,11 @@
 					</select>
 				</label>
 			</div>
-			<div class="small-3 columns">
-				<label># of Max Days for Billing Period: <input name="maxDaysPerBillingPeriod" id="maxDaysPerBillingPeriod" type="text" /></label>
+			<div class="small-3 medium-3 columns">
+				<label># of Max Days for Billing Period: <input name="MaxBillableDaysPerBillingPeriod" id="MaxBillableDaysPerBillingPeriod" type="text" value="<cfoutput>#billingCycle.MaxBillableDaysPerBillingPeriod#</cfoutput>"/></label>
 			</div>
 		<cfelse>
-			<div class="small-2 columns">
+			<div class="small-2 medium-2 columns">
 				<label>Term:<br/>
 					<select name="term" id="term" >
 						<option disabled selected value="" >
@@ -41,18 +70,17 @@
 					</select>
 				</label>
 			</div>
-			<div class="small-3 columns">
-				<label># of Max Credits Per Year: <input name="maxCreditsPerYear" id="maxCreditsPerYear" type="text" value="36"/></label>
+			<div class="small-3 medium-3 columns">
+				<label># of Max Credits Per Term: <input name="MaxBillableCreditsPerTerm" id="MaxBillableCreditsPerTerm" type="text" value="<cfoutput>#billingCycle.MaxBillableCreditsPerTerm#</cfoutput>"/></label>
 			</div>
-			<div class="small-2 columns">
-				<label># of Max Days Per Year: <input name="maxDaysPerYear" id="maxDaysPerYear" type="text" value="175"/></label>
+			<div class="small-2 medium-2 columns">
+				<label># of Max Days Per Year: <input name="MaxBillableDaysPerYear" id="MaxBillableDaysPerYear" type="text" value="<cfoutput>#billingCycle.MaxBillableDaysPerYear#</cfoutput>"/></label>
 			</div>
 		</cfif>
-		<div class="small-5 columns">
-			<input class="button" value="Calculate Billing" onClick='javascript:saveValues(<cfoutput>"#formName#"</cfoutput>);' />
-			<input class="button secondary" value="Cancel" onClick=<cfoutput>'javascript:closeForm("#divIdName#");'</cfoutput> />
+		<div class="small-5 medium-5 columns">
+			<input class="button" value="Generate Billing" onClick='javascript:saveValues(<cfoutput>"#formName#"</cfoutput>);' style="margin-top:22px;margin-bottom:0px;"/>
+			<cfif showCancelButton><input class="button secondary" value="Cancel" onClick=<cfoutput>'javascript:closeForm("#divIdName#");'</cfoutput> style="margin-top:22px;margin-bottom:0px;" /></cfif>
 			<div id="saveMessage<cfoutput>#formName#</cfoutput>"></div>
 		</div>
 	</div>
 </form>
-

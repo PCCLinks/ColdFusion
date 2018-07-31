@@ -86,7 +86,7 @@
 			columnDefs:[
 	    		{targets:0,
 	    		render: function ( data, type, row ) {
-    				return '<a href="programStudentDetail.cfm?billingStudentId=' + row[6] + '" target="_blank">' + data + '</a>';
+    				return '<a href="javascript:getBillingStudent(' + row[6] + ', true)">' + data + '</a>';
 	    		  }
 	    		}
 	    	],

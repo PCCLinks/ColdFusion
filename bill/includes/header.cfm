@@ -15,16 +15,11 @@
 <cfset pcc_title = 'PCC Links' /> 	<!--- Page title & h3 --->
 <cfsavecontent variable="pcc_menu">	 <!--- List items for menu --->
 	<ul class="dropdown menu" data-dropdown-menu>
-		 <li><a href="index.cfm">Home</a>
-			<ul class="menu">
-				<li><a href="index.cfm?type=Term">Term</a></li>
-		 		<li><a href="index.cfm?type=Attendance">Attendance</a></li>
-			</ul>
-		</li>
+		 <li><a href="index.cfm">Home</a></li>
 		 <li><a>Term Billing</a>
 			<ul class="menu">
 				<li><a href="SetUpBilling.cfm?type=Term">Set Up Billing</a></li>
-		 		<li><a href="AddStudent.cfm">Add Student</a></li>
+		 		<li><a href="AddStudent.cfm?type=Term">Add Student</a></li>
 				<li><a href="ReportSummary.cfm?type=Term">Reporting</a></li>
 			</ul>
 		</li>
@@ -32,11 +27,14 @@
 			<ul class="menu">
 				<li><a href="SetUpBilling.cfm?type=Attendance">Set Up Billing</a></li>
 		 		<li><a href="AttendanceEntry.cfm">Enter Attendance</a></li>
-		 		<li><a href="AddStudent.cfm">Add Student</a></li>
+		 		<li><a href="AddStudent.cfm?type=Attendance">Add Student</a></li>
 		 		<li><a href="AddScenario.cfm">Scenarios</a></li>
 				<li><a href="ReportSummary.cfm?type=Attendance">Reporting</a></li>
 				<li><a href="ReportAttendanceEntry.cfm">Attendance Summary</a></li>
-				<li><a href="AttendanceBillingTotalOverride.cfm">Totals Override</a></li>
+				<!--- When converting from old AEP system to new system, totals were not actually the sum of all the
+		  			columns, so had to put in specific amounts in order to match old reports
+		  			This is no longer needed 07/2018
+				<li><a href="AttendanceBillingTotalOverride.cfm">Totals Override</a></li>--->
 			</ul>
 		</li>
 		<li><a href="ProgramStudent.cfm">Review Billing</a>
@@ -66,7 +64,8 @@
 				<li><a href="SetExit.cfm">Set Exit Reason and Dates</a></li>
 			</ul>
 		</li>
-		 <!---<li><a href="Reconcile.cfm">Reconcile Previous Billing</a></li>--->
+		<li><a href="javascript:search();">Search</a>
+		</li>
 	</ul>
 </cfsavecontent>
 
@@ -82,6 +81,7 @@
     <link rel="stylesheet" href="<cfoutput>#pcc_source#</cfoutput>/css/foundation.min.css" />
     <link rel="stylesheet" href="<cfoutput>#pcc_source#</cfoutput>/css/app.css" />
     <link rel="stylesheet" href="<cfoutput>#pcc_source#</cfoutput>/css/vendor/datatables.min.css" />
+	<link rel="stylesheet" href="<cfoutput>#pcc_source#</cfoutput>/css/vendor/jquery-ui.min.css" />
 	<!--<link rel="stylesheet" href="https://cdn.datatables.net/v/dt/dt-1.10.15/b-1.3.1/b-html5-1.3.1/kt-2.2.1/r-2.1.1/rg-1.0.0/datatables.min.css"/>
 	<link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/v/dt/dt-1.10.15/b-1.3.1/b-colvis-1.3.1/b-html5-1.3.1/b-print-1.3.1/cr-1.3.3/fc-3.2.2/fh-3.1.2/kt-2.2.1/r-2.1.1/rg-1.0.0/sc-1.4.2/se-1.2.2/datatables.min.css"/>-->
 	<cfoutput>#pcc_styles#</cfoutput>
@@ -91,12 +91,64 @@
 	<!-- jquery -->
 	<script src="<cfoutput>#pcc_source#</cfoutput>/js/vendor/jquery.js"></script>
 	<script src="<cfoutput>#pcc_source#</cfoutput>/js/vendor/Chart.bundle.min.js"></script>
+
+
+	<style>
+		.overlay{
+		    background:transparent url(<cfoutput>#pcc_source#</cfoutput>/images/overlay.png) repeat top left;
+		    position:fixed;
+		    top:0px;
+		    bottom:0px;
+		    left:0px;
+		    right:0px;
+		    z-index:100;
+		}
+
+
+		.box{
+		    position:fixed;
+		    top:-400px;
+		    left:30%;
+		    right:30%;
+		    background-color:#fff;
+		    color:#7F7F7F;
+		    padding:20px;
+		    border:2px solid #ccc;
+		   // -moz-border-radius: 20px;
+		    //-webkit-border-radius:20px;
+		    //-khtml-border-radius:20px;
+		    //-moz-box-shadow: 0 1px 5px #333;
+		    //-webkit-box-shadow: 0 1px 5px #333;
+		    z-index:101;
+		}
+
+		a.boxclose{
+		    float:right;
+		    width:26px;
+		    height:26px;
+		    background:transparent url(<cfoutput>#pcc_source#</cfoutput>/images/cancel.png) repeat top left;
+		    margin-top:-30px;
+		    margin-right:-30px;
+		    cursor:pointer;
+		}
+
+	</style>
  </head>
 <!-- End HEAD -->
 
 <!-- BODY -->
  <body>
-
+	<div id="searchOverlay" class="overlay" style="display:none">Search</div>
+	<div class="box" id="search">
+		 <a class="boxclose" href="javascript:closeSearch()"></a>
+		 <fieldset id="searchFields" style="border:1px solid black; padding:2px 10px 2px 10px">
+			 <legend style="padding: 2px; display:block">Student Search</legend>
+			<input id="searchGNumber" type="text" placeholder="G Number">
+			<input id="searchFirstName" type="text" placeholder="First Name">
+			<input id="searchLastName" type="text" placeholder="Last Name">
+			<input class="button small" value="Search" onClick="javascript:searchBoxDoSearch();">
+		 </fieldset>
+	</div>
     <!-- header -->
     <header id="header" aria-label="Main header" role="banner">
       <div class="row">

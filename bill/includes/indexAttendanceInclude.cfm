@@ -1,9 +1,16 @@
 
-<cfinvoke component="pcclinks.bill.LookUp" method="getLastAttendancePeriodClosed" returnvariable="lastClosedAttendance"></cfinvoke>
 <cfinvoke component="pcclinks.bill.LookUp" method="getFirstOpenAttendanceDate" returnvariable="openAttendanceDate"></cfinvoke>
+<cfinvoke component="pcclinks.bill.LookUp" method="getLastAttendancePeriodClosed" returnvariable="lastClosedAttendance"></cfinvoke>
+
+<cfinvoke component="pcclinks.bill.SetUpBilling" method="getStudentsNeedingBannerAttributes" returnvariable="attendanceStudentsNeedingBannerAttr">
+	<cfinvokeargument name="billingStartDate" value="#openAttendanceDate#">
+	<cfinvokeargument name="billingType" value="attendance">
+</cfinvoke>
+
 <cfinvoke component="pcclinks.bill.Report" method="getAttendanceEnteredByStudent" returnvariable="attendanceEnteredByStudent">
 	<cfinvokeargument name="billingStartDate" value="#openAttendanceDate#">
 </cfinvoke>
+
 <cfinvoke component="pcclinks.bill.Report" method="getAttendanceEnteredByClass" returnvariable="attendanceEnteredByClass">
 	<cfinvokeargument name="billingStartDate" value="#openAttendanceDate#">
 </cfinvoke>
@@ -37,27 +44,56 @@
 
 
 <hr>
-	<a href="SetUpBilling.cfm?type=Attendance">Set Up Billing</a><br>
-	<ul><li><b><cfif LEN(openAttendanceDate)>
-			Billing in Progress: <cfoutput>#DateFormat(openAttendanceDate,'yyyy-mm-dd')#</cfoutput>
-			<cfelse>
-			No Billing In Progress
-			</cfif></b>
-		</li>
-		<li>Last Month Closed: <cfoutput>#DateFormat(lastClosedAttendance,'yyyy-mm-dd')#</cfoutput></li>
-	</ul>
+<a href="SetUpBilling.cfm?type=Attendance">Set Up Billing</a><br>
+<ul><li><b><cfif LEN(openAttendanceDate)>
+		Billing in Progress: <cfoutput>#DateFormat(openAttendanceDate,'yyyy-mm-dd')#</cfoutput>
+		<cfelse>
+		No Billing In Progress
+		</cfif></b>
+	</li>
+	<li>Last Month Closed: <cfoutput>#DateFormat(lastClosedAttendance,'yyyy-mm-dd')#</cfoutput></li>
+</ul>
 
-	<cfif LEN(openAttendanceDate)>
+<cfif LEN(openAttendanceDate)>
+
+	<hr>
+	<a href="javascript:showMissingAttrAttendance()" id="missingAttrLinkAttendance">Show Student List Missing Banner Attributes</a>
+	<div id="missingAttrAttendance">
+		<table class="w3-table w3-bordered" id="tableMissingAttr">
+			<thead>
+			<tr>
+				<th>G Number</th>
+				<th>Firstname</th>
+				<th>Lastname</th>
+				<th>Program</th>
+				<th>Status</th>
+			</tr>
+			</thead>
+			<tbody>
+			<cfoutput query="attendanceStudentsNeedingBannerAttr">
+			<tr>
+				<td>#bannerGNumber#</td>
+				<td>#firstname#</td>
+				<td>#lastname#</td>
+				<td>#program#</td>
+				<td>#Status#</td>
+			</tr>
+			</cfoutput>
+			</tbody>
+		</table>
+	</div>
+
 	<hr>
 	<a href="ReportSIDNYComparison.cfm?billingStartDate=<cfoutput>#openAttendanceDate#</cfoutput>" >Check for SIDNY Differences</a><br>
 	<a href="ReportPreviousPeriodComparison.cfm?billingStartDate=<cfoutput>#openAttendanceDate#</cfoutput>" >Check for Differences from Previous Month</a><br>
 	<a href="AddScenario.cfm">Attendance Scenarios</a>
+
 	<hr>
 	<a href="AttendanceEntry.cfm">Enter Attendance</a><br>
 	<ul class="circle">
 		<li># students entered: <cfoutput>#attendanceEnteredByStudent.NumStudentsEntered#</cfoutput></li>
 		<li># students with no hours entered: <cfoutput>#attendanceEnteredByStudent.NumStudentsNoHours#</cfoutput>
-		<a href="javascript:showStudents()" id="showStudentsLink">Show Student List with No Hours Entered</a>
+		<a href="javascript:showStudents()" id="showStudentsMissingHoursLink">Show Student List with No Hours Entered</a>
 		<div id="studentsMissingHours">
 		<table class="w3-table w3-bordered">
 			<thead>
@@ -111,11 +147,14 @@
 		</li>
 	</ul>
 	<a href="ReportAttendanceEntry.cfm" >Review Attendance - Summary Report</a><br>
+
 	<hr>
 	<a href="SetExit.cfm" >Set Exit Reason and Dates</a><br>
+
 	<hr>
 	<a href=<cfoutput>"ReportSIDNYComparison.cfm?billingStartDate=#openAttendanceDate#"</cfoutput>>Recheck SIDNY Differences</a><br>
 	<a href="ReportPreviousPeriodComparison.cfm?billingStartDate=<cfoutput>#openAttendanceDate#</cfoutput>" >Recheck for Differences from Previous Month</a><br>
+
 	<hr>
 	<a href="javascript:showForm('calculateBillingAttendance');">Generate Calculations</a><br>
 	<!-- CALCULATE BILLING -->
@@ -132,10 +171,13 @@
 	<cfmodule template="attendanceBilledInfoInclude.cfm"
 		billingStartDate = "#openAttendanceDate#">
 	</div>
+
 	<hr>
 	<a href="ReportSummary.cfm?type=Attendance">Review Billing Reports</a><br>
+
 	<hr>
 	<a href="ReportSummary.cfm?type=Attendance">Run Billing Reports</a><br>
+
 	<hr>
 	<a href="javascript:showForm('closeBillingCycleAttendance');">Close Billing Cycle for <cfoutput>#DateFormat(openAttendanceDate,'yyyy-mm-dd')#</cfoutput></a><br>
 	<!-- CLOSE BILLING CYCLE -->
@@ -148,22 +190,34 @@
 		divIdName = "closeBillingCycleAttendance">
 	</div>
 	<hr>
-	</cfif>
+</cfif>
 
 
 <script type="text/javascript">
-	var linkStudentTextShow = "Show Student List with No Hours Entered";
-	var linkStudentTextHide = "Hide Student List";
+	var linkStudentMissingHoursShow= "Show Student List with No Hours Entered";
+	var linkStudentMissingHoursHide = "Hide Student List";
 	var linkClassTextShow = "Show Class List with No Hours Entered";
 	var linkClassTextHide = "Hide Class List";
+	var linkMissingAttribShowAttendance  = "<cfif attendanceStudentsNeedingBannerAttr.recordcount GT 0>Show </cfif><cfoutput>#attendanceStudentsNeedingBannerAttr.recordcount#</cfoutput> Student(s) Missing Banner Attributes."
+	var linkMissingAttribHideAttendance  = "Hide Student List Missing Banner Attributes"
 
 	$(document).ready(function() {
 		$('#calculateBillingAttendance').hide();
 		$('#closeBillingCycleAttendance').hide();
 		$('#studentsMissingHours').hide();
-		$('#showStudentsLink').text(linkStudentTextShow);
+		$('#showStudentsMissingHoursLink').text(linkStudentMissingHoursShow);
 		$('#classesMissingHours').hide();
 		$('#showClassesLink').text(linkClassTextShow);
+		$('#missingAttrAttendance').hide();
+		$('#missingAttrLinkAttendance').text(linkMissingAttribShowAttendance);
+
+		$('#tableMissingAttr').DataTable({
+		    	dom: '<"top"B>rt<"bottom">',
+				buttons:[{extend: 'csv',
+            	  text: 'export'}],
+            	paging:false
+			});
+
 	});
 	function rePopulateBillingInfo(){
 		$.ajax({
@@ -187,11 +241,11 @@
 		}
 	}
 	function showStudents(){
-		if($('#showStudentsLink').text() == linkStudentTextShow){
-			$('#showStudentsLink').text(linkStudentTextHide);
+		if($('#showStudentsLink').text() == linkStudentMissingHoursShow){
+			$('#showStudentsLink').text(linkStudentMissingHoursHide);
 			$('#studentsMissingHours').show();
 		}else{
-			$('#showStudentsLink').text(linkStudentTextShow);
+			$('#showStudentsLink').text(linkStudentMissingHoursShow);
 			$('#studentsMissingHours').hide();
 		}
 	}
@@ -205,5 +259,13 @@
 		 	}
 		 });
 	}
+	function showMissingAttr(){
+		if($('#missingAttrLink').text() == linkMissingAttribShowAttendance){
+			$('#missingAttrLink').text(linkMissingAttribHideAttendance);
+			$('#missingAttr').show();
+		}else{
+			$('#missingAttrLink').text(linkMissingAttribShowAttendance);
+			$('#missingAttr').hide();
+		}
+	}
 </script>
-

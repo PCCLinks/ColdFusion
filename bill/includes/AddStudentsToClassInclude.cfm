@@ -20,7 +20,7 @@
 		$.ajax({
             type: 'post',
             url: 'programBilling.cfc?method=addStudentToClass',
-            data: {billingStudentId: billingStudentID, crn: '<cfoutput>#url.crn#</cfoutput>', billingStudentItemId:billingStudentItemId, isAjax:'true'},
+            data: {billingStudentId: billingStudentID, crn: '<cfoutput>#url.crn#</cfoutput>', billingStudentItemId:billingStudentItemId},
             datatype:'json',
             success: function(billingStudentItemID){
             	$('#' + billingStudentID).parent().html('<a href="javascript:removeItem(' + billingStudentItemID + ', billingStudentId=' + billingStudentID + ');" id=' + billingStudentID + '>Remove Entry</a>');
@@ -39,7 +39,7 @@
 			$.ajax({
 	            type: 'post',
 	            url: 'programBilling.cfc?method=removeItem',
-	            data: {billingStudentItemID: billingStudentItemID, isAjax:'true'},
+	            data: {billingStudentItemID: billingStudentItemID},
 	            datatype:'json',
 	            success: function(){
 	            	$('#' + billingStudentID).parent().html('<input type="checkbox" id=' + billingStudentID + ' onclick="javascript:insertItem(' + billingStudentID + ', ' + billingStudentItemID + ');">');

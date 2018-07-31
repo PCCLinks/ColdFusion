@@ -27,7 +27,7 @@
 	<tbody>
 	<cfoutput query="data">
 		<tr>
-			<td style="text-align:left"><a href='javascript:goToDetail(#billingStudentIdMostCurrent#)'>#name#</a></td>
+			<td style="text-align:left"><a href='javascript:getBillingStudent(#billingStudentIdMostCurrent#)'>#name#</a></td>
 			<td style="text-align:left">#bannerGNumber#</td>
 			<td style="text-align:left">#DateFormat(dob,"m/d/y")#</td>
 			<td style="text-align:left">#DateFormat(enrolleddate,"m/d/y")#</td>
@@ -63,7 +63,7 @@
 			from billingStudentTotalOverride
 			where schooldistrict = <cfqueryparam value="#data.schooldistrict#">
 				and Program = <cfqueryparam value="#data.Program#">
-				and ProgramYear = '2017/2018'
+				and ProgramYear = <cfqueryparam value="#url.programYear#">
 		</cfquery>
 		<cfoutput query="totals">
 		<tr>

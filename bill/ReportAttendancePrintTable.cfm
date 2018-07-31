@@ -1,5 +1,4 @@
 <cfset data = Session.reportAttendanceData>
-<cfset reportDates = Session.reportDatesAttendanceData>
 
 <style>
 
@@ -68,7 +67,7 @@
 			<tr>
 				<th class="no-border" style="text-align:center" colspan="19">
 					<h3 style="margin:1px;font-size:18px">Monthly Attendance And Days Enrolled - Public School Days</h3>
-					<cfoutput><b>All Students at <cfif data.Program EQ "gtc">PCC/HSC<cfelse>#data.Program#</cfif> Between #DateFormat(reportDates.ReportStartDate,'m/d/yyyy')# and #DateFormat(reportDates.ReportMonthEndDate,'m/d/yyyy')#</b></cfoutput>
+					<cfoutput><b>All Students at <cfif data.Program EQ "gtc">PCC/HSC<cfelse>#data.Program#</cfif> Between #DateFormat(data.ReportStartDate,'m/d/yyyy')# and #DateFormat(data.ReportEndDate,'m/d/yyyy')#</b></cfoutput>
 				</th>
 			</tr></cfoutput>
 		<tr>
@@ -142,6 +141,8 @@
 					sum(attnd) Attnd, sum(enrl) enrl
 				from data
 		</cfquery>
+		<!--- When converting from old AEP system to new system, totals were not actually the sum of all the
+		  columns, so had to put in specific amounts in order to match old reports 07/2018--->
 		<cfquery name="ovrd">
 			select *
 			from billingStudentTotalOverride

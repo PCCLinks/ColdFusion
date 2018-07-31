@@ -1,6 +1,6 @@
 <!--- Get Classes to Bill --->
 <cfinvoke component="pcclinks.bill.ProgramBilling" method="selectBillingEntries"  returnvariable="data">
-	<cfinvokeargument name="billingStudentId" value="#attributes.billingStudentId#">
+	<cfinvokeargument name="billingStudentId" value="#Session.mostRecentTermBillingStudentId#">
 </cfinvoke>
 
 <cfset Variables.programType = "term">
@@ -42,11 +42,7 @@
 				<cfif inBilling EQ 0>
 					<span style="color:red">#billingStatus#</span>
 				<cfelse>
-					<cfif billingStatus EQ 'BILLED'>
-						<cfif IncludeFlag EQ 1>TRUE<cfelse>FALSE</cfif>
-					<cfelse>
-						<input type="checkbox" id="IncludeFlag"  <cfif #IncludeFlag# EQ 1>checked</cfif>>
-					</cfif>
+					<input type="checkbox" id="IncludeFlag#BillingStudentItemId#"  <cfif #IncludeFlag# EQ 1>checked</cfif> onChange="javascript:updateClassIncludeFlag('IncludeFlag#BillingStudentItemId#',#BillingStudentItemId#);" >
 				</cfif>
 			</td>
 		</tr>
@@ -58,14 +54,14 @@
 </table>
 <cfif data.BillingStatus NEQ 'BILLED'>
 <div class="callout">
-	<b>Billing Reviewed:</b> <input type="checkbox" name="billingReviewed" id="billingReviewed" <cfif data.BillingStatus EQ "Reviewed">checked</cfif> >
+	<b>Billing Reviewed:</b> <input type="checkbox" name="billingReviewed" id="billingReviewed" <cfif data.BillingStatus EQ "Reviewed">checked</cfif> onChange=<cfoutput>"javascript:updateBilledClassesBillingReviewed('billingReviewed', #Session.mostRecentTermBillingStudentId#);"</cfoutput> >
 </div>
 </cfif>
 
+
 <script type="text/javascript">
 
-//source page: billedClassesInlude.cfm
-$(document).ready(function() {
+function billedClassesInit(){
 	//setup for billing table
     $('#dt_billed').DataTable({
     	searching:false,
@@ -77,38 +73,45 @@ $(document).ready(function() {
     	}
     });
 
-     // save billing reviewed checkbox changes
-	 $('#billingReviewed').click(function(){
-		var checked = $(this)[0].checked;
-		$.ajax({
-			url: "programbilling.cfc?method=updatestudentbillingstatus",
-			type: "POST",
-			async: false,
-			data: { billingstudentid: billingStudentId, billingReviewed: checked },
-			error: function (jqXHR, exception) {
-		        handleAjaxError(jqXHR, exception);
-			}
-		});
-		}); //end save checkbox changes
+    $(document).on("saveAction", function(e){
+		billingStudentTabSaveEventHandler(e);
+	});
+}
 
-		 // save include course checkbox changes
-	   	$('#dt_billed').find('input:checkbox').click(function(){
-			//cb = $(this).find('input:checkbox');
-			cb = $(this);
-	 		dt = $('#dt_billed').DataTable();
-			var tableRow  = dt.row(this.parentNode).data();
+// save billing reviewed checkbox changes
+function updateBilledClassesBillingReviewed(id, billingStudentId){
+	var billingStatus;
+	if($('#'+id).prop("checked")){
+		billingStatus = 'REVIEWED';
+	}else{
+		billingStatus = 'IN PROGRESS';
+	}
+	$.ajax({
+		url: "programbilling.cfc?method=updateStudentBillingStatus",
+		type: "POST",
+		async: false,
+		data: { billingstudentid: billingStudentId, billingStatus: billingStatus },
+		error: function (jqXHR, exception) {
+	        handleAjaxError(jqXHR, exception);
+		},
+		success: function(){
+			callSaveActionEvent(billingStudentId, "billingStatus", billingStatus, "billedClassesInclude");
+		}
+	});
+} //end save checkbox changes
 
-			var billingStudentItemId = tableRow[0];
-			var includeFlag = (cb[0].checked ? 1 : 0);
-			$.ajax({
-				url: "programbilling.cfc?method=updatestudentbillingiteminclude",
-				type: "POST",
-				async: false,
-				data: { billingstudentitemid: billingStudentItemId, includeflag:includeFlag },
-				error: function (jqXHR, exception) {
-			        handleAjaxError(jqXHR, exception);
-				}
-			});
-		}); //end save checkbox changes
-});
+function updateClassIncludeFlag(id, billingStudentItemId){
+	var includeFlag = ($('#'+id).prop("checked") ? 1 : 0);
+	$.ajax({
+		url: "programbilling.cfc?method=updatestudentbillingiteminclude",
+		type: "POST",
+		async: false,
+		data: { billingstudentitemid: billingStudentItemId, includeflag:includeFlag },
+		error: function (jqXHR, exception) {
+	        handleAjaxError(jqXHR, exception);
+		}
+	});
+} //end save checkbox changes
+
+
 </script>
