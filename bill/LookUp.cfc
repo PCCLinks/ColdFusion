@@ -234,8 +234,8 @@
 				SELECT * FROM billingScenario
 				<cfif len(arguments.billingScenarioName) GT 0>
 				WHERE billingScenarioName = <cfqueryparam value="#arguments.billingScenarioName#">
-				order by billingScenarioName
 				</cfif>
+				order by billingScenarioName
 		</cfquery>
 		<cfreturn data>
 	</cffunction>

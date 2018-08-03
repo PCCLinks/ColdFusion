@@ -93,6 +93,7 @@
 		<cfargument name="programYear" required="true">
 		<cfargument name="program" required="true">
 		<cfargument name="schooldistrict" required="true">
+
 		<cfquery name="data">
 			select concat(bsp.lastname,', ',bsp.firstname) name
 				,bsp.bannerGNumber
@@ -137,29 +138,51 @@
 
 	<cffunction name="attendanceReportDetail" access="remote">
 		<cfargument name="billingStudentId" required="true">
+
+		<cfquery name="billingStudent">
+			select *
+			from billingStudent
+			where billingStudentId = <cfqueryparam value="#arguments.billingStudentId#">
+		</cfquery>
+
+		<!--- make sure all is up to date --->
+		<cfstoredproc procedure="spBillingUpdateAttendanceBilling">
+			<cfprocparam value="#billingStudent.billingStartDate#" cfsqltype="CF_SQL_DATE">
+			<cfprocparam value="#Session.username#" cfsqltype="CF_SQL_STRING">
+		</cfstoredproc>
+
 		<cfquery name="data">
-			select bsp.firstname, bsp.lastname, bs.bannerGNumber, bs.billingStartDate
-				,COALESCE(bs.adjustedDaysPerMonth,bs.maxDaysPerMonth) Enrollment
-				,ROUND(IFNULL(bsi.Attendance,0),2) Attendance, bsi.CRN
-                ,IFNULL(bsi.Scenario,'Unassigned') Scenario, IFNULL(IndPercent,0) IndPercent
-                ,IFNULL(SmallPercent,0) SmallPercent, IFNULL(InterPercent,0) InterPercent
-                ,IFNULL(LargePercent,0) LargePercent
-				,ROUND(IFNULL(bsi.Attendance,0)*IFNULL(IndPercent,0),2) as Ind
-				,ROUND(IFNULL(bsi.Attendance,0)*IFNULL(SmallPercent,0),2) as Small
-				,ROUND(IFNULL(bsi.Attendance,0)*IFNULL(InterPercent,0),2) as Inter
-				,ROUND(IFNULL(bsi.Attendance,0)*IFNULL(LargePercent,0),2) as Large
-				,ROUND(COALESCE(bs.adjustedDaysPerMonth,bs.maxDaysPerMonth)*0.1,2) as CM
-				,ROUND(IFNULL(bs.SmGroupPercent,0),2) SmGroupPercent
-				,ROUND(IFNULL(bs.InterGroupPercent,0),2) InterGroupPercent
-				,ROUND(IFNULL(bs.LargeGroupPercent,0),2) LargeGroupPercent
-				,IFNULL(bs.CMPercent,0) CMPercent
-				,ROUND(IFNULL(bs.GeneratedBilledAmount,0),2) GeneratedBilledAmount
-				,ROUND(IFNULL(bs.GeneratedOverageAmount,0),2) GeneratedOverageAmount
-			from billingStudent bs
-				join billingStudentProfile bsp on bs.contactId = bsp.contactId
-				join billingStudentItem bsi on bs.BillingStudentID = bsi.BillingStudentID
-			    join keySchoolDistrict sd on bs.DistrictID = sd.keySchoolDistrictID
-			where bs.billingStudentId = <cfqueryparam value="#arguments.billingStudentId#">
+			select firstname, lastname, bannerGNumber, billingStartDate
+				,Enrollment, Attendance, CRN, Scenario, ScenarioIndPercent
+				,ScenarioSmallPercent, ScenarioInterPercent, ScenarioLargePercent
+				,0.10 ScenarioCMPercent
+				,Ind, Small, Inter, Large
+				,SmGroupPercent, InterGroupPercent, LargeGroupPercent, CMPercent
+				,GeneratedBilledAmount, GeneratedOverageAmount
+				,ROUND((Ind+Small+Inter+Large)*0.10,2) CM
+			FROM (
+				select bsp.firstname, bsp.lastname, bs.bannerGNumber, bs.billingStartDate
+					,COALESCE(bs.adjustedDaysPerMonth,bs.maxDaysPerMonth) Enrollment
+					,ROUND(IFNULL(bsi.Attendance,0),2) Attendance, bsi.CRN
+	                ,IFNULL(bsi.Scenario,'Unassigned') Scenario, IFNULL(IndPercent,0) ScenarioIndPercent
+	                ,IFNULL(SmallPercent,0) ScenarioSmallPercent, IFNULL(InterPercent,0) ScenarioInterPercent
+	                ,IFNULL(LargePercent,0) ScenarioLargePercent
+					,ROUND(IFNULL(bsi.Attendance,0)*IFNULL(IndPercent,0),2) as Ind
+					,ROUND(IFNULL(bsi.Attendance,0)*IFNULL(SmallPercent,0),2) as Small
+					,ROUND(IFNULL(bsi.Attendance,0)*IFNULL(InterPercent,0),2) as Inter
+					,ROUND(IFNULL(bsi.Attendance,0)*IFNULL(LargePercent,0),2) as Large
+					,IFNULL(bs.SmGroupPercent,0.000) SmGroupPercent
+					,IFNULL(bs.InterGroupPercent,0.000) InterGroupPercent
+					,IFNULL(bs.LargeGroupPercent,0.000) LargeGroupPercent
+					,IFNULL(bs.CMPercent,0.000) CMPercent
+					,ROUND(IFNULL(bs.GeneratedBilledAmount,0),2) GeneratedBilledAmount
+					,ROUND(IFNULL(bs.GeneratedOverageAmount,0),2) GeneratedOverageAmount
+				from billingStudent bs
+					join billingStudentProfile bsp on bs.contactId = bsp.contactId
+					join billingStudentItem bsi on bs.BillingStudentID = bsi.BillingStudentID
+				    join keySchoolDistrict sd on bs.DistrictID = sd.keySchoolDistrictID
+				where bs.billingStudentId = <cfqueryparam value="#arguments.billingStudentId#">
+			) data
 		</cfquery>
 		<cfreturn data>
 	</cffunction>
@@ -751,11 +774,11 @@
 		</cfquery>
 		<cfreturn data>
 	</cffunction>
+
 	<cffunction name="getLastBillingGeneratedMessage" access="remote" returnformat="plain" returntype="String">
 		<cfargument name="billingType" required="true">
 		<cfargument name="programYear" required="true">
 		<cfargument name="includeTitle" default=true>
-		<!---><cfif arguments.billingType EQ "Term">--->
 
 		<cfif arguments.billingType EQ 'Term'>
 			<cfset isTerm = true>
@@ -766,7 +789,7 @@
 		<cfset reportTable = 'billingReportTerm'>
 		<cfinvoke component="LookUp" method="getNextTermToBill" returnvariable="nextTerm"></cfinvoke>
 		<cfquery name="maxDates">
-			SELECT MAX(r.dateCreated) maxGeneratedDate, MAX(Term) maxTerm, max(BillingStartDate) maxBillingStartDate
+			SELECT IFNULL(MAX(r.dateCreated),'1900-01-01') maxGeneratedDate, MAX(Term) maxTerm, max(BillingStartDate) maxBillingStartDate
 			FROM billingCycle bc
 				join billingReport r on bc.billingCycleId = r.billingCycleId
 			where programYear = <cfqueryparam value="#arguments.programYear#">
@@ -774,8 +797,10 @@
 				and term = #nextTerm#
 		</cfquery>
 		<cfquery name="lastChange"  >
-			SELECT Term, BillingStartDate, max(dateLastUpdated) lastUpdated
-			FROM billingStudent
+			SELECT bs.Term, bs.BillingStartDate
+				, GREATEST(max(bs.dateLastUpdated), max(bsi.dateLastUpdated)) lastUpdated
+			FROM billingStudent bs
+				join billingStudentItem bsi on bs.billingStudentId = bsi.billingStudentId
 			WHERE program <cfif isTerm>not</cfif> like '%attendance%'
 				AND Term = #nextTerm#
 			GROUP BY Term, BillingStartDate
@@ -833,7 +858,7 @@
 						</div>
 						<cfloop query="lastChange">
 						<div class="row" >
-							<span <cfif maxDates.maxGeneratedDate LT lastUpdated>style="color:red"</cfif>>
+							<span <cfif DateDiff("n", maxDates.maxGeneratedDate, lastUpdated) GT 1>style="color:red"</cfif>>
 							<cfif isTerm><div class="small-6 columns">#convertTerm(Term)#</div>
 							<cfelse><div class="small-6 columns">#dFmt(BillingStartDate)#</div></cfif>
 							<div class="small-6 columns">#dtFmt(lastUpdated)#</div>
@@ -847,6 +872,7 @@
 		</cfsavecontent>
 		<cfreturn msg>
 	</cffunction>
+
 	<cffunction name="getReportList" returntype="query" access="remote" returnformat="JSON">
 		<cfargument name="programYear" required="yes">
 		<cfargument name="billingType" required="yes">
@@ -865,6 +891,7 @@
 		</cfquery>
 		<cfreturn data>
 	</cffunction>
+
 	<cffunction name="getBillingCycle" access="remote">
 		<cfargument name="billingStartDate" required=true>
 		<cfargument name="billingType" required=true>
@@ -876,18 +903,19 @@
 		</cfquery>
 		<cfreturn data>
 	</cffunction>
+
 	<cffunction name="getMissingScenarioCount" access="remote">
 		<cfargument name="billingStartDate">
 
 		<cfquery name="data">
 			select distinct bsi.CRN
-from billingStudentItem bsi
-	join billingStudent bs on bsi.billingStudentId = bs.BillingStudentID
-	left outer join billingScenarioByCourse bsbc on bsi.crn = bsbc.crn and bs.term = bsbc.term
-where bs.term = (select max(term) from bannerCalendar where termBeginDate <= '2018-07-02')
-	and bsbc.crn is null
-	and bs.program like '%attendance%'
-order by bsi.CRN
+			from billingStudentItem bsi
+				join billingStudent bs on bsi.billingStudentId = bs.BillingStudentID
+				left outer join billingScenarioByCourse bsbc on bsi.crn = bsbc.crn and bs.term = bsbc.term
+			where bs.term = (select max(term) from bannerCalendar where termBeginDate <= '2018-07-02')
+				and bsbc.crn is null
+				and bs.program like '%attendance%'
+			order by bsi.CRN
 		</cfquery>
 	</cffunction>
 

@@ -96,16 +96,6 @@ h4{
 		if(program.indexOf('Attendance')>0)
 			url = 'ReportAttendance.cfm';
 		window.location=url+'?programYear=' + $('#programYear').val() + '&type=<cfoutput>#url.type#</cfoutput>&schooldistrict='+schooldistrict+'&program='+program;
-		/*sessionStorage.setItem('schooldistrict', schooldistrict);
-		sessionStorage.setItem('program', program);
-		sessionStorage.setItem('term', <cfoutput>#terms.CurrentTerm#</cfoutput>);
-		var data = $.param({data:encodeURIComponent(JSON.stringify(sessionStorage))});
-		var url = 'ReportTerm.cfm';
-		if(program.indexOf('Attendance')>0)
-			url = 'ReportAttendance.cfm'
-  		$.post("SaveSession.cfm", data, function(){
-	  		window.location=url;
-  		});*/
 	}
 	function saveValues(formName){
 	 	var $form = $('#'+formName);

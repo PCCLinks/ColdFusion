@@ -14,6 +14,12 @@
 <cfinvoke component="LookUp" method="getCurrentProgramYear" returnvariable="programYear"></cfinvoke>
 
 <style>
+table.dataTable thead th.tooltipformat {
+	color:gray;
+	font-size:x-small;
+	border-bottom-style:none;
+	padding-bottom:0px;
+}
 .dataTables_wrapper .dataTables_processing{
 	top: 30% !important;
 	height: 50px !important;
@@ -21,6 +27,9 @@
 }
 .dt-buttons{
 	float:right !important;
+}
+.filterEntry{
+	color:blue;
 }
 </style>
 
@@ -72,6 +81,16 @@
 				<table id="dt_table_list" class="hover" cellspacing="0" width="100%">
 					<caption class="visually-hide">"Program data"</caption>
 					<thead>
+						<tr><th colspan="3" class="tooltipformat">
+							<span data-tooltip aria-haspopup="true" class="has-tip" data-disable-hover="false" tabindex="1" title="Filter GNumber, Name or other entries by entering the information into the header boxes below." >Filter...</span>
+							</th>
+							<th colspan="3" class="tooltipformat">
+								<span data-tooltip aria-haspopup="true" class="has-tip" data-disable-hover="false" tabindex="1" title="Click row to see student detail" >Click row...</span>
+							</th>
+							<th colspan="5" class="tooltipformat">
+								<span data-tooltip aria-haspopup="true" class="has-tip" data-disable-hover="false" tabindex="1" title="Sort multiple columns by holding down the <shift> key while clicking sort icon ^." >Sort multiple columns...</span>
+							</th>
+						</tr>
 						<tr id="headerRow">
 							<th id="coach">Coach</th>
 							<th id="bannerGNumber">G</th>
@@ -87,19 +106,18 @@
 							<th id="BillingStudentId"></th>
 						</tr>
 						<tr id="searchRow">
-							<th><input type="text" placeholder="Coach"></th>
-							<th><input type="text" id="gNumberPlaceholder" placeholder="G" /></th>
-							<th><input type="text" id="firstNamePlaceholder" placeholder="First name" /></th>
-							<th><input type="text" id="lastNamePlaceholder" placeholder="Last name" /></th>
-							<th><input type="text" placeholder="School District" /></th>
-							<th><input type="text" placeholder="Program" /></th>
-							<th><input type="text" placeholder="Exit Date" /></th>
-							<th><input type="text" id="termPlaceholder" placeholder="Term" value="<cfoutput>#Variables.MaxTerm#</cfoutput>" /></th>
-							<!---><th><input type="text" placeholder="Term" value=<cfoutput>#Variables.MaxTerm#</cfoutput> /></th>--->
-							<th><input type="text" placeholder="Current Term Credits" /></th>
-							<th><input type="text" placeholder="Prev Term Credits" /></th>
-							<th><input type="text" id="billingStatusPlaceholder" placeholder="Billing Status" /></th>
-							<!---><th></th>--->
+							<th><input type="text" placeholder="Coach" class="filterEntry" ></th>
+							<th><input type="text" id="gNumberPlaceholder" placeholder="G" class="filterEntry" /></th>
+							<th><input type="text" id="firstNamePlaceholder" placeholder="First name" class="filterEntry" /></th>
+							<th><input type="text" id="lastNamePlaceholder" placeholder="Last name" class="filterEntry" /></th>
+							<th><input type="text" placeholder="School District" class="filterEntry" /></th>
+							<th><input type="text" placeholder="Program" class="filterEntry" /></th>
+							<th><input type="text" placeholder="Exit Date" class="filterEntry" /></th>
+							<th><input type="text" id="termPlaceholder" placeholder="Term" value="<cfoutput>#Variables.MaxTerm#</cfoutput>" class="filterEntry" /></th>
+							<th><input type="text" placeholder="Current Term Credits" class="filterEntry" /></th>
+							<th><input type="text" placeholder="Prev Term Credits" class="filterEntry" /></th>
+							<th><input type="text" id="billingStatusPlaceholder" placeholder="Billing Status" class="filterEntry" /></th>
+							<th></th>
 						</tr>
 					</thead>
 					<tbody>
@@ -204,6 +222,7 @@
 			table_list.columns().every( function () {
 				var that = this;
 				$( 'input', this.header() ).on( 'keyup change', function () {
+					table_list.search('').columns().search('').draw();
 					if (that.search() !== this.value ) {
 							that.search( this.value ).draw();
 					}

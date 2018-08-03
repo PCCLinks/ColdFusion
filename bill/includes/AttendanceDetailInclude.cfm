@@ -46,17 +46,17 @@ table.attendance thead th{
 			<td>#small#</td>
 			<td>#inter#</td>
 			<td>#large#</td>
-			<td>#cm#</td>
+			<td>#CM#</td>
 		</tr>
 	</cfoutput>
 	</tbody>
 	<tfoot>
 		<tr>
 			<cfquery dbtype="query" name="dataTotal">
-				select SmGroupPercent, InterGroupPercent, LargeGroupPercent, CMPercent, GeneratedBilledAmount, GeneratedOverageAmount
-					,sum(Enrollment) enrollment, sum(attendance) attendance, sum(ind) ind, sum(small) small, sum(inter) inter, sum(large) large, sum(cm) CM
+				select SmGroupPercent, InterGroupPercent, LargeGroupPercent, CMPercent, GeneratedBilledAmount, GeneratedOverageAmount, Enrollment
+					,sum(attendance) attendance, sum(ind) ind, sum(small) small, sum(inter) inter, sum(large) large, sum(CM) CM
 				from data
-				group by SmGroupPercent, InterGroupPercent, LargeGroupPercent, CMPercent, GeneratedBilledAmount, GeneratedOverageAmount
+				group by SmGroupPercent, InterGroupPercent, LargeGroupPercent, CMPercent, GeneratedBilledAmount, GeneratedOverageAmount, Enrollment
 			</cfquery>
 			<cfoutput query="dataTotal">
 			<td></td>
@@ -89,11 +89,11 @@ table.attendance thead th{
 		<tr>
 			<td>#crn#</td>
 			<td colspan="2">#Scenario#</td>
-			<td>#IndPercent#</td>
-			<td>#SmallPercent#</td>
-			<td>#InterPercent#</td>
-			<td>#LargePercent#</td>
-			<td>0.1</td>
+			<td>#ScenarioIndPercent#</td>
+			<td>#ScenarioSmallPercent#</td>
+			<td>#ScenarioInterPercent#</td>
+			<td>#ScenarioLargePercent#</td>
+			<td>#ScenarioCMPercent#</td>
 		</tr>
 	</cfoutput>
 	</tbody>
@@ -121,7 +121,7 @@ table.attendance thead th{
 			<td>#Small*SmGroupPercent#</td>
 			<td>#Inter*InterGroupPercent#</td>
 			<td>#Large*LargeGroupPercent#</td>
-			<td>#Enrollment*.1*CMPercent#</td>
+			<td>#CM*CMPercent#</td>
 		</cfoutput>
 		</tr>
 	</tbody>

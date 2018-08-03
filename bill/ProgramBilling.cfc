@@ -1,17 +1,6 @@
 <cfcomponent displayname="programbilling">
 
 	<cfobject name="appObj" component="application">
-	<!---><cffunction name="select" returntype="struct" access="remote">
-		<cfargument name="page" type="numeric" required="no" default="1">
-		<cfargument name="pageSize" type="numeric" required="no" default="10">
-		<cfargument name="gridsortcolumn" type="string" required="no" default="">
-		<cfargument name="gridsortdir" type="string" required="no" default="">
-		<cfargument name="program" default="YtC Credit">
-		<cfargument name="schooldistrict" default="Tigard/Tualatin">
-		<cfargument name="term" default="201701">
-		<cfset var data = yearlybilling(program=#arguments.program#, term=#arguments.term#, schooldistrict=#arguments.schooldistrict#) >
-		<cfreturn QueryConvertForGrid(data,  arguments.page, arguments.pageSize)>
-	</cffunction>--->
 
 
 	<cffunction name="getBillingStudentForYear" returntype="query" access="remote">
@@ -23,12 +12,7 @@
 			where billingStudentId = <cfqueryparam value="#arguments.billingStudentId#">
 		</cfquery>
 
-		<!--- make sure all is up to date --->
-		<cfstoredproc procedure="spBillingUpdateAttendanceBilling">
-			<cfprocparam value="#qryInfo.billingStartDate#" cfsqltype="CF_SQL_DATE">
-			<cfprocparam value="#Session.username#" cfsqltype="CF_SQL_STRING">
-			<cfprocresult name="qry">
-		</cfstoredproc>
+		<cfset appObj.logDump(label="qryInfo", value="#qryInfo#", level=5)>
 
 		<!--- main query --->
 		<cfquery name="data" >
@@ -168,12 +152,12 @@
 			WHERE bs.billingStudentId in (
 				SELECT MAX(BillingStudentId) billingStudentId
 				FROM billingStudent
+				WHERE includeFlag = 1
 				<cfif len(arguments.program) GT 0>
-				WHERE
 					<cfif arguments.program EQ 'YtC'>
-						bs.program like 'YtC%'
+						and bs.program like 'YtC%'
 					<cfelse>
-						bs.program = <cfqueryparam value="#arguments.program#">
+						and bs.program = <cfqueryparam value="#arguments.program#">
 					 </cfif>
 				</cfif>
 				GROUP BY ContactId, Program
