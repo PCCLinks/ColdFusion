@@ -6,7 +6,7 @@
 	<cfinvoke component="LookUp" method="getNextTermToBill" returnvariable="termToBill"></cfinvoke>
 	<cfset billingStartDate = ''>
 <cfelse>
-	<cfinvoke component="LookUp" method="getNextAttendanceDatesToBill" returnvariable="attendanceData"></cfinvoke>
+	<cfinvoke component="LookUp" method="getLastAttendanceDateClosed" returnvariable="attendanceData"></cfinvoke>
 	<cfset termToBill = attendanceData.Term>
 	<cfset billingStartDate = attendanceData.billingStartDate>
 </cfif>
@@ -125,8 +125,7 @@
 			 	}else{
 			 		setAttendanceDates($('#term').val(),'');
 			 	}
-		 	}
-	 	);
+		 });
 	});
 
 	function setTermDates(term){

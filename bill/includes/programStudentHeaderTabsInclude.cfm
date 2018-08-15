@@ -14,9 +14,6 @@
 <cfset Session.qryStudent = qryStudent>
 
 <!--- Start of UI --->
-
-
-
 <cfoutput>
 	<!-- Term/Month Header Tabs -->
 	<ul class="tabs" data-tabs id="term-header-tabs" >
@@ -77,6 +74,7 @@ function programStudentHeaderInit(){
 	})
 }
 function programStudentHeaderSaveEventHandler(e){
+	debugger;
 	if(e.caller != "programStudentHeaderTabsInclude"){
 		var billingStudentId = e.billingStudentId;
 		switch(e.field){

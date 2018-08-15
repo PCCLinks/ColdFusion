@@ -8,15 +8,22 @@
 	<cfset This.datasource = "pcclinks" />
 	<cfset This.sessiontimeout=createTimeSpan(0,2,0,0)>
 
-	<cfset Variables.cas_path="https://authenticate.pcc.edu/cas/">
+	<cfparam name="pcc_source" default='/pcclinks' />
+	<cfinclude template="#pcc_source#/includes/logfunctions.cfm">
+
+	<cfif CGI.SERVER_NAME EQ "intranettest.pcc.edu">
+		<cfset Variables.cas_path="https://authenticate-test.pcc.edu/cas/">
+	<cfelse>
+		<cfset Variables.cas_path="https://authenticate.pcc.edu/cas/">
+	</cfif>
  	<cfset Variables.app_path="https://" & CGI.SERVER_NAME & CGI.SCRIPT_NAME & "?" & CGI.QUERY_STRING>
  	<cfset Variables.cas_url=cas_path & "login?" & "service=" & app_path>
 
 	<cfparam name="url.ticket" default="">
 	<cfparam name="url.action" default="">
-	<cfparam name="pcc_source" default='/pcclinks' />
 
-	<cfinclude template="#pcc_source#/includes/logfunctions.cfm">
+	<cfparam name="errorEmailAddress" default="arlette.slachmuylder@pcc.edu" >
+
 
     <cffunction name="OnSessionStart">
 		<cfset logEntry(value="Global Application.cfc OnSessionStart", level=2)>
@@ -77,11 +84,15 @@
 
 		<cfreturn "true">
 	</cffunction>
-<!--->
+
 	<cffunction name="onError">
 		<cfargument name="exception" >
 		<cfargument name="thrownError" default="">
 		<cfargument name="eventname" type="string" >
+
+		<cfset Session.Exception = "" >
+		<cfset Session.ThrownError = "" >
+		<cfset Session.Error = "" >
 
 		<cfset var errortext = "">
 
@@ -140,12 +151,15 @@
 			    An error occurred:<br/>
 			    http://#cgi.server_name##cgi.script_name#?#cgi.query_string#<br />
 			    Time: #dateFormat(now(), "short")# #timeFormat(now(), "short")#<br /><br/>
+			    <cfif IsDefined("session.username")>
+				Username: #Session.username#
+				</cfif>
 
 			    <cfdump var="#arguments.exception#" >
 		    </cfoutput>
 		</cfsavecontent>
 		<cfif CGI.SERVER_NAME DOES NOT CONTAIN "intranettest" && CGI.SERVER_NAME DOES NOT CONTAIN "localhost">
-			<cfmail to="arlette.slachmuylder@pcc.edu" from="arlette.slachmuylder@pcc.edu" subject="PCC Links Future Connect Application Error" type="html">
+			<cfmail to="#errorEmailAddress#" from="#errorEmailAddress#" subject="PCC Links Application Error" type="html">
 				#errortext#
 			</cfmail>
 		</cfif>
@@ -157,7 +171,7 @@
 		   	<cflocation url="error.cfm">
 		</cfif>
 	</cffunction>
---->
+
 	<cffunction name="isAjaxCall" returntype="boolean">
 		<cfset Variables.reqData = getHTTPRequestData() >
 		<cfset logDump(label="HTTPRequestData", value="#Variables.reqData#", level=2)>
@@ -199,7 +213,7 @@
 				<cfset logEntry(value="Auth got search results", level=2)>
 				<cftry>
 					<!--- validate against valid app users --->
-					<cfquery name="qryUser" >
+					<cfquery name="qryUser" datasource="pcclinks">
 						select *
 						from applicationUser
 						where username = <cfqueryparam value="#username#">
@@ -245,13 +259,12 @@
 		<cfif not len(trim(session.username))>
 			<cfset username="arlette.slachmuylder">
 			<cfset logEntry(label="username", value="#username#")>
-			<cfquery name="qryUser" >
+			<cfquery name="qryUser" datasource="pcclinks" >
 				select *
 				from applicationUser
 				where username = <cfqueryparam value="#username#">
 			</cfquery>
-			<!---<cfset logEntry(value="Search results from CAS did not provide key information")>
-			<cfset Session.Error = "Search results from CAS did not provide key information">--->
+
 			<cfif qryUser.recordcount EQ 1>
 				<cfset logEntry(value=#username# & " logged in at " & #now()#)>
 		          	<cflock scope="session" timeout="30" type="exclusive">

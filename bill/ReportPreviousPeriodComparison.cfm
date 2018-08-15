@@ -1,7 +1,7 @@
 <cfinclude template="includes/header.cfm">
 
 <cfinvoke component="LookUp" method="getOpenBillingStartDates" returnvariable="billingDates"></cfinvoke>
-<cfinvoke component="LookUp" method="getLatesBillingStartDate" returnvariable="latestMonth"></cfinvoke>
+<cfinvoke component="LookUp" method="getLatestBillingStartDate" returnvariable="latestMonth"></cfinvoke>
 <cfparam name="selectedBillingDate" default="#latestMonth#">
 <cfif IsDefined("form.billingStartDate")>
 	<cfset selectedBillingDate = form.billingStartDate>

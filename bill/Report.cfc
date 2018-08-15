@@ -136,56 +136,7 @@
 		<cfreturn data>
 	</cffunction>
 
-	<cffunction name="attendanceReportDetail" access="remote">
-		<cfargument name="billingStudentId" required="true">
 
-		<cfquery name="billingStudent">
-			select *
-			from billingStudent
-			where billingStudentId = <cfqueryparam value="#arguments.billingStudentId#">
-		</cfquery>
-
-		<!--- make sure all is up to date --->
-		<cfstoredproc procedure="spBillingUpdateAttendanceBilling">
-			<cfprocparam value="#billingStudent.billingStartDate#" cfsqltype="CF_SQL_DATE">
-			<cfprocparam value="#Session.username#" cfsqltype="CF_SQL_STRING">
-		</cfstoredproc>
-
-		<cfquery name="data">
-			select firstname, lastname, bannerGNumber, billingStartDate
-				,Enrollment, Attendance, CRN, Scenario, ScenarioIndPercent
-				,ScenarioSmallPercent, ScenarioInterPercent, ScenarioLargePercent
-				,0.10 ScenarioCMPercent
-				,Ind, Small, Inter, Large
-				,SmGroupPercent, InterGroupPercent, LargeGroupPercent, CMPercent
-				,GeneratedBilledAmount, GeneratedOverageAmount
-				,ROUND((Ind+Small+Inter+Large)*0.10,2) CM
-			FROM (
-				select bsp.firstname, bsp.lastname, bs.bannerGNumber, bs.billingStartDate
-					,COALESCE(bs.adjustedDaysPerMonth,bs.maxDaysPerMonth) Enrollment
-					,ROUND(IFNULL(bsi.Attendance,0),2) Attendance, bsi.CRN
-	                ,IFNULL(bsi.Scenario,'Unassigned') Scenario, IFNULL(IndPercent,0) ScenarioIndPercent
-	                ,IFNULL(SmallPercent,0) ScenarioSmallPercent, IFNULL(InterPercent,0) ScenarioInterPercent
-	                ,IFNULL(LargePercent,0) ScenarioLargePercent
-					,ROUND(IFNULL(bsi.Attendance,0)*IFNULL(IndPercent,0),2) as Ind
-					,ROUND(IFNULL(bsi.Attendance,0)*IFNULL(SmallPercent,0),2) as Small
-					,ROUND(IFNULL(bsi.Attendance,0)*IFNULL(InterPercent,0),2) as Inter
-					,ROUND(IFNULL(bsi.Attendance,0)*IFNULL(LargePercent,0),2) as Large
-					,IFNULL(bs.SmGroupPercent,0.000) SmGroupPercent
-					,IFNULL(bs.InterGroupPercent,0.000) InterGroupPercent
-					,IFNULL(bs.LargeGroupPercent,0.000) LargeGroupPercent
-					,IFNULL(bs.CMPercent,0.000) CMPercent
-					,ROUND(IFNULL(bs.GeneratedBilledAmount,0),2) GeneratedBilledAmount
-					,ROUND(IFNULL(bs.GeneratedOverageAmount,0),2) GeneratedOverageAmount
-				from billingStudent bs
-					join billingStudentProfile bsp on bs.contactId = bsp.contactId
-					join billingStudentItem bsi on bs.BillingStudentID = bsi.BillingStudentID
-				    join keySchoolDistrict sd on bs.DistrictID = sd.keySchoolDistrictID
-				where bs.billingStudentId = <cfqueryparam value="#arguments.billingStudentId#">
-			) data
-		</cfquery>
-		<cfreturn data>
-	</cffunction>
 
 	<cffunction name="closeBillingCycle" access="remote">
 		<cfargument name="term" >
@@ -340,7 +291,7 @@
 				,FORMAT(sum(bsi.Attendance*IFNULL(LargePercent,0)),1) as LargeGrp
 				,FORMAT(sum(bsi.Attendance*IFNULL(InterPercent,0)),1) as InterGrp
 				,FORMAT(sum(bsi.Attendance*IFNULL(SmallPercent,0)),1) as SmallGrp
-				,FORMAT(CASE WHEN bs.AdjustedIndHours = 0 THEN sum(bsi.Attendance*IFNULL(IndPercent,0)) ELSE bs.AdjustedIndHours END,1) as Tutorial
+				,FORMAT(CASE WHEN IFNULL(bs.AdjustedIndHours,0) = 0 THEN sum(bsi.Attendance*IFNULL(IndPercent,0)) ELSE bs.AdjustedIndHours END,1) as Tutorial
 				,sum(bsi.Attendance) DaysPresent
 				,sum(bsi.MaxPossibleAttendance)-sum(bsi.Attendance) DaysAbsent
 				,bsYear.Program, bsYear.SchoolDistrict, bc.billingStartDate BeginDate, bc.BillingEndDate EndDate
@@ -352,6 +303,7 @@
 				from billingStudent bs
 					join billingStudentProfile bsp on bs.contactId = bsp.contactId
 					join keySchoolDistrict sd on bs.districtId = sd.keySchoolDistrictId
+					join billingStudentItem bsi on bs.BillingStudentID = bsi.BillingStudentID
 				where bs.billingStartDate <= <cfqueryparam value="#DateFormat(arguments.billingStartDate,'yyyy-mm-dd')#">
 					and bs.term in (select term from bannerCalendar where programYear = (select max(ProgramYear) from bannerCalendar where TermBeginDate <= <cfqueryparam value="#DateFormat(arguments.billingStartDate,'yyyy-mm-dd')#"> ))
 					and bs.includeFlag = 1
@@ -660,7 +612,7 @@
 			select bs.bannerGNumber, bsp.FirstName, bsp.LastName
 			from billingStudent bs
 				join billingStudentProfile bsp on bs.contactId = bsp.contactId
-				left outer join billingStudentItem bsi on bs.billingStudentId = bsi.billingStudentId
+				join billingStudentItem bsi on bs.billingStudentId = bsi.billingStudentId
 					and bsi.includeFlag = 1
 			where bs.billingStartDate = <cfqueryparam value="#DateFormat(arguments.billingStartDate,'yyyy-mm-dd')#">
 				and bs.program like '%attendance%'
@@ -788,23 +740,31 @@
 
 		<cfset reportTable = 'billingReportTerm'>
 		<cfinvoke component="LookUp" method="getNextTermToBill" returnvariable="nextTerm"></cfinvoke>
+		<cfif isTerm>
+			<cfinvoke component="LookUp" method="getNextTermToBill" returnvariable="nextTerm"></cfinvoke>
+			<cfset nextBillingStartDate = ''>
+		<cfelse>
+			<cfinvoke component="LookUp" method="getOpenAttendanceDates" returnvariable="attendanceData"></cfinvoke>
+			<cfset nextTerm = attendanceData.Term>
+			<cfset nextBillingStartDate = attendanceData.billingStartDate>
+		</cfif>
 		<cfquery name="maxDates">
 			SELECT IFNULL(MAX(r.dateCreated),'1900-01-01') maxGeneratedDate, MAX(Term) maxTerm, max(BillingStartDate) maxBillingStartDate
 			FROM billingCycle bc
 				join billingReport r on bc.billingCycleId = r.billingCycleId
 			where programYear = <cfqueryparam value="#arguments.programYear#">
 				and billingType = <cfqueryparam value="#arguments.billingType#">
+				<!---><cfif isTerm>
 				and term = #nextTerm#
+				<cfelse>
+				and billingStartDate = '#DateFormat(nextBillingStartDate, "yyyy-mm-dd")#'
+				</cfif>--->
 		</cfquery>
 		<cfquery name="lastChange"  >
-			SELECT bs.Term, bs.BillingStartDate
-				, GREATEST(max(bs.dateLastUpdated), max(bsi.dateLastUpdated)) lastUpdated
+			SELECT GREATEST(max(bs.dateLastUpdated), max(bsi.dateLastUpdated)) lastUpdated
 			FROM billingStudent bs
 				join billingStudentItem bsi on bs.billingStudentId = bsi.billingStudentId
 			WHERE program <cfif isTerm>not</cfif> like '%attendance%'
-				AND Term = #nextTerm#
-			GROUP BY Term, BillingStartDate
-			ORDER BY Term, BillingStartDate
 		</cfquery>
 		<cfquery name="billingCycle">
 			SELECT Term BillingTerm, BillingStartDate
@@ -833,38 +793,22 @@
 				</cfif>
 				<cfif billingCycle.recordCount EQ 0>
 					No Open Billing Periods<br>
+				</cfif>
+				<cfif maxDates.maxTerm EQ ''>
+				<b>No reports yet generated</b>
 				<cfelse>
-					<cfif maxDates.maxTerm EQ ''>
-					<b>No reports yet generated</b>
-					<cfelse>
-					<b>Report last generated for:</b>
-						<cfif isTerm>Term #convertTerm(maxDates.maxTerm)#
-						<cfelse>#dFmt(maxDates.maxBillingStartDate)#</cfif>
-						on <span style="color:blue">#dtFmt(maxDates.maxGeneratedDate)#</span>
-					</cfif>
+				<b>Report last generated for:</b>
+					<cfif isTerm>Term #convertTerm(maxDates.maxTerm)#
+					<cfelse>#dFmt(maxDates.maxBillingStartDate)#</cfif>
+					on <span style="color:blue">#dtFmt(maxDates.maxGeneratedDate)#</span>
 				</cfif>
 			</div>
 			<div class="callout primary">
 				<div class="row">
-					<div class="small-3 medium-3 columns">
-						<b>Last changes to billing:</b>
-					</div>
-					<div class="small-8 medium-9 columns">
-						<div class="row">
-							<b><div class="small-6 columns">
-								<cfif isTerm>Term<cfelse>Month</cfif>
-								</div>
-							<div class="small-6 columns">Date Changed</div></b>
-						</div>
-						<cfloop query="lastChange">
-						<div class="row" >
-							<span <cfif DateDiff("n", maxDates.maxGeneratedDate, lastUpdated) GT 1>style="color:red"</cfif>>
-							<cfif isTerm><div class="small-6 columns">#convertTerm(Term)#</div>
-							<cfelse><div class="small-6 columns">#dFmt(BillingStartDate)#</div></cfif>
-							<div class="small-6 columns">#dtFmt(lastUpdated)#</div>
-							</span>
-						</div>
-						</cfloop>
+					<div class="small-21 medium-12 columns">
+						<b>Last date changed:</b> <span <cfif DateDiff("n", maxDates.maxGeneratedDate, lastChange.lastUpdated) GT 1>style="color:red"</cfif>>
+						#dtFmt(lastChange.lastUpdated)#
+						</span>
 					</div>
 				</div>
 			</div>

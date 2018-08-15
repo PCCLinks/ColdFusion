@@ -12,8 +12,7 @@
 <cfif StructKeyExists(Form, "Error")>
 	<cfset error = UrlDecode(Form.Error)>
 </cfif>
-<!---<cfdump var="#SESSION#">
-<cfdump var="#FORM#">--->
+
 <div class="callout warning">
 <h5>Unexpected Error in the application. This error has been logged and IT staff notified.</h5>
 </div>

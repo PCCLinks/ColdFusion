@@ -152,7 +152,7 @@
 			WHERE bs.billingStudentId in (
 				SELECT MAX(BillingStudentId) billingStudentId
 				FROM billingStudent
-				WHERE includeFlag = 1
+				WHERE 1=1
 				<cfif len(arguments.program) GT 0>
 					<cfif arguments.program EQ 'YtC'>
 						and bs.program like 'YtC%'
@@ -988,4 +988,55 @@
 		<cfreturn data>
 	</cffunction>
 
+	<cffunction name="attendanceBillingDetail" access="remote">
+		<cfargument name="billingStudentId" required="true">
+
+		<cfquery name="billingStudent">
+			select *
+			from billingStudent
+			where billingStudentId = <cfqueryparam value="#arguments.billingStudentId#">
+		</cfquery>
+
+		<!--- make sure all is up to date --->
+		<cfstoredproc procedure="spBillingUpdateAttendanceBilling">
+			<cfprocparam value="#billingStudent.billingStartDate#" cfsqltype="CF_SQL_DATE">
+			<cfprocparam value="#Session.username#" cfsqltype="CF_SQL_STRING">
+			<cfprocparam value="#billingStudent.contactId#" cfsqltype="CF_SQL_INTEGER">
+		</cfstoredproc>
+
+		<cfquery name="data">
+			select firstname, lastname, bannerGNumber, billingStartDate
+				,Enrollment, Attendance, CRN, Scenario, ScenarioIndPercent
+				,ScenarioSmallPercent, ScenarioInterPercent, ScenarioLargePercent
+				,0.10 ScenarioCMPercent
+				,Ind, Small, Inter, Large
+				,SmGroupPercent, InterGroupPercent, LargeGroupPercent, CMPercent
+				,GeneratedBilledAmount, GeneratedOverageAmount
+				,ROUND((Ind+Small+Inter+Large)*0.10,2) CM
+			FROM (
+				select bsp.firstname, bsp.lastname, bs.bannerGNumber, bs.billingStartDate
+					,COALESCE(bs.adjustedDaysPerMonth,bs.maxDaysPerMonth) Enrollment
+					,ROUND(IFNULL(bsi.Attendance,0),2) Attendance, bsi.CRN
+	                ,IFNULL(bsi.Scenario,'Unassigned') Scenario, IFNULL(IndPercent,0) ScenarioIndPercent
+	                ,IFNULL(SmallPercent,0) ScenarioSmallPercent, IFNULL(InterPercent,0) ScenarioInterPercent
+	                ,IFNULL(LargePercent,0) ScenarioLargePercent
+					,ROUND(IFNULL(bsi.Attendance,0)*IFNULL(IndPercent,0),2) as Ind
+					,ROUND(IFNULL(bsi.Attendance,0)*IFNULL(SmallPercent,0),2) as Small
+					,ROUND(IFNULL(bsi.Attendance,0)*IFNULL(InterPercent,0),2) as Inter
+					,ROUND(IFNULL(bsi.Attendance,0)*IFNULL(LargePercent,0),2) as Large
+					,IFNULL(bs.SmGroupPercent,0.000) SmGroupPercent
+					,IFNULL(bs.InterGroupPercent,0.000) InterGroupPercent
+					,IFNULL(bs.LargeGroupPercent,0.000) LargeGroupPercent
+					,IFNULL(bs.CMPercent,0.000) CMPercent
+					,ROUND(IFNULL(bs.GeneratedBilledAmount,0),2) GeneratedBilledAmount
+					,ROUND(IFNULL(bs.GeneratedOverageAmount,0),2) GeneratedOverageAmount
+				from billingStudent bs
+					join billingStudentProfile bsp on bs.contactId = bsp.contactId
+					join billingStudentItem bsi on bs.BillingStudentID = bsi.BillingStudentID
+				    join keySchoolDistrict sd on bs.DistrictID = sd.keySchoolDistrictID
+				where bs.billingStudentId = <cfqueryparam value="#arguments.billingStudentId#">
+			) data
+		</cfquery>
+		<cfreturn data>
+	</cffunction>
 </cfcomponent>

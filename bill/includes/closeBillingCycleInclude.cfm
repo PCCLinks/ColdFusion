@@ -9,7 +9,7 @@
 <cfif isDefined('attributes.billingDates')>
 	<cfset billingDates = attributes.billingDates>
 <cfelse>
-	<cfinvoke component="pcclinks.bill.LookUp" method="getOpenAttendanceBillingStartDates" returnvariable="billingDates"></cfinvoke>
+	<cfinvoke component="pcclinks.bill.LookUp" method="getOpenAttendanceDates" returnvariable="billingDates"></cfinvoke>
 </cfif>
 
 <cfparam name="billingType" default="">

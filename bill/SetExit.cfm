@@ -147,6 +147,8 @@
             	if(color.length>0){
             		//find the cell for idx_sidnyExitDate and set the background to the specified color
     				$(row).find('td:eq(' + idx_grid_sidnyExitDate + ')').css('background-color', '"' + color +'"' );
+            	}else{
+            		$(row).find('td:eq(' + idx_grid_sidnyExitDate + ')').css('background-color', "" );
             	}
         	},
 	        scrollX:        true,
@@ -221,7 +223,7 @@
 		heading += '<b>Sec. Reason: </b>' + (selectedGridData[idx_grid_sidnySecondaryReason] ? selectedGridData[idx_grid_sidnySecondaryReason] : "") + '<br>';
 		heading += '<b>Exit Note: </b>' + (selectedGridData[idx_grid_sidnyExitNote] ? selectedGridData[idx_grid_sidnyExitNote] : "") + '</div>';
 		$("#selectedGNumber").html(heading);
-		populateStudent('<cfoutput>#programyear#</cfoutput>');
+		exitStudentInclude_populateStudent('<cfoutput>#programyear#</cfoutput>');
 	}
 
 

@@ -62,7 +62,7 @@
 
 
 <script>
-
+	<!-- from ProgramStudentDetail.cfm -->
 	function getStudent(billingStudentId, fnComplete, showNext){
 		if(showNext){
 			$('#nextButtons').css("display", "block");
@@ -115,16 +115,6 @@
 				})
 			});
 	}
-
-	<!---
-	function getAttendanceDetail(crn){
-		<cfoutput>window.open('AttendanceDetail.cfm?crn=' + crn + '&billingStartDate=#qryStudent.billingStartDate#');</cfoutput>
-	}--->
-
-
-
-
-
 
  </script>
 

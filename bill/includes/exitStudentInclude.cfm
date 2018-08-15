@@ -26,7 +26,7 @@ var ids;
 var selectedBillingStudentId;
 var customDialog;
 
-function populateStudent(programYear){
+function exitStudentInclude_populateStudent(programYear){
 	var htmlTabs = '';
 	var htmlTabContent = '';
 	var buildContent = [];
@@ -83,7 +83,7 @@ function getDetail(url){
 }
 
 
-function saveExitStudentValues(frmId){
+function exitStudentInclude_saveExitStudentValues(frmId){
  	var billingStudentId = frmId.replace('frm','');
 
  	//validate that we want to clear out this entry
@@ -135,6 +135,7 @@ function saveExitStudentValues(frmId){
 	}
 }
 function doSave(frmId){
+	//debugger;
 	var frm = $('#'+frmId);
  	var billingStudentId = frmId.replace('frm','');
 
@@ -175,7 +176,7 @@ function updateGridRow(billingStudentId){
 		}
 	}
 
-	selectedGridRow.data(selectedGridData);
+	selectedGridRow.data(selectedGridData).draw();
 	$('#billTab'+selectedGridData[idx_grid_billingStudentId]).click();
 
 }
@@ -246,13 +247,16 @@ function exitDateNotInBillingPeriod(billingStudentId){
 	var bEnd = getBillingEndDate(billingStudentId);
 	var exitDate = getExitDate(billingStudentId);
 
+	if(exitDate == ""){
+		return false;
+	}
 	if(exitDate < bStart || exitDate > bEnd){
 		return true;
 	}else{
 		return false;
 	}
 }
-function setBillableDays(billingStudentId){
+function exitStudentInclude_setBillableDays(billingStudentId){
 	selectedBillingStudentId = billingStudentId;
 	var billingStartDate = getBillingStartDate(billingStudentId);
 	var exitDate = getExitDate(billingStudentId);
@@ -278,6 +282,8 @@ function saveBillableDays(numDays){
 	customDialog.dialog( "close" );
 	$('#billabledays').css("display", "none");
 }
+
+
 
 </script>
 

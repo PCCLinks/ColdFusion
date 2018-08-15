@@ -15,7 +15,8 @@
 		<cfquery name="data" datasource="pcclinks">
 			select Term Term,
 				fnGetTermDescription(Term) TermDescription,
-			     billingStartDate
+			     billingStartDate,
+			     billingEndDate
 			from billingCycle
 			where billingCloseDate IS NULL
 				AND billingType = 'Term'
@@ -90,15 +91,6 @@
 		<cfreturn data>
 	</cffunction>
 
-	<cffunction name="getLastAttendancePeriodClosed" access="remote" returnType="date">
-		<cfquery datasource="pcclinks" name="data">
-			SELECT MAX(billingStartDate) billingStartDate
-			FROM billingCycle
-			WHERE billingCloseDate IS NOT NULL
-	        	and billingType = 'Attendance'
-		</cfquery>
-		<cfreturn data.billingStartDate>
-	</cffunction>
 	<cffunction name="getLastTermClosed" access="remote" >
 		<cfquery datasource="pcclinks" name="data">
 			select fnGetTermDescription(Term) TermDescription
@@ -134,7 +126,7 @@
 		</cfquery>
 		<cfreturn data>
 	</cffunction>
-	<cffunction name="getNextAttendanceDatesToBill" access="remote" >
+	<cffunction name="getLastAttendanceDateClosed" access="remote" >
 		<cfquery datasource="pcclinks" name="data">
 			SELECT MAX(billingStartDate) billingStartDate, max(Term) Term
 		  	FROM billingCycle
@@ -247,9 +239,9 @@
 		</cfquery>
 		<cfreturn data>
 	</cffunction>
-	<cffunction  name="getOpenAttendanceBillingStartDates" access="remote"  >
+	<cffunction  name="getOpenAttendanceDates" access="remote"  >
 		<cfquery name="data" >
-				SELECT billingStartDate
+				SELECT billingStartDate, billingEndDate, Term
 				FROM billingCycle
 				WHERE billingCloseDate IS NULL
 					AND billingType = 'attendance'
@@ -272,18 +264,16 @@
 	<cffunction  name="getOpenBillingStartDates" access="remote"  >
 		<cfquery name="data" >
 				SELECT distinct billingStartDate
-				FROM billingStudent
-				WHERE billingStatus IN ('IN PROGRESS', 'REVIEWED')
-					and includeFlag = 1
+				FROM billingCycle
+				WHERE billingCloseDate IS NULL
 				ORDER BY billingStartDate desc
 		</cfquery>
 		<cfreturn data>
 	</cffunction>
-	<cffunction name="getLatesBillingStartDate" access="remote" returntype="date">
+	<cffunction name="getLatestBillingStartDate" access="remote" returntype="date">
 		<cfquery name="data">
 			select max(billingStartDate) billingStartDate
-			from billingStudent
-			where includeFlag = 1
+			from billingCycle
 		</cfquery>
 		<cfreturn data.billingStartDate>
 	</cffunction>
@@ -308,13 +298,6 @@
 			WHERE billingType = 'attendance'
 				and billingCloseDate IS NULL
 		</cfquery>
-		<!---><cfif LEN(data.attendanceBillDate) EQ 0>
-			<cfquery name="data">
-				SELECT max(billingStartDate) attendanceBillDate
-				FROM billingCycle
-				WHERE billingType = 'attendance'
-			</cfquery>
-		</cfif>--->
 		<cfreturn data.attendanceBillDate>
 	</cffunction>
 	<cffunction name="getLatestDateAttendanceMonth" access="remote" returntype="date">
@@ -324,15 +307,6 @@
 				WHERE billingType = 'attendance'
 		</cfquery>
 		<cfreturn data.lastAttendanceBillDate>
-	</cffunction>
-	<cffunction name="getMaxBillingStartDateForTerm" access="remote" returnType="date">
-		<cfargument name="term" required="true">
-		<cfquery name="data">
-			select max(billingStartDate) maxBillingStartDate
-			from billingStudent
-			where term = <cfqueryparam value="#arguments.term#">
-		</cfquery>
-		<cfreturn data.maxBillingStartDate>
 	</cffunction>
 	<cffunction name="getAttendanceCRN" access="remote" returnFormat="json">
 		<cfargument name="billingStartDate" required="true">
@@ -350,16 +324,14 @@
 	<cffunction name="getFirstOpenAttendanceDates" access="remote">
 		<cfquery name="data">
 			select min(billingStartDate) billingStartDate
-				,min(bs.Term) Term
+				,min(bc.Term) Term
 			    ,min(billingEndDate) billingEndDate
 			    ,min(termBeginDate) TermBeginDate
 			    ,min(termDropDate) TermDropDate
 			    ,min(termEndDate) TermEndDate
-			from billingStudent bs
+			from billingCycle bc
 				join bannerCalendar bc on bs.term = bc.Term
-			WHERE program like '%attendance%'
-				and billingStatus IN ('IN PROGRESS', 'REVIEWED')
-				and includeFlag = 1
+			WHERE billingType like '%attendance%'
 		</cfquery>
 		<cfreturn data>
 	</cffunction>

@@ -1,6 +1,6 @@
 
 <cfinvoke component="pcclinks.bill.LookUp" method="getFirstOpenAttendanceDate" returnvariable="openAttendanceDate"></cfinvoke>
-<cfinvoke component="pcclinks.bill.LookUp" method="getLastAttendanceDateClosed" returnvariable="lastClosedAttendance"></cfinvoke>
+<cfinvoke component="pcclinks.bill.LookUp" method="getLastAttendancePeriodClosed" returnvariable="lastClosedAttendance"></cfinvoke>
 
 <cfinvoke component="pcclinks.bill.SetUpBilling" method="getStudentsNeedingBannerAttributes" returnvariable="attendanceStudentsNeedingBannerAttr">
 	<cfinvokeargument name="billingStartDate" value="#openAttendanceDate#">
@@ -51,7 +51,7 @@
 		No Billing In Progress
 		</cfif></b>
 	</li>
-	<li>Last Month Closed: <cfoutput>#DateFormat(lastClosedAttendance.billingStartDate,'yyyy-mm-dd')#</cfoutput></li>
+	<li>Last Month Closed: <cfoutput>#DateFormat(lastClosedAttendance,'yyyy-mm-dd')#</cfoutput></li>
 </ul>
 
 <cfif LEN(openAttendanceDate)>
@@ -259,13 +259,13 @@
 		 	}
 		 });
 	}
-	function showMissingAttrAttendance(){
-		if($('#missingAttrLinkAttendance').text() == linkMissingAttribShowAttendance){
-			$('#missingAttrLinkAttendance').text(linkMissingAttribHideAttendance);
-			$('#missingAttrAttendance').show();
+	function showMissingAttr(){
+		if($('#missingAttrLink').text() == linkMissingAttribShowAttendance){
+			$('#missingAttrLink').text(linkMissingAttribHideAttendance);
+			$('#missingAttr').show();
 		}else{
-			$('#missingAttrLinkAttendance').text(linkMissingAttribShowAttendance);
-			$('#missingAttrAttendance').hide();
+			$('#missingAttrLink').text(linkMissingAttribShowAttendance);
+			$('#missingAttr').hide();
 		}
 	}
 </script>
