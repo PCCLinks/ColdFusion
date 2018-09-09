@@ -53,7 +53,7 @@ function loadStudent(pidm, maxTerm, doSave){
 			bannerGNumber = rowData[colMap["BANNERGNUMBER"]];
 
 			$('#heading_studentname').html(rowData[colMap["STU_NAME"]] + "<br>" + rowData[colMap["STU_ID"]]);
-			$('#heading_studentdata').html('Overall GPA: ' + rowData[colMap["O_GPA"]] + '<br>Total Credits Earned: ' + rowData[colMap["O_EARNED"]]);
+			$('#heading_studentdata').html('Overall GPA: ' + replaceNull(rowData[colMap["O_GPA"]]) + '<br>Total Credits Earned: ' + replaceNull(rowData[colMap["O_EARNED"]]));
 
 			loadStudent_panelEdit(pidm, cohort);
 			loadStudent_panelDashboard(pidm, cohort, bannerGNumber);
@@ -62,6 +62,7 @@ function loadStudent(pidm, maxTerm, doSave){
 			handleAjaxError(jqXHR, exception, thrownError);
 		  }
 	});
+
 
 	//get data for registration heading
 	$.ajax({
@@ -88,10 +89,16 @@ function loadStudent(pidm, maxTerm, doSave){
 	});
 
 	//autosave every 5 minutes
-	saveInterval = 1000*60*5;
-	doSave = setInterval(saveStudentContent, saveInterval);
+	//saveInterval = 1000*60*5;
+	//doSave = setInterval(saveStudentContent, saveInterval);
 }
-
+function replaceNull(value){
+	if(value == null){
+		return "N/A";
+	}else{
+		return value;
+	}
+}
 function loadStudent_panelEdit(pidm, cohort){
 	$.ajax({
 		type: "POST",
@@ -118,7 +125,7 @@ function loadStudent_panelDashboard(pidm, cohort, bannerGNumber, doSave){
 
 function unloadStudent(doSave, functionToCall){
 	saveStudentContent(functionToCall);
-	clearInterval(doSave);
+	//clearInterval(doSave);
 }
 
 function loadStudent_panelDashboard_classesTable(pidm, cohort){
@@ -301,12 +308,29 @@ function studentUpdateContent(contactId){
 	url = "includes/multiselectcheckboxes.cfm?contactid=" + contactId + "&mscb_componentname=pcclinks.fc.fc&mscb_methodname=getEnrichmentProgramsWithAssignments&mscb_fieldName=enrichmentProgramId&mscb_description=Enrichment%20Program";
 	$('#enrichmentprograms').load(url, function(){$(this).foundation();});
 }
+
+function deleteStudent(contactId){
+	if (window.confirm("Are you sure you want to delete this student??")) {
+            $.ajax({
+            	url:'fc.cfc?method=deleteStudent&contactId='+contactId,
+            	type:'post',
+				success: function (data, textStatus, jqXHR) {
+			        showScreen(CASELOAD_DIV);
+			   	},
+			   	error: function (xhr, textStatus, thrownError) {
+					handleAjaxError(xhr, textStatus, thrownError);
+				}
+            });
+     }
+}
+
 function addZero($time) {
   if ($time < 10) {
     $time = "0" + $time;
   }
   return $time;
 }
+
 
 </script>
 

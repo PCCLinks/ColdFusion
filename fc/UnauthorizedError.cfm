@@ -1,4 +1,3 @@
-<!---<cfdump var=#Session#>--->
 <cfheader statuscode="600" statustext="Session Timeout.">
 <!doctype html>
 <html class="no-js" lang="en">

@@ -1,5 +1,3 @@
-<!---  <cfdump var=#Session#> --->
-
 <!doctype html>
 <html class="no-js" lang="en">
 
@@ -18,6 +16,9 @@
 	<li><a href="javascript:showScreen('dashboard');">Dashboard</a></li>
 	<li><a href="javascript:showScreen('caseload');">Caseload</a></li>
 	<li><a href="javascript:showScreen('report');">Report</a></li>
+	<cfif Session.userRole EQ "admin">
+		<li><a href="javascript:showScreen('import');">Import Applicants</a></li>
+	</cfif>
 </cfsavecontent>
 
 <!-- HEAD -->
@@ -34,6 +35,7 @@
 	<link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/v/dt/dt-1.10.15/b-1.3.1/b-colvis-1.3.1/b-html5-1.3.1/b-print-1.3.1/cr-1.3.3/fc-3.2.2/fh-3.1.2/kt-2.2.1/r-2.1.1/rg-1.0.0/sc-1.4.2/se-1.2.2/datatables.min.css"/>
 
 	 <link rel="stylesheet" href="https://cdn.datatables.net/select/1.2.5/css/select.dataTables.min.css" />
+	<link rel="stylesheet" href="<cfoutput>#pcc_source#</cfoutput>/css/vendor/jquery-ui.min.css" />
 
 	<cfoutput>#pcc_styles#</cfoutput>
 

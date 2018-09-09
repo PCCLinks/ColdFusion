@@ -373,6 +373,9 @@
 			</label>
 
 			<input name="submit" value="Save" class="success button" type="submit" />
+			<cfif Session.userRole EQ "admin">
+			<br><input name="deleteStudentInput" value="Delete" class="button alert" onClick="javascript:deleteStudent('<cfoutput>#caseload_banner.contactID#</cfoutput>');" style="width:75px"/>
+			</cfif>
 			<div id="savemessage"></div>
 		</div>
 		<!---- END COLUMN 3 --->

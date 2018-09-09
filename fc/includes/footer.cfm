@@ -20,6 +20,8 @@ const STUDENT_DIV = "student";
 const REPORT_DIV = "report";
 const DASHBOARD_DIV = "dashboard";
 const CASELOAD_DIV = "caseload";
+const IMPORT_PAGE = "import";
+
 const DT_TABLE = "dt_table_caseload";
 
 var loaded = [];
@@ -47,7 +49,6 @@ function checkLogin(){
 
 //NAVIGATION SHOWSCREEN
 function showScreen(screen){
-	document.cookie = 'pcclinks_fc_screen = ' + screen;
 	var url;
 	$("body").css("cursor", "wait");
 
@@ -64,16 +65,15 @@ function showScreen(screen){
 				if(screen == REPORT_DIV){
 					loadReport();
 				}
-				if(screen == DASHBOARD_DIV){
+				if(screen == DASHBOARD_DIV || screen == IMPORT_PAGE){
 					$.ajax({
 						type: "GET",
-						url: 'dashboard.cfm',
+						url: url,
 						success: function(data){
-							$('#'+DASHBOARD_DIV).html(data);
+							$('#'+screen).html(data);
 						}
 		  			});
 				}
-
 			    loaded.push(screen);
 			}
 
@@ -86,7 +86,6 @@ function showScreen(screen){
 
 			$('#' + screen).delay(500).fadeIn( 1000 );
 			$('#' + loadedScreen).css("display", "none");
-
 			loadedScreen = screen;
 			$("body").css("cursor", "default");
 		}

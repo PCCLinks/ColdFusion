@@ -59,6 +59,7 @@ input.gridfilter{
 <div id="student" style="display:none;"><cfinclude template="student.cfm"></div>
 <div id="report" style="display:none;"><cfinclude template="report.cfm"></div>
 <div id="dashboard" style="display:none;"></div>
+<div id="import" style="display:none;"></div>
 
 <cfsavecontent variable="pcc_scripts">
 <script >
@@ -88,6 +89,7 @@ input.gridfilter{
 	var idx_in_contract = 11;
 	var idx_pcc_email = 12;
 	var idx_flagged = 13;
+	var idx_deleteStatus = 14;
 
 	var currentIndex = 0;
 	var selectedPidm = 0;
@@ -119,6 +121,7 @@ input.gridfilter{
 				        handleAjaxError(xhr, textStatus, thrownError);
 					}
 			},
+
 			select: {
             	style: 'os',
             	selector: 'td:nth-child(10)'
@@ -127,7 +130,7 @@ input.gridfilter{
 			lengthMenu: [[10, 20, 50, 100, -1], [10, 20, 50, 100, "All"]],
 			order: [[ idx_coach, "asc" ],[idx_cohort, "desc"] ],
 			columnDefs: [
-         		{targets:[idx_in_contract,idx_pcc_email, idx_flagged], visible:false},
+         		{targets:[idx_in_contract,idx_pcc_email, idx_flagged, idx_deleteStatus], visible:false},
 
 				<!--server code determines:-->
 				<!--if user is a coach, show flag checkbox otherwise,  contactid column hidden-->
@@ -150,7 +153,11 @@ input.gridfilter{
 				 {targets:idx_pidm,
 				 	sortable:false,
 				 	render: function ( data, type, row, meta ) {
-                  				return '<a href="javascript:goToDetail(' + data + ', ' + row[idx_maxterm] +', ' + row[idx_contactid] + ', ' + meta.row + ')">Edit</a>';
+				 				if(row[idx_deleteStatus] == -1){
+				 					return '<span style="color:red">deleted</span>';
+				 				}else{
+	                  				return '<a href="javascript:goToDetail(' + data + ', \'' + row[idx_maxterm] +'\', ' + row[idx_contactid] + ', ' + meta.row + ')">Edit</a>';
+				 				}
              				}
 				 	}
 				],
@@ -225,6 +232,7 @@ input.gridfilter{
          	}
 
 		}); //end initialize
+
 	}
 
 	function initializeCaseload(){
@@ -299,7 +307,7 @@ input.gridfilter{
         	dt_caseload.draw();
     	} );
 
-    		//Custom filtering function which will search data in column four between two values
+    	//Custom filtering function which will search data in column four between two values
 		$.fn.dataTable.ext.search.push(
 		    function( settings, data, dataIndex ) {
 		    	if( $('#Credits').val().charAt(0) == ">"){

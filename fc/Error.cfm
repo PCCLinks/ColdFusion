@@ -14,8 +14,6 @@
 <cfif StructKeyExists(Form, "Error")>
 	<cfset error = UrlDecode(Form.Error)>
 </cfif>
-<!---<cfdump var="#SESSION#">
-<cfdump var="#FORM#">--->
 <div class="callout warning">
 <h5>Unexpected Error in the application. This error has been logged and IT staff notified.</h5>
 </div>
@@ -39,12 +37,6 @@
 		</div>
 	</li>
 	</cfif>
-	<li class="accordion-item" data-accordion-item>
-    	<a href="#Session" class="accordion-title">Session</a>
- 		<div class="accordion-content" data-tab-content>
-			<cfdump var="#Session#" label="Session">
-		</div>
-	</li>
 	<li class="accordion-item" data-accordion-item>
     	<a href="#Form" class="accordion-title">Form</a>
  		<div class="accordion-content" data-tab-content>

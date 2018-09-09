@@ -578,6 +578,9 @@ all the banner queries need to force a distinct by PIDM
 			, maxTermData.TERM as MaxTerm
 			, maxTermData.ASAP_STATUS
 
+			<!--- for managing deletes --->
+			, 0 as deleteStatus
+
 			FROM futureConnect_bannerPerson, maxTermData
 			WHERE maxTermData.STU_ID = futureConnect_bannerPerson.STU_ID
 			<!--- note this where clause needs to be here for caching purposes --->
@@ -647,7 +650,7 @@ all the banner queries need to force a distinct by PIDM
 		<cfquery dbtype="query" name="qryData" >
 			select contactID, stu_name, bannerGNumber, Cohort
 				,ASAP_status, statusinternal, Coach, maxterm, LastContactDate, O_EARNED
-				,pidm, in_contract, pcc_email, flagged
+				,pidm, in_contract, pcc_email, flagged, deleteStatus
 			from caseloaddata
 			<cfif arguments.contactId NEQ -1>
 			where contactID = <cfqueryparam value="#arguments.contactId#">
@@ -666,8 +669,6 @@ all the banner queries need to force a distinct by PIDM
 		</cfquery>
 		<cfreturn data>
 	</cffunction>
-
-
 
 	<cffunction name="getStudentTermMetrics" access="remote" returntype="query">
 		<cfargument name="bannerGNumber" required="yes" >
@@ -803,4 +804,190 @@ all the banner queries need to force a distinct by PIDM
 	<cffunction name="checkSessionTimeout" access="remote" returntype="boolean" returnformat="json">
 		<cfreturn false>
 	</cffunction>
+
+	<cffunction name="importApplicant" access="remote" returnformat="JSON" >
+		<cfargument name="BannerGNumber" require=true>
+		<cfargument name="Coach" required=true>
+		<cfargument name="Cohort" required=true>
+		<cfargument name ="FundedBy" required=true>
+		<cfargument name ="PreferredName">
+		<cfargument name ="Gender">
+		<cfargument name ="livingSituationDescription">
+		<cfargument name ="CellPhone" >
+		<cfargument name ="Phone2">
+		<cfargument name ="EmailPersonal">
+
+		<cfset appObj.logDump(label="arguments", value="#arguments#", level=5)>
+
+		<cfset resultStatus = "">
+		<cfif LEN(arguments.bannerGNumber) EQ 0>
+			<cfset resultStatus = "Missing G Number">
+			<cfset contactId = 0>
+		<cfelse>
+			<cftry>
+
+				<cfquery name="checkForContact">
+					select contactId
+					from contact
+					where bannerGNumber = <cfqueryparam value="#arguments.BannerGNumber#">
+				</cfquery>
+				<cfif checkForContact.recordCount EQ 0>
+					<cfquery name="insertContact" result="inserted">
+						insert into contact(bannerGNumber, emailPcc, contactRecordStart, contactRecordLast) values(<cfqueryparam value="#BannerGNumber#">,'', sysdate(), sysdate())
+					</cfquery>
+					<cfset contactId = inserted.GENERATEDKEY>
+				<cfelse>
+					<cfset contactId = #checkForContact.contactId#>
+				</cfif>
+
+				<cfquery name="checkForApplicant">
+					select contactId
+					from futureConnect
+					where contactId = #contactId#
+				</cfquery>
+
+				<cfif checkForApplicant.recordCount GT 0>
+					<cfquery name="update">
+						update futureConnect
+							SET cohort = <cfqueryparam value="#arguments.cohort#">
+							, coach = <cfqueryparam value="#arguments.coach#">
+							, FundedBy = <cfqueryparam value="#arguments.FundedBy#">
+							<!--- GNumber here due to developer errors than needed in production --->
+							, BannerGNumber = <cfqueryparam value="#arguments.BannerGNumber#">
+							, lastUpdatedBy = '#Session.username#'
+							, dateLastupdated = sysdate()
+						<cfif structKeyExists(arguments, "PreferredName")>
+							, PreferredName = <cfqueryparam value="#arguments.PreferredName#">
+						</cfif>
+						<cfif structKeyExists(arguments, "Gender")>
+							, Gender = <cfqueryparam value="#arguments.Gender#">
+						</cfif>
+						<cfif structKeyExists(arguments, "CellPhone")>
+							, CellPhone = <cfqueryparam value="#arguments.CellPhone#">
+						</cfif>
+						<cfif structKeyExists(arguments, "Phone2")>
+							, Phone2 = <cfqueryparam value="#arguments.Phone2#">
+						</cfif>
+						<cfif structKeyExists(arguments, "EmailPersonal")>
+							, EmailPersonal = <cfqueryparam value="#arguments.EmailPersonal#">
+						</cfif>
+						where contactId = #contactId#
+					</cfquery>
+					<cfset result = [#arguments.bannerGNumber#, "updated"]>
+					<cfset resultStatus = "updated">
+				<cfelse>
+					<cfquery name="insert">
+						insert into futureConnect(
+							contactId
+							, bannerGNumber
+							, cohort
+							, FundedBy
+							, coach
+							, createdBy
+							, dateCreated
+							, lastUpdatedBy
+							, dateLastUpdated
+							<cfif structKeyExists(arguments, "PreferredName")>, preferredName</cfif>
+							<cfif structKeyExists(arguments, "Gender")>, Gender</cfif>
+							<cfif structKeyExists(arguments, "CellPhone")>, CellPhone</cfif>
+							<cfif structKeyExists(arguments, "Phone2")>, Phone2</cfif>
+							<cfif structKeyExists(arguments, "EmailPersonal")>, EmailPersonal</cfif>
+							)
+						values (
+							#contactId#
+							, <cfqueryparam value="#arguments.BannerGNumber#">
+							, <cfqueryparam value="#arguments.cohort#">
+							, <cfqueryparam value="#arguments.FundedBy#">
+							, <cfqueryparam value="#arguments.Coach#">
+							, '#session.username#'
+							, sysdate()
+							, '#session.username#'
+							, sysdate()
+							<cfif structKeyExists(arguments, "PreferredName")>, <cfqueryparam value="#arguments.PreferredName#"></cfif>
+							<cfif structKeyExists(arguments, "Gender")>, <cfqueryparam value="#arguments.Gender#"></cfif>
+							<cfif structKeyExists(arguments, "CellPhone")>, <cfqueryparam value="#arguments.CellPhone#"></cfif>
+							<cfif structKeyExists(arguments, "Phone2")>, <cfqueryparam value="#arguments.Phone2#"></cfif>
+							<cfif structKeyExists(arguments, "EmailPersonal")>, <cfqueryparam value="#arguments.EmailPersonal#"></cfif>
+						)
+					</cfquery>
+					<cfset result= [#arguments.bannerGNumber#, "inserted"]>
+					<cfset resultStatus = "inserted">
+				</cfif>
+
+				<cfif structKeyExists(arguments, "livingSituationDescription")>
+					<cfset arrayLivSit = arguments.livingSituationDescription.split(",") >
+					<cfset appObj.logDump(label="arrayLivSit", value="#arrayLivSit#", level=5)>
+					<cfquery name="deleteExistingLivingSit">
+						delete from livingSituationContact
+						where contactId = #contactId#
+					</cfquery>
+					<cfloop array="#arrayLivSit#" item="livSitDesc" >
+						<cfset appObj.logEntry(value="#Trim(livSitDesc)#", level=5)>
+						<cfquery name="insertLivingSit">
+							insert into livingSituationContact(tableName, contactId, livingSituationId, activeFlag, createdBy, dateCreated, lastUpdatedBy, dateLastUpdated)
+							select 'futureConnect', #contactId#, livingSituationId, 1, '#session.username#', sysdate(), '#session.username#', sysdate()
+							from livingSituation
+							where livingSituationDescription like '#Trim(livSitDesc)#%'
+						</cfquery>
+					</cfloop>
+				</cfif>
+				<cfcatch>
+					<cfset resultStatus = "ERROR: #cfcatch.message#">
+					<cfset appObj.logDump(label="importApplicantError for #arguments.bannerGNumber#:", value="#cfcatch#") >
+				</cfcatch>
+			</cftry>
+		</cfif>
+
+		<cfquery name="result">
+			select d.BannerGNumber, '#resultStatus#' as Status, Coach, FundedBy, PreferredName, Gender, CellPhone, Phone2, EmailPersonal
+				, group_concat(livingSituationDescription order by livingSituationDescription) livingSituationDescription
+			from
+			<!--- built to guarantee return of GNumber,  if nothing inserted due to failure --->
+			(select <cfqueryparam value="#arguments.bannerGNumber#"> BannerGNumber) d
+				left outer join futureConnect on futureConnect.contactId = #contactId#
+				left outer join livingSituationContact on futureConnect.contactId = livingSituationContact.contactId
+				left outer join livingSituation on livingSituationContact.livingSituationId = livingSituation.livingSituationId
+				left outer join enrichmentProgramContact on futureConnect.contactId = enrichmentProgramContact.contactId
+				left outer join enrichmentProgram on enrichmentProgramContact.enrichmentProgramId = enrichmentProgram.enrichmentProgramId
+			group by BannerGNumber, PreferredName, Gender, CellPhone, Phone2
+		</cfquery>
+		<cfreturn result>
+	</cffunction>
+
+	<cffunction name="deleteStudent" access="remote">
+		<cfargument name="contactId" required=true>
+
+		<cfset appObj.logEntry(value="function deleteStudent", level=5)>
+
+		<cfquery name="insertIntoDeleted">
+			insert into futureConnectDeleted(BannerGNumber, contactID, PreferredName, cohort_old, FundedBy
+										,StatusInternal ,ExitReason ,Gender, Coach, CellPhone, Phone2
+										,EmailPersonal ,ParentalStatus ,WeeklyWorkHours ,flagged
+										,CreatedBy ,DateCreated ,LastUpdatedBy, DateLastUpdated
+										,CareerPlan ,cohort)
+			select BannerGNumber, contactID, PreferredName, cohort_old, FundedBy
+					,StatusInternal ,ExitReason ,Gender, Coach, CellPhone, Phone2
+					,EmailPersonal ,ParentalStatus ,WeeklyWorkHours ,flagged
+					,CreatedBy ,DateCreated ,LastUpdatedBy, DateLastUpdated
+					,CareerPlan ,cohort
+			from futureConnect
+			where contactId = <cfqueryparam value="#arguments.contactId#">
+		</cfquery>
+		<cfquery name="delete">
+			delete from futureConnect
+			where contactId = <cfqueryparam value="#arguments.contactId#">
+		</cfquery>
+
+		<cfset appObj.logEntry(value="function deleteStudent delete done", level=5)>
+
+		<cfset caseloaddata = getCaseload()>
+		<cfloop query="caseloaddata">
+			<cfif arguments.contactID EQ caseloaddata.contactID>
+				<cfset QuerySetCell(caseloaddata, 'deleteStatus', -1, caseloaddata.currentRow)>
+				<cfset appObj.logDump(label="deleted row", value="#caseloaddata.currentRow#",level=5)>
+			</cfif>
+		</cfloop>
+
+	</cffunction>
+
 </cfcomponent>
