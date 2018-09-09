@@ -20,6 +20,7 @@
 </cfif>
 <cfparam name="openBillingStartDate" default="">
 <cfif isDefined('url.openBillingStartDate')><cfset openBillingStartDate = url.openBillingStartDate></cfif>
+<cfif isDefined('attributes.openBillingStartDate')><cfset openBillingStartDate = attributes.openBillingStartDate></cfif>
 
 <cfparam name="divIdName" default="closeBillingCycle">
 <cfparam name="showCancelButton" default=false>

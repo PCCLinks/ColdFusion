@@ -7,17 +7,14 @@
 	<cfset Variables.selectedCRN = Session.selectedCRN>
 </cfif>
 
-<cfinvoke component="LookUp" method="getCurrentYearTerms" returnvariable="qryTerms"></cfinvoke>
 
 <cfif url.type EQ 'Term'>
-	<cfinvoke component="LookUp" method="getNextTermToBill" returnvariable="term"></cfinvoke>
-	<cfset billingStartDate = ''>
+	<cfinvoke component="LookUp" method="getYTDTerms" returnvariable="qryTerms"></cfinvoke>
+	<cfinvoke component="LookUp" method="getOpenTerms" returnvariable="qryOpenTerm"></cfinvoke>
 <cfelse>
-	<cfinvoke component="LookUp" method="getLastAttendanceDateClosed" returnvariable="attendanceData"></cfinvoke>
-	<cfset term = attendanceData.Term>
-	<cfset billingStartDate = attendanceData.billingStartDate>
+	<cfinvoke component="LookUp" method="getYTDBillingStartDates" returnvariable="qrybillingStartDates"></cfinvoke>
+	<cfinvoke component="LookUp" method="getFirstOpenAttendanceDate" returnvariable="openAttendanceDate"></cfinvoke>
 </cfif>
-
 
 <cfinvoke component="LookUp" method="getPrograms" returnvariable="qryPrograms"></cfinvoke>
 
@@ -48,51 +45,47 @@
 <div id="addStudent" style="display:none">
 	<div class="callout primary">
 		<div class="row">
+			<div class="small-2 columns">
+				Add Student:
+			</div>
+			<div class="small-10 columns">
+			<input id="bannerGNumber" name="bannerGNumber" type="text" readonly style="max-width:25%;display:inline-block" >
+			</div>
+		</div>
+		<div class="row">
+			<cfif url.type EQ 'Term'>
+			<div class="small-2 columns">
+				Term:
+			</div>
+			<div class="small-10 columns">
+				<select name="term" id="term" >
+					<option disabled selected value="" >
+						--Select Term--
+					</option>
+					<cfoutput query="qryTerms">
+					<option  value="#term#" <cfif term EQ qryOpenTerm.Term>selected</cfif> >#termDescription#</option>
+					</cfoutput>
+				</select>
+			</div>
+			<cfelse>
+			<div class="small-2 columns" >
+				Billing Start Date:
+			</div>
+			<div class="small-3 columns">
+				<select name="billingStartDate" id="billingStartDate" >
+					<option disabled selected value="" >
+						--Select Billing Start Date --
+					</option>
+					<cfoutput query="qryBillingStartDates">
+					<option  value="#billingStartDate#" <cfif billingStartDate EQ openAttendanceDate>selected</cfif> >#DateFormat(billingStartDate,'mm-dd-yy')#</option>
+					</cfoutput>
+				</select>
+			</div>
+			<div class="small-7 columns" id="crnselect"></div>
+			</cfif>
+		</div>
+		<div class="row">
 			<div class="small-12 columns">
-				Add Student: <input id="bannerGNumber" name="bannerGNumber" type="text" readonly style="max-width:25%;display:inline-block" >
-			</div>
-		</div>
-		<div class="row">
-			<div class="small-3 columns">
-				<label>Term:<br/>
-					<select name="term" id="term" >
-						<option disabled selected value="" >
-							--Select Term--
-						</option>
-						<cfoutput query="qryTerms">
-						<option  value="#term#" <cfif qryTerms.term EQ term>selected</cfif> >#termDescription#</option>
-						</cfoutput>
-					</select>
-				</label>
-			</div>
-			<div class="small-3 columns">
-				<label>Term Begin Date:<br/>
-					<input name="termBeginDate" id="termBeginDate" type="text"  readonly="true" />
-				</label>
-			</div>
-			<div class="small-3 columns">
-				<label>Term Drop Date:<br/>
-					<input name="termDropDate" id="termDropDate" type="text" readonly="true" />
-				</label>
-			</div>
-			<div class="small-3 columns"></div>
-		</div>
-		<div class="row">
-			<div class="small-3 columns">
-				<label>Billing Start Date:<br/>
-					<input name="billingStartDate" id="billingStartDate" type="text" class="fdatepicker" />
-				</label>
-			</div>
-			<div class="small-3 columns">
-				<label>Billing End Date:<br/>
-					<input name="billingEndDate" id="billingEndDate" type="text" class="fdatepicker" />
-				</label>
-			</div>
-			<div class="small-6 columns"></div>
-		</div>
-		<div class="row">
-			<div class="small-3 columns" id="crnselect"></div>
-			<div class="small-9 columns">
 				<br><input class="button" type="submit" name="submit" value="Add Student to Billing" onClick="javascript:addStudentToBilling();" id="addStudentToBilling"/>
 				<input class="button" value="New Search" onClick="javascript:newSearch();" id="newSearch">
 			</div>
@@ -179,20 +172,20 @@
 
 		<cfoutput>
 		billingType = '#url.type#';
-		if(billingType == 'Term'){
-			setTermDates('#term#');
+		<!---if(billingType == 'Term'){
+			setTermDates('#openTerm#');
 		}else{
 			setAttendanceDates('#term#','#billingStartDate#');
-		}
+		}--->
 		</cfoutput>
 
-		 $('#term').on('change', function(e) {
+		/* $('#term').on('change', function(e) {
 			 if(billingType == 'Term'){
 			 	setTermDates($('#term').val());
 			 }else{
 			 	setAttendanceDates($('#term').val(),'');
 			 }
-		  });
+		  });*/
 	})
 	//end document ready
 
@@ -295,12 +288,17 @@
 			crn = $('#crn').val();
 		}
 
+		var d = {};
+		if(billingType == 'Term'){
+	 		d = {bannerGNumber:$('#bannerGNumber').val(), term:$('#term').val(), billingType: billingType};
+    	}else{
+    		d = {bannerGNumber:$('#bannerGNumber').val(), billingStartDate:$('#billingStartDate').val(), crn: crn, billingType: billingType}
+    	}
+
         $.ajax({
             url: "setUpBilling.cfc?method=addBillingStudent",
             type:'post',
-            data:{bannerGNumber:$('#bannerGNumber').val(), term:$('#term').val(),
-            		billingStartDate:$('#billingStartDate').val(), billingEndDate:$('#billingEndDate').val(),
-            		crn: crn, billingType: billingType},
+            data:d,
             dataType: 'json',
             async:false,
             success: function(billingStudentId){
@@ -319,73 +317,14 @@
         	window.location = returnPage;
         }
     }
-	function setTermDates(term){
-        var url = 'LookUp.cfc?method=getBannerCalendarEntry&term=' + term;
-        $.ajax({
-            url: url,
-            dataType: 'json',
-            success: function(termData){
-            	$.each(termData.COLUMNS, function(index, col){
-            		v = termData.DATA[0][index];
-            		switch(col){
-            			case "TERMBEGINDATE":
-            				$("#termBeginDate").val(v);
-            				$("#billingStartDate").val(v);
-            				break;
-            			case "TERMENDDATE":
-            				$("#termEndDate").val(v);
-            				$("#billingEndDate").val(v);
-            				break;
-            			case "TERMDROPDATE":
-            				$("#termDropDate").val(v);
-            				break;
-            		}
-            	});
-            },
-            error: function (jqXHR, exception) {
-					handleAjaxError(jqXHR, exception);
-			}
-        })
-   	}
-   	function setAttendanceDates(term, billingStartDate){
-		selectedTerm = term;
-        var url = 'LookUp.cfc?method=getAttendanceDatesToBill&term=' + term;
-        if(billingStartDate.length > 0){
-        	url = url  + '&billingStartDate=' + billingStartDate;
-        }
-        $.ajax({
-            url: url,
-            dataType: 'json',
-            success: function(termData){
-            	$.each(termData.COLUMNS, function(index, col){
-            		v = termData.DATA[0][index];
-            		switch(col){
-            			case "TERMBEGINDATE":
-            				$("#termBeginDate").val(v);
-            				break;
-            			case "TERMENDDATE":
-            				$("#termEndDate").val(v);
-            				break;
-            			case "TERMDROPDATE":
-            				$("#termDropDate").val(v);
-            				break;
-            			case "NEXTBEGINDATE":
-            				$("#billingStartDate").val(v);
-            				break;
-            			case "NEXTENDDATE":
-            				$("#billingEndDate").val(v);
-            				break;
-            			case "MAXBILLABLEDAYSPERBILLINGPERIOD":
-            				$("#MaxBillableDaysPerBillingPeriod").val(v);
-            				break;
-            		}
-            	});
-            },
-            error: function (jqXHR, exception) {
-					handleAjaxError(jqXHR, exception);
-			}
-        })
-   	}
+    function getData(){
+    	if(billingType == 'Term'){
+	 		return {bannerGNumber:$('#bannerGNumber').val(), term:$('#term').val(), billingType: billingType};
+    	}else{
+    		return {bannerGNumber:$('#bannerGNumber').val(), billingStartDate:$('#billingStartDate').val(), crn: crn, billingType: billingType}
+    	}
+    }
+
 	function refreshTable(){
 		sidnyTable.ajax.reload();
 		bannerPersonTable.ajax.reload();
@@ -412,6 +351,9 @@
     	}).done(function(data) {
         	$("#crnselect").html(data);
     	});
+	}
+	function getCRNChanged(){
+		crn = $('#crn').val();
 	}
 
 

@@ -707,22 +707,30 @@
 	<!--- used by AddStudent.cfm --->
 	<cffunction name="addBillingStudent" returnformat="json" access="remote">
 		<cfargument name="bannerGNumber" default="" required="true">
-		<cfargument name = "billingStartDate" type="date" required="true">
-		<cfargument name = "billingEndDate">
+		<cfargument name = "billingStartDate" type="date" >
+		<!---><cfargument name = "billingEndDate">--->
 		<cfargument name="crn" >
 		<cfargument name= "term" >
 		<cfargument name="billingType" required=true>
 
-		<cfif not isDefined('arguments.billingEndDate')>
-			<cfquery name="billingDate">
+		<cfif billingType EQ 'Term'>
+			<cfquery name="billingCycle">
+				select *
+				from billingCycle
+				where term = <cfqueryparam value="#arguments.term#">
+					and billingType = 'Term'
+			</cfquery>
+		<cfelse>
+			<cfquery name="billingCycle">
 				select *
 				from billingCycle
 				where billingStartDate = <cfqueryparam value="#DateFormat(arguments.billingStartDate,'yyyy-mm-dd')#">
-					and billingType = <cfqueryparam value="#arguments.billingType#">
+					and billingType = 'Attendance'
 			</cfquery>
-			<cfset arguments.billingEndDate = billingDate.billingEndDate>
-			<cfset arguments.term = billingDate.term>
 		</cfif>
+		<cfset arguments.billingStartDate = billingCycle.billingStartDate>
+		<cfset arguments.billingEndDate = billingCycle.billingEndDate>
+		<cfset arguments.term = billingCycle.term>
 
 		<!---wide range of dates to force getting of student event if has exited --->
 		<cfset studentQry = getStudents(endDate="2999-12-31", beginDate="2000-01-01", bannerGNumber = #arguments.bannerGNumber#) >
@@ -777,6 +785,14 @@
 
 				</cfif> <!--- end rows to insert --->
 			</cfif>
+
+			<!--- make sure all is up to date --->
+			<cfstoredproc procedure="spBillingUpdateAttendanceBilling">
+				<cfprocparam value="#arguments.billingStartDate#" cfsqltype="CF_SQL_DATE">
+				<cfprocparam value="#Session.username#" cfsqltype="CF_SQL_STRING">
+				<cfprocparam value="#contactRow.contactId#" cfsqltype="CF_SQL_INTEGER">
+			</cfstoredproc>
+
 			<cfreturn local.billingStudentId>
 		<cfelse>
 			<cfreturn [local.billingStudentId, local.errorMsg]>

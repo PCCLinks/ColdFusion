@@ -2,29 +2,30 @@
 <cfinvoke component="pcclinks.bill.LookUp" method="getFirstOpenAttendanceDate" returnvariable="openAttendanceDate"></cfinvoke>
 <cfinvoke component="pcclinks.bill.LookUp" method="getLastAttendanceDateClosed" returnvariable="lastClosedAttendance"></cfinvoke>
 
-<cfinvoke component="pcclinks.bill.SetUpBilling" method="getStudentsNeedingBannerAttributes" returnvariable="attendanceStudentsNeedingBannerAttr">
-	<cfinvokeargument name="billingStartDate" value="#openAttendanceDate#">
-	<cfinvokeargument name="billingType" value="attendance">
-</cfinvoke>
+<cfif isDefined("openAttendanceDate") and openAttendanceDate NEQ "">
+	<cfinvoke component="pcclinks.bill.SetUpBilling" method="getStudentsNeedingBannerAttributes" returnvariable="attendanceStudentsNeedingBannerAttr">
+		<cfinvokeargument name="billingStartDate" value="#openAttendanceDate#">
+		<cfinvokeargument name="billingType" value="attendance">
+	</cfinvoke>
 
-<cfinvoke component="pcclinks.bill.Report" method="getAttendanceEnteredByStudent" returnvariable="attendanceEnteredByStudent">
-	<cfinvokeargument name="billingStartDate" value="#openAttendanceDate#">
-</cfinvoke>
+	<cfinvoke component="pcclinks.bill.Report" method="getAttendanceEnteredByStudent" returnvariable="attendanceEnteredByStudent">
+		<cfinvokeargument name="billingStartDate" value="#openAttendanceDate#">
+	</cfinvoke>
 
-<cfinvoke component="pcclinks.bill.Report" method="getAttendanceEnteredByClass" returnvariable="attendanceEnteredByClass">
-	<cfinvokeargument name="billingStartDate" value="#openAttendanceDate#">
-</cfinvoke>
+	<cfinvoke component="pcclinks.bill.Report" method="getAttendanceEnteredByClass" returnvariable="attendanceEnteredByClass">
+		<cfinvokeargument name="billingStartDate" value="#openAttendanceDate#">
+	</cfinvoke>
 
-<cfinvoke component="pcclinks.bill.Report" method="getClassesNoHours" returnvariable="classesNoHours">
-	<cfinvokeargument name="billingStartDate" value="#openAttendanceDate#">
-</cfinvoke>
-<cfinvoke component="pcclinks.bill.Report" method="getStudentsNoHours" returnvariable="studentsNoHours">
-	<cfinvokeargument name="billingStartDate" value="#openAttendanceDate#">
-</cfinvoke>
+	<cfinvoke component="pcclinks.bill.Report" method="getClassesNoHours" returnvariable="classesNoHours">
+		<cfinvokeargument name="billingStartDate" value="#openAttendanceDate#">
+	</cfinvoke>
+	<cfinvoke component="pcclinks.bill.Report" method="getStudentsNoHours" returnvariable="studentsNoHours">
+		<cfinvokeargument name="billingStartDate" value="#openAttendanceDate#">
+	</cfinvoke>
 
-<cfinvoke component="pcclinks.bill.LookUp" method="getOpenTerms" returnvariable="qryTerms"></cfinvoke>
-<cfinvoke component="pcclinks.bill.LookUp" method="getOpenAttendanceDates" returnvariable="billingDates"></cfinvoke>
-
+	<cfinvoke component="pcclinks.bill.LookUp" method="getOpenTerms" returnvariable="qryTerms"></cfinvoke>
+	<cfinvoke component="pcclinks.bill.LookUp" method="getOpenAttendanceDates" returnvariable="billingDates"></cfinvoke>
+</cfif>
 
 <style>
 .checkmark{
@@ -198,7 +199,10 @@
 	var linkStudentMissingHoursHide = "Hide Student List";
 	var linkClassTextShow = "Show Class List with No Hours Entered";
 	var linkClassTextHide = "Hide Class List";
-	var linkMissingAttribShowAttendance  = "<cfif attendanceStudentsNeedingBannerAttr.recordcount GT 0>Show </cfif><cfoutput>#attendanceStudentsNeedingBannerAttr.recordcount#</cfoutput> Student(s) Missing Banner Attributes."
+	var linkMissingAttribShowAttendance = "";
+	<cfif isDefined("attendanceStudentsNeedingBannerAttr")>
+ 		linkMissingAttribShowAttendance  = "<cfif attendanceStudentsNeedingBannerAttr.recordcount GT 0>Show </cfif><cfoutput>#attendanceStudentsNeedingBannerAttr.recordcount#</cfoutput> Student(s) Missing Banner Attributes."
+	</cfif>
 	var linkMissingAttribHideAttendance  = "Hide Student List Missing Banner Attributes"
 
 	$(document).ready(function() {

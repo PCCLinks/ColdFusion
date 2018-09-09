@@ -36,7 +36,7 @@
 				<select name="billingStartDate" id="billingStartDate">
 					<option disabled selected value="" > --Select Month Start Date-- </option>
 				<cfoutput query="billingDates">
-					<option value="#billingStartDate#" #DateFormat(billingStartDate,'mm-dd-yy')# </option>
+					<option value="#billingStartDate#">#DateFormat(billingStartDate,'mm-dd-yy')# </option>
 				</cfoutput>
 				</select>
 			</label>

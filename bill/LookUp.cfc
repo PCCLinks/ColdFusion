@@ -71,6 +71,24 @@
 		</cfquery>
 		<cfreturn data>
 	</cffunction>
+	<cffunction name="getYTDTerms" access="remote" >
+		<cfquery name="data" >
+			select Term, fnGetTermDescription(Term) TermDescription
+			from billingCycle c
+			where programYear = (select max(ProgramYear) from billingCycle)
+				and billingType = 'Term'
+		</cfquery>
+		<cfreturn data>
+	</cffunction>
+	<cffunction name="getYTDBillingStartDates" access="remote" >
+		<cfquery name="data" >
+			select billingStartDate
+			from billingCycle c
+			where programYear = (select max(ProgramYear) from billingCycle)
+				and billingType = 'Attendance'
+		</cfquery>
+		<cfreturn data>
+	</cffunction>
 	<cffunction name="getprograms" access="remote">
 		<cfquery name="data" datasource="pcclinks">
 			select programName
@@ -199,7 +217,7 @@
 	<cffunction name="getMaxTerm" access="remote" returntype="string">
 		<cfquery name="maxTermQuery">
 			SELECT MAX(Term) Term
-			FROM billingStudent
+			FROM billingCycle
 		</cfquery>
 		<cfreturn maxTermQuery.Term>
 	</cffunction>
@@ -254,7 +272,7 @@
 		<cfquery name="data" >
 				SELECT billingStartDate
 				FROM billingCycle
-				WHERE billingCloseDate IS NULL
+				WHERE billingCloseDate IS NOT NULL
 					AND billingType = 'attendance'
 					AND ProgramYear = '#programYear#'
 				ORDER BY billingStartDate desc
@@ -324,14 +342,15 @@
 	<cffunction name="getFirstOpenAttendanceDates" access="remote">
 		<cfquery name="data">
 			select min(billingStartDate) billingStartDate
-				,min(bc.Term) Term
+				,min(bcycle.Term) Term
 			    ,min(billingEndDate) billingEndDate
 			    ,min(termBeginDate) TermBeginDate
 			    ,min(termDropDate) TermDropDate
 			    ,min(termEndDate) TermEndDate
-			from billingCycle bc
-				join bannerCalendar bc on bs.term = bc.Term
+			from billingCycle bcycle
+				join bannerCalendar bc on bcycle.term = bc.Term
 			WHERE billingType like '%attendance%'
+				and billingCloseDate IS NULL
 		</cfquery>
 		<cfreturn data>
 	</cffunction>

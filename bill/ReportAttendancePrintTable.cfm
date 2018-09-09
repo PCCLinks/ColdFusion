@@ -1,4 +1,4 @@
-<cfset data = Session.reportAttendanceData>
+<cfset data = Session.reportAttendancePrintTable>
 
 <style>
 
@@ -148,7 +148,7 @@
 			from billingStudentTotalOverride
 			where schooldistrict = <cfqueryparam value="#data.schooldistrict#">
 				and Program = <cfqueryparam value="#data.Program#">
-				and ProgramYear = '2017/2018'
+				and ProgramYear = '2018/2019'
 		</cfquery>
 		<cfoutput query="totals">
 		<tr>

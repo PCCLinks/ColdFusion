@@ -54,9 +54,10 @@
 
 <cfsavecontent variable="pcc_scripts">
 	<script>
+		var table;
 		$.fn.dataTable.ext.errMode = 'throw';
 		$(document).ready(function() {
-		    $('#dt_table').DataTable({
+		    table = $('#dt_table').DataTable({
 		    	processing:true,
 				ajax:{
 					url: 'report.cfc?method=admReport',
@@ -73,7 +74,11 @@
 				buttons:[
 					{text: "export",
             	  		action: function( e, table, node, config ){
-							window.open('reportAdmExport.cfm');
+            	  			if(table.rows().count() > 0){
+								window.open('reportAdmExport.cfm');
+            	  			}else{
+            	  				alert('No data to export');
+            	  			}
             	  		}
             	  	}
             	  ],

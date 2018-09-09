@@ -146,7 +146,11 @@
 			UPDATE billingCycle
 			SET BillingCloseDate = now(), dateLastUpdated = now(), lastUpdatedBy = '#Session.username#', ClosingBillingReportID = LatestBillingReportID
 			WHERE billingType = <cfqueryparam value="#arguments.billingType#">
+				<cfif arguments.billingType EQ 'Term'>
 				AND Term = <cfqueryparam value="#arguments.term#">
+				<cfelse>
+				AND billingStartDate = <cfqueryparam value="#arguments.billingStartDate#">
+				</cfif>
 		</cfquery>
 	</cffunction>
 
@@ -158,7 +162,11 @@
 			UPDATE billingCycle
 			SET BillingCloseDate = NULL, ClosingBillingReportID=NULL, dateLastUpdated = now(), lastUpdatedBy = '#Session.username#'
 			WHERE billingType = <cfqueryparam value="#arguments.billingType#">
+				<cfif arguments.billingType EQ 'Term'>
 				AND Term = <cfqueryparam value="#arguments.term#">
+				<cfelse>
+				AND billingStartDate = <cfqueryparam value="#arguments.billingStartDate#">
+				</cfif>
 		</cfquery>
 	</cffunction>
 

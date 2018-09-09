@@ -102,18 +102,20 @@
 		<cfelse>
 			<cfset logEntry(value="No Username Defined")>
 		</cfif>
-		<cfset logEntry(value="#arguments.exception#") >
+		<cfset logEntry(label="Exception:", value="#arguments.exception#") >
 		<cfif StructkeyExists(arguments.exception, "cause")>
 		    <cfset logEntry(label="Message", value="#arguments.exception.cause.message#")>
 		    <cfset msg = arguments.exception.cause.message>
-		    <cfset logEntry(label="StackTrace", value="#arguments.exception.cause.StackTrace#")>
+		    <cfset logEntry(label="-------------StackTrace BEGIN--------------", value="#arguments.exception.cause.StackTrace#")>
+		    <cfset logEntry(label="-------------END StackTrace----------------", value="") >
 		    <cfif StructKeyExists(arguments.exception.cause, "TagContext")>
 			    <cfset tag = arguments.exception.cause.TagContext>
 			 </cfif>
 		<cfelse>
 		    <cfset logEntry(label="Message", value="#arguments.exception.message#")>
 		    <cfset msg = arguments.exception.message>
-		    <cfset logEntry(label="StackTrace", value="#arguments.exception.StackTrace#")>
+		    <cfset logEntry(label="*****BEGIN StackTrace*****", value="#arguments.exception.StackTrace#")>
+		    <cfset logEntry(label="*****END StackTrace*****", value="") >
 		    <cfif StructKeyExists(arguments.exception, "TagContext")>
 			    <cfset tag = arguments.exception.TagContext>
 			 </cfif>
@@ -165,6 +167,7 @@
 		</cfif>
 
 		<cfset Variables.isAjax = isAjaxCall()>
+		<cfset logDump(label="isAjax variable:", value="#Variables.isAjax#")>
 		<cfif Variables.isAjax>
 			<cfheader statusCode=700 statustext="#msg#" >
 		<cfelse>
@@ -175,10 +178,8 @@
 	<cffunction name="isAjaxCall" returntype="boolean">
 		<cfset Variables.reqData = getHTTPRequestData() >
 		<cfset logDump(label="HTTPRequestData", value="#Variables.reqData#", level=2)>
-		<cfset logDump(label="Session", value="#Session#", level=2)>
     	<cfif structKeyExists(Variables.reqData.headers,"X-Requested-With")
 					&& reqData.headers["X-Requested-With"] eq "XMLHttpRequest">
-			<cfset logEntry(value="IsAjaxCall", level=2)>
 			<cfreturn true>
 		<cfelse>
 			<cfreturn false>
@@ -205,6 +206,7 @@
 			<cfhttp url="#cas_url#" method="get" />
 			<cfset logEntry(label="cas_url", value="#cas_url#", level=5)>
 		    <cfset objXML = xmlParse(cfhttp.filecontent)>
+		    <!---><cfdump var="#objXML#">--->
 		    <cfset SearchResults = XmlSearch(objXML,"cas:serviceResponse/cas:authenticationSuccess/cas:user")>
 
 			<!--- login returned key information --->

@@ -1,4 +1,3 @@
-<!---<cfdump var="#Session#">--->
 <cfset programValue="" >
 <cfif isDefined("Session.Program") >
 	<cfset programValue="#Session.Program#" >
