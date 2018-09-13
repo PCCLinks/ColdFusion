@@ -235,7 +235,7 @@
 		<cfargument name="billingStudentId" required="true">
 		<cfargument name="exitDate" required="true">
 		<cfargument name="billingStudentExitReasonCode" required="true">
-		<cfargument name="adjustedDaysPerMonth" >
+		<cfargument name="adjustedDaysPerMonth" default="">
 		<cfargument name="includeFlag" required="true">
 
 		<cfquery name="update">

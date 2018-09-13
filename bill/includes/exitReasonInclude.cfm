@@ -12,6 +12,7 @@
 				<label>Exit Date:<br>
 					<input id="exitDate#FORM.billingStudentId#" name="exitDate" value="<cfif FORM.exitDate NEQ 'null'>#DateFormat(FORM.exitDate,'yyyy-mm-dd')#</cfif>"
 						onChange='javascript:exitStudentInclude_saveExitStudentValues("frm#FORM.billingStudentId#")' class="fdatepicker"
+						autocomplete = "off"
 					>
 				</label>
 			</div>

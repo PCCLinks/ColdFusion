@@ -113,17 +113,19 @@ function exitStudentInclude_saveExitStudentValues(frmId){
 		d.dialog("open");
 	}else{
 		if(exitDateNotInBillingPeriod(billingStudentId)){
+			var bStart = getBillingStartDate(billingStudentId);
+			var bEnd = getBillingEndDate(billingStudentId);
 			$( "#validateDialog" ).css("display","none");
-			$( "#validateDialog" ).html("The exit date must be within the billing period.<br>  Please select the tab with the billing period that fits this exit date.");
+			$( "#validateDialog" ).html("The exit date must be within the billing period.<br>  Please select the tab with the billing period that fits this exit date. This billing period is between " + bStart + ' and ' + bEnd);
 			var d = $( "#validateDialog" ).dialog({
 			  title: "Invalid Exit Date",
 			  modal: true,
 			  autoOpen: false,
 			  width: 350,
-			  height:250,
+			  height:300,
 			  buttons: {
 			      "OK": function() {
-			      		clearExitData(billingStudentId);
+			      		//clearExitData(billingStudentId);
 			        	$( this ).dialog( "close" );
 			      }
 			    }
@@ -176,7 +178,7 @@ function updateGridRow(billingStudentId){
 		}
 	}
 
-	selectedGridRow.data(selectedGridData).draw();
+	selectedGridRow.data(selectedGridData).draw("page");
 	$('#billTab'+selectedGridData[idx_grid_billingStudentId]).click();
 
 }
@@ -199,7 +201,11 @@ function getExitDate(billingStudentId){
 	return $('#exitDate'+billingStudentId).val();
 }
 function getAdjustedDaysPerMonth(billingStudentId){
-	return $('#adjustedDaysPerMonth'+billingStudentId).val();
+	if($('#adjustedDaysPerMonth'+billingStudentId).length){
+		return $('#adjustedDaysPerMonth'+billingStudentId).val();
+	}else{
+		return "";
+	}
 }
 function getExitReasonCode(billingStudentId){
 	if($('#billingStudentExitReasonCode' + billingStudentId + ' option:selected').val()){
