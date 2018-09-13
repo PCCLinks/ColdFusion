@@ -161,7 +161,7 @@
 
 <script>
 function programStudentHeaderInit(){
-	$(document).on("saveAction", function(e){
+	$('body').on("saveAction", function(e){
 		programStudentHeaderSaveEventHandler(e);
 	})
 }

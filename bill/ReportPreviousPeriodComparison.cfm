@@ -75,7 +75,7 @@
 	$(document).ready(function() {
 	    table = $('#dt_table').DataTable({
 			ajax:{
-				url: "report.cfc?method=prevBillingPeriodComparison",
+				url: "report.cfc?method=prevBillingPeriodComparison&billingType=<cfoutput>#url.type#</cfoutput>",
 				data: {billingStartDate: billingStartDate},
 				dataSrc:'DATA',
 				error: function (xhr, textStatus, thrownError) {

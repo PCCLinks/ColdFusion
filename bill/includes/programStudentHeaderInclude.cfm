@@ -8,7 +8,7 @@
 </cfquery>
 <cfinvoke component="pcclinks.bill.LookUp" method="getPrograms" returnvariable="programs"></cfinvoke>
 <cfset readonly=false>
-<cfif #qryStudent.BillingStatus# EQ 'BILLED'>
+<cfif #qryStudent.BillingStatus# EQ 'BILLED' or #qryStudent.BillingStatus# EQ 'EXCLUDED'>
 	<cfset readonly=true>
 </cfif>
 <cfset local.sidnyExitDateAlert = false>
@@ -24,7 +24,7 @@
 	<!-- begin header data for billingStudentId #attributes.billingStudentId# -->
 	<div class="callout
 				<cfif local.sidnyExitDateAlert OR includeFlag EQ 0> alert
-				<cfelse><cfif billingStatus EQ 'BILLED'>secondary
+				<cfelse><cfif readonly>secondary
 						<cfelse> primary</cfif>
 				</cfif>
 		"> <!--- end callout div --->

@@ -73,7 +73,7 @@ function billedClassesInit(){
     	}
     });
 
-    $(document).on("saveAction", function(e){
+    $('body').on("saveAction", function(e){
 		billingStudentTabSaveEventHandler(e);
 	});
 }

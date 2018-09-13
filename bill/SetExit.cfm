@@ -3,7 +3,7 @@
 <cfinvoke component="LookUp" method="getAttendanceBillingStartDates" returnvariable="billingDates"></cfinvoke>
 <cfinvoke component="pcclinks.bill.LookUp" method="getExitReasons" returnvariable="exitReasons"></cfinvoke>
 <cfinvoke component="Lookup" method="getCurrentProgramYear" returnvariable="programyear"></cfinvoke>
-
+<cfinvoke component="LookUp" method="getPrograms" returnvariable="programs"></cfinvoke>
 <cfset Session.Lookup.GetExitReason = exitReasons>
 
 <style>
@@ -28,13 +28,22 @@
 	<div id="validateDialog"></div>
 <div class="callout primary">
 <div class="row">
-	<div class="small-6 columns">
 	<p><b>Update Exit Date and Reason</b></p>
+	<div class="small-3 columns">
 	<label for="billingStartDate">Attendance Entry for:&nbsp;&nbsp;
 	<select name="billingStartDate" id="billingStartDate" onChange="javascript:filter();" style="width:200px">
 		<option selected value="" selected > --Select All-- </option>
 		<cfoutput query="billingDates">
 			<option value="#billingStartDate#"> #DateFormat(billingStartDate,'yyyy-mm-dd')# </option>
+		</cfoutput>
+	</select>
+	</div>
+	<div class="small-3 columns">
+	<label for="program">Program:&nbsp;&nbsp;
+	<select name="program" id="program" onChange="javascript:filterProgram();" style="width:200px">
+		<option selected value="" selected > --Select All-- </option>
+		<cfoutput query="programs">
+			<option value="#programName#"> #programName# </option>
 		</cfoutput>
 	</select>
 	</div>
@@ -109,6 +118,7 @@
 	var idx_grid_reasonCode = 16;
 	var idx_grid_sidnySecondaryReason = 17;
 	var idx_grid_sidnyExitNote = 18;
+	var idx_grid_billingEndDate = 19;
 
 	var currentIndex = 0;
 
@@ -137,11 +147,12 @@
 	    			return row[idx_grid_firstname] + ' ' + row[idx_grid_lastname] + '<br>' + row[idx_grid_bannerGNumber];
 	    			}
 	    		},
-        		{targets:[10,11,12,13,14,15,16,17,18], visible:false}
+        		{targets:[10,11,12,13,14,15,16,17,18,19], visible:false}
         	],
         	rowCallback: function(row, data, index){
             	color = '';
-            	if(data[idx_grid_sidnyExitDate] <  data[idx_grid_billingStartDate] || data[idx_grid_sidnyExitDate] != data[idx_grid_exitDate]){
+            	if(data[idx_grid_sidnyExitDate] <  data[idx_grid_billingStartDate] ||
+            		(data[idx_grid_sidnyExitDate] != data[idx_grid_exitDate] && data[idx_grid_sidnyExitDate] < data[idx_grid_billingEndDate])){
             		color = '#f78989';
             	}
             	if(color.length>0){
@@ -212,6 +223,14 @@
 			table.columns(idx_grid_billingStartDate).search(d).draw();
 		}else{
 			table.columns(idx_grid_billingStartDate).search('').draw();
+		}
+	}
+	function filterProgram(){
+		var p = $('#program').val();
+		if(p != ''){
+			table.columns(idx_grid_program).search(p).draw();
+		}else{
+			table.columns(idx_grid_program).search('').draw();
 		}
 	}
 	function getStudent(){

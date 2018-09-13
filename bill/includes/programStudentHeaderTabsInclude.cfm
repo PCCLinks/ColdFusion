@@ -69,12 +69,11 @@
 
 <script>
 function programStudentHeaderInit(){
-	$(document).on("saveAction", function(e){
+	$('body').on("saveAction", function(e){
 		programStudentHeaderSaveEventHandler(e);
 	})
 }
 function programStudentHeaderSaveEventHandler(e){
-	debugger;
 	if(e.caller != "programStudentHeaderTabsInclude"){
 		var billingStudentId = e.billingStudentId;
 		switch(e.field){
@@ -93,7 +92,6 @@ function programStudentHeaderSaveEventHandler(e){
 					v = true;
 				if(e.value === "off")
 					v = false;
-
 				$('#includeFlagH'+billingStudentId).prop("checked", v);
 				break;
 		}

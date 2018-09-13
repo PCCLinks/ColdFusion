@@ -27,7 +27,7 @@
 <!-- scripts from billingStudentTabInclude.cfm -->
 <script>
 function billingStudentTabInit(){
-	$(document).on("saveAction", function(e){
+	$('body').on("saveAction", function(e){
 		billingStudentTabSaveEventHandler(e);
 	});
 }
@@ -102,8 +102,8 @@ function billingStudentTabSaveEventHandler(e){
 			case 'exitDate':
 				$('#exitDateB'+billingStudentId).val(e.value);
 				break;
-			case 'Program':
-				$('#programB'+billingStudentId).val(e.value);
+			case 'program':
+				$('#ProgramB'+billingStudentId).val(e.value);
 				break;
 			case "includeFlag":
 				$('#includeFlagB'+billingStudentId).prop("checked", e.value);

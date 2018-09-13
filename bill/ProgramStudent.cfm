@@ -175,6 +175,7 @@ table.dataTable thead th.tooltipformat {
 		});
 		<!-- end document.ready -->
 
+
 		<!-- setUpTableList -->
 		function setUpTableList(program){
 			table_list = $('#dt_table_list').DataTable({
@@ -263,7 +264,7 @@ table.dataTable thead th.tooltipformat {
 		}
 
 		function callSaveActionEvent(billingStudentId, fieldName, fieldValue, caller){
-			$.event.trigger({
+			$('body').trigger({
 				type: "saveAction",
 				billingStudentId: billingStudentId,
 				field: fieldName,

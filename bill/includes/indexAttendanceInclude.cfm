@@ -22,7 +22,9 @@
 	<cfinvoke component="pcclinks.bill.Report" method="getStudentsNoHours" returnvariable="studentsNoHours">
 		<cfinvokeargument name="billingStartDate" value="#openAttendanceDate#">
 	</cfinvoke>
-
+	<cfinvoke component="pcclinks.bill.Report" method="getStudentsNoClasses" returnvariable="studentsNoClasses">
+		<cfinvokeargument name="billingStartDate" value="#openAttendanceDate#">
+	</cfinvoke>
 	<cfinvoke component="pcclinks.bill.LookUp" method="getOpenTerms" returnvariable="qryTerms"></cfinvoke>
 	<cfinvoke component="pcclinks.bill.LookUp" method="getOpenAttendanceDates" returnvariable="billingDates"></cfinvoke>
 </cfif>
@@ -86,7 +88,7 @@
 
 	<hr>
 	<a href="ReportSIDNYComparison.cfm?billingStartDate=<cfoutput>#openAttendanceDate#</cfoutput>" >Check for SIDNY Differences</a><br>
-	<a href="ReportPreviousPeriodComparison.cfm?billingStartDate=<cfoutput>#openAttendanceDate#</cfoutput>" >Check for Differences from Previous Month</a><br>
+	<a href="ReportPreviousPeriodComparison.cfm?Type=Attendance&billingStartDate=<cfoutput>#openAttendanceDate#</cfoutput>" >Check for Differences from Previous Month</a><br>
 	<a href="AddScenario.cfm">Attendance Scenarios</a>
 
 	<hr>
@@ -106,6 +108,30 @@
 			</thead>
 			<tbody>
 			<cfoutput query="studentsNoHours">
+			<tr>
+				<td>#bannerGNumber#</td>
+				<td>#firstname#</td>
+				<td>#lastname#</td>
+			</tr>
+			</cfoutput>
+			</tbody>
+		</table>
+		<a href="javascript:exportNoHours()" class="button">Export</a>
+		</div>
+		</li>
+		<li># students with no classes entered: <cfoutput>#attendanceEnteredByStudent.NumStudentsNoClasses#</cfoutput>
+		<a href="javascript:showStudentsNoClasses()" id="showStudentsMissingClassesLink">Show Student List with No Classes</a>
+		<div id="studentsMissingClasses">
+		<table class="w3-table w3-bordered">
+			<thead>
+			<tr>
+				<th>G Number</th>
+				<th>Firstname</th>
+				<th>Lastname</th>
+			</tr>
+			</thead>
+			<tbody>
+			<cfoutput query="studentsNoClasses">
 			<tr>
 				<td>#bannerGNumber#</td>
 				<td>#firstname#</td>
@@ -154,7 +180,7 @@
 
 	<hr>
 	<a href=<cfoutput>"ReportSIDNYComparison.cfm?billingStartDate=#openAttendanceDate#"</cfoutput>>Recheck SIDNY Differences</a><br>
-	<a href="ReportPreviousPeriodComparison.cfm?billingStartDate=<cfoutput>#openAttendanceDate#</cfoutput>" >Recheck for Differences from Previous Month</a><br>
+	<a href="ReportPreviousPeriodComparison.cfm?billingStartDate=<cfoutput>#openAttendanceDate#</cfoutput>&Type=Attendance" >Recheck for Differences from Previous Month</a><br>
 
 	<hr>
 	<a href="javascript:showForm('calculateBillingAttendance');">Generate Calculations</a><br>
@@ -172,9 +198,6 @@
 	<cfmodule template="attendanceBilledInfoInclude.cfm"
 		billingStartDate = "#openAttendanceDate#">
 	</div>
-
-	<hr>
-	<a href="ReportSummary.cfm?type=Attendance">Review Billing Reports</a><br>
 
 	<hr>
 	<a href="ReportSummary.cfm?type=Attendance">Run Billing Reports</a><br>
@@ -197,6 +220,8 @@
 <script type="text/javascript">
 	var linkStudentMissingHoursShow= "Show Student List with No Hours Entered";
 	var linkStudentMissingHoursHide = "Hide Student List";
+	var linkStudentMissingClassesShow= "Show Student List with No Classes";
+	var linkStudentMissingClassesHide = "Hide Student No Classes List";
 	var linkClassTextShow = "Show Class List with No Hours Entered";
 	var linkClassTextHide = "Hide Class List";
 	var linkMissingAttribShowAttendance = "";
@@ -210,17 +235,19 @@
 		$('#closeBillingCycleAttendance').hide();
 		$('#studentsMissingHours').hide();
 		$('#showStudentsMissingHoursLink').text(linkStudentMissingHoursShow);
+		$('#studentsMissingClasses').hide();
+		$('#showStudentsMissingClassesLink').text(linkStudentMissingClassesShow);
 		$('#classesMissingHours').hide();
 		$('#showClassesLink').text(linkClassTextShow);
 		$('#missingAttrAttendance').hide();
 		$('#missingAttrLinkAttendance').text(linkMissingAttribShowAttendance);
 
 		$('#tableMissingAttr').DataTable({
-		    	dom: '<"top"B>rt<"bottom">',
-				buttons:[{extend: 'csv',
-            	  text: 'export'}],
-            	paging:false
-			});
+			dom: '<"top"B>rt<"bottom">',
+			buttons:[{extend: 'csv',
+            text: 'export'}],
+            paging:false
+		});
 
 	});
 	function rePopulateBillingInfo(){
@@ -253,9 +280,28 @@
 			$('#studentsMissingHours').hide();
 		}
 	}
+	function showStudentsNoClasses(){
+		if($('#showStudentsMissingClassesLink').text() == linkStudentMissingClassesShow){
+			$('#showStudentsMissingClassesLink').text(linkStudentMissingClassesHide);
+			$('#studentsMissingClasses').show();
+		}else{
+			$('#showStudentsMissingClassesLink').text(linkStudentMissingClassesShow);
+			$('#studentsMissingClasses').hide();
+		}
+	}
 	function exportNoHours(){
 		 $.ajax({
 		 	url: 'Report.cfc?method=attendanceEntry&billingStartDate=<cfoutput>#openAttendanceDate#</cfoutput>&noHoursOnly=true',
+		 	type:'get',
+		 	cache:false,
+		 	success: function(data){
+		 		window.open('includes/ReportAttendanceEntryPrintInclude.cfm');
+		 	}
+		 });
+	}
+	function exportNoClasses(){
+		 $.ajax({
+		 	url: 'Report.cfc?method=attendanceEntry&billingStartDate=<cfoutput>#openAttendanceDate#</cfoutput>&noClassesOnly=true',
 		 	type:'get',
 		 	cache:false,
 		 	success: function(data){

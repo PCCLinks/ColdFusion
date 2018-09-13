@@ -365,8 +365,7 @@
 			order by fnGetBillingStatus(billingStudentId)
 		</cfquery>
 		<cfreturn data>
-	</cffunction>
-
+	</cffunction>			
 	<cffunction name="convertTerm">
 		<cfargument name="term" required="true">
 		<cfset d = "">
