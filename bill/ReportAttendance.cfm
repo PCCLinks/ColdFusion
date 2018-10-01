@@ -1,6 +1,6 @@
 
 <cfinclude template="includes/header.cfm">
-<cfinvoke component="LookUp" method="getFirstOpenAttendanceDate"  returnvariable="attendanceMonth"></cfinvoke>
+<cfinvoke component="LookUp" method="getFirstOpenAttendanceDateorLastClosed"  returnvariable="attendanceMonth"></cfinvoke>
 <cfinvoke component="Report" method="attendanceReport" returnvariable="data">
 	<cfinvokeargument name="billingStartDate" value="#attendanceMonth#">
 	<cfinvokeargument name="programYear" value="#url.programYear#">

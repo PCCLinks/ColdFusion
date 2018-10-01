@@ -416,6 +416,7 @@
 				join billingStudentItem bsi on bs.BillingStudentID = bsi.BillingStudentID
 				join keySchoolDistrict sd on bs.DistrictID = sd.keySchoolDistrictID
 			where bsi.includeFlag = 1
+				and bs.includeFlag = 1
 				and bs.billingStartDate = <cfqueryparam value="#DateFormat(arguments.billingStartDate,'yyyy-mm-dd')#">
 				<cfif structKeyExists(arguments, "program")>
 					and bs.program = <cfqueryparam value="#arguments.program#">
@@ -902,28 +903,35 @@
 		</cfquery>
 	</cffunction>
 
-	<cffunction name="getBillingDiffMaxMonth">
-		<cfquery name="maxMonth">
-			select max(month(billingStartDate)) month
-			from billingCycle
-			where ProgramYear = (select max(ProgramYear) from billingCycle)
-			and billingCloseDate is not null
-		</cfquery>
-		<cfset maxMonth = maxMonth.month>
-		<!--- need January to be greater than June - December for the flow of the program year --->
-		<cfif maxMonth LT 6>
-			<cfset maxMonth = maxMonth + 20>
-		</cfif>
-		<cfreturn maxMonth>
-	</cffunction>
 	<cffunction name="getBillingDifferencesAttendance">
-		<cfset maxMonth = getBillingDiffMaxMonth()>
+		<cfquery name="qryMaxMonth">
+			select substring_index(maxmonth,':',-1) billingCycleId, substring_index(maxmonth,':',1) monthNumber
+            from(
+			select max(concat(month(billingStartDate),':',bc.billingCycleId)) maxmonth
+			from billingCycle bc
+				join billingReport br on bc.billingCycleId = br.billingCycleId
+			where ProgramYear = (select max(ProgramYear) from billingCycle)
+			and bc.billingType = 'attendance') data
+		</cfquery>
+		<cfset maxMonth = qryMaxMonth.monthNumber>
 		<!--- need January to be greater than June - December for the flow of the program year --->
 		<cfif maxMonth LT 6>
 			<cfset maxMonth = maxMonth + 20>
 		</cfif>
+
+		<cfquery name="qryPrevMonth">
+			select substring_index(maxmonth,':',-1) billingCycleId, substring_index(maxmonth,':',1) monthNumber
+            from(
+			select max(concat(month(billingStartDate),':',bc.billingCycleId)) maxmonth
+			from billingCycle bc
+				join billingReport br on bc.billingCycleId = br.billingCycleId
+			where ProgramYear = (select max(ProgramYear) from billingCycle)
+			and bc.billingType = 'attendance'
+			and month(billingStartDate) < #qryMaxMonth.monthNumber#) data
+		</cfquery>
+
 		<cfquery name="data">
-			select *
+			select *, #maxMonth# adjMaxMonth
 			from(
 
 			select repB.SchoolDistrict, repB.Program
@@ -948,7 +956,7 @@
 			from billingCycle bc
 				join billingReport br on bc.LatestBillingReportID = br.BillingReportId
 			    join billingReportAttendance bra on br.BillingReportId = bra.BillingReportId
-			where bc.billingCycleId = (select max(billingCycleId) from billingCycle where billingType = 'attendance')
+			where bc.billingCycleId = #qryMaxMonth.billingCycleId#
 				) repB
 			left outer join (select contactID, bannerGNumber, FirstName, LastName, Program, SchoolDistrict
 				,June, July, August, September, October, November, December, January, February
@@ -956,28 +964,28 @@
 			from billingCycle bc
 				join billingReport br on bc.LatestBillingReportID = br.BillingReportId
 			    join billingReportAttendance bra on br.BillingReportId = bra.BillingReportId
-			where bc.billingCycleId = (select max(billingCycleId) from billingCycle where billingType = 'attendance' and billingCycleId < (select max(billingCycleId) from billingCycle where billingType = 'attendance'))
+			where bc.billingCycleId = #qryPrevMonth.billingCycleId#
 			  ) repA
 				on repA.contactID = repB.contactID
 					and repA.Program = repB.Program
 			        and repA.SchoolDistrict = repB.SchoolDistrict
 			where repB.June != IFNULL(repA.June,0)
-				<cfif maxMonth GT 6>
+				<cfif maxMonth GT 7>
 					or repB.July != IFNULL(repA.July,0)
 				</cfif>
-				<cfif maxMonth GT 7>
+				<cfif maxMonth GT 8>
 					or repB.August != IFNULL(repA.August,0)
 				</cfif>
-				<cfif maxMonth GT 8>
+				<cfif maxMonth GT 9>
 					or repB.September != IFNULL(repA.September,0)
 				</cfif>
-				<cfif maxMonth GT 9>
+				<cfif maxMonth GT 10>
 					or repB.October != IFNULL(repA.October,0)
 				</cfif>
-				<cfif maxMonth GT 10>
+				<cfif maxMonth GT 11>
 					or repB.November != IFNULL(repA.November,0)
 				</cfif>
-				<cfif maxMonth GT 11>
+				<cfif maxMonth GT 12>
 					or repB.December != IFNULL(repA.December,0)
 				</cfif>
 				<cfif maxMonth GT 21>
@@ -1018,7 +1026,7 @@
 			from billingCycle bc
 				join billingReport br on bc.LatestBillingReportID = br.BillingReportId
 			    join billingReportAttendance bra on br.BillingReportId = bra.BillingReportId
-			where bc.billingCycleId = (select max(billingCycleId) from billingCycle where billingType = 'attendance' and billingCycleId < (select max(billingCycleId) from billingCycle where billingType = 'attendance'))
+			where bc.billingCycleId = #qryPrevMonth.billingCycleId#
 			  ) repA
 			left outer join (select contactID, bannerGNumber, FirstName, LastName, Program, SchoolDistrict
 				,June, July, August, September, October, November, December, January, February
@@ -1026,29 +1034,29 @@
 			from billingCycle bc
 				join billingReport br on bc.LatestBillingReportID = br.BillingReportId
 			    join billingReportAttendance bra on br.BillingReportId = bra.BillingReportId
-			where bc.billingCycleId = (select max(billingCycleId) from billingCycle where billingType = 'attendance')
+			where bc.billingCycleId =  #qryMaxMonth.billingCycleId#
 				) repB
 				on repA.contactID = repB.contactID
 					and repA.Program = repB.Program
 			        and repA.SchoolDistrict = repB.SchoolDistrict
 			where repB.contactID is null
 				or repA.June != IFNULL(repB.June,0)
-				<cfif maxMonth GT 6>
+				<cfif maxMonth GT 7>
 					or repA.July != IFNULL(repB.July,0)
 				</cfif>
-				<cfif maxMonth GT 7>
+				<cfif maxMonth GT 8>
 					or repA.August != IFNULL(repB.August,0)
 				</cfif>
-				<cfif maxMonth GT 8>
+				<cfif maxMonth GT 9>
 					or repA.September != IFNULL(repB.September,0)
 				</cfif>
-				<cfif maxMonth GT 9>
+				<cfif maxMonth GT 10>
 					or repA.October != IFNULL(repB.October,0)
 				</cfif>
-				<cfif maxMonth GT 10>
+				<cfif maxMonth GT 11>
 					or repA.November != IFNULL(repB.November,0)
 				</cfif>
-				<cfif maxMonth GT 11>
+				<cfif maxMonth GT 12>
 					or repA.December != IFNULL(repB.December,0)
 				</cfif>
 				<cfif maxMonth GT 21>
@@ -1072,11 +1080,178 @@
 		</cfquery>
 		<cfreturn data>
 	</cffunction>
+
+	<cffunction name="getBillingDifferencesTerm">
+		<cfquery name="qryMaxMonth">
+			select substring_index(maxmonth,':',-1) billingCycleId, substring_index(maxmonth,':',1) monthNumber
+            from(
+			select max(concat(month(billingStartDate),':',bc.billingCycleId)) maxmonth
+			from billingCycle bc
+				join billingReport br on bc.billingCycleId = br.billingCycleId
+			where ProgramYear = (select max(ProgramYear) from billingCycle)
+			and bc.billingType = 'Term') data
+		</cfquery>
+		<cfset maxMonth = qryMaxMonth.monthNumber>
+		<!--- need January to be greater than June - December for the flow of the program year --->
+		<cfif maxMonth LT 6>
+			<cfset maxMonth = maxMonth + 20>
+		</cfif>
+
+		<cfquery name="qryPrevMonth">
+			select substring_index(maxmonth,':',-1) billingCycleId, substring_index(maxmonth,':',1) monthNumber
+            from(
+			select max(concat(month(billingStartDate),':',bc.billingCycleId)) maxmonth
+			from billingCycle bc
+				join billingReport br on bc.billingCycleId = br.billingCycleId
+			where ProgramYear = (select max(ProgramYear) from billingCycle)
+			and bc.billingType = 'term'
+			and month(billingStartDate) < #qryMaxMonth.monthNumber#) data
+		</cfquery>
+
+		<cfquery name="data">
+			select *, #maxMonth# adjMaxMonth
+			from(
+
+			select repB.SchoolDistrict, repB.Program
+				,repB.contactID, repB.bannerGNumber, repB.FirstName, repB.LastName
+				,round(repB.SummerCredits - ifnull(repA.SummerCredits,0),1) SummerCredits
+			    ,round(repB.SummerDays - ifnull(repA.SummerDays,0),1) SummerDays
+			    ,round(repB.FallCredits - ifnull(repA.FallCredits,0),1) FallCredits
+			    ,round(repB.FallDays - ifnull(repA.FallDays,0),1) FallDays
+			    ,round(repB.FallCreditsOverage - ifnull(repA.FallCreditsOverage,0),1) FallCreditsOverage
+			    ,round(repB.FallDaysOverage - ifnull(repA.FallDaysOverage,0),1) FallDaysOverage
+			    ,round(repB.WinterCredits - ifnull(repA.WinterCredits,0),1) WinterCredits
+			    ,round(repB.WinterDays - ifnull(repA.WinterDays,0),1) WinterDays
+			    ,round(repB.WinterCreditsOverage - ifnull(repA.WinterCreditsOverage,0),1) WinterCreditsOverage
+			    ,round(repB.WinterDaysOverage - ifnull(repA.WinterDaysOverage,0),1) WinterDaysOverage
+			    ,round(repB.SpringCredits - ifnull(repA.SpringCredits,0),1) SpringCredits
+			    ,round(repB.SpringDays - ifnull(repA.SpringDays,0),1) SpringDays
+			    ,round(repB.SpringCreditsOverage - ifnull(repA.SpringCreditsOverage,0),1) SpringCreditsOverage
+			    ,round(repB.SpringDaysOverage - ifnull(repA.SpringDaysOverage,0),1) SpringDaysOverage
+			    ,round(repB.FYTotalNoOfCredits - ifnull(repA.FYTotalNoOfCredits,0),1) FYTotalNoOfCredits
+			    ,round(repB.FYTotalNoOfDays - ifnull(repA.FYTotalNoOfDays,0),1) FYTotalNoOfDays
+			from
+			(select contactID, bannerGNumber, FirstName, LastName, Program, SchoolDistrict
+				,SummerCredits, SummerDays, FallCredits, FallDays, FallCreditsOverage, FallDaysOverage
+				,WinterCredits, WinterDays, WinterCreditsOverage, WinterDaysOverage
+			    ,SpringCredits, SpringDays, SpringCreditsOverage, SpringDaysOverage
+			    ,FYTotalNoOfCredits, FYTotalNoOfDays
+			from billingCycle bc
+				join billingReport br on bc.LatestBillingReportID = br.BillingReportId
+			    join billingReportTerm brt on br.BillingReportId = brt.BillingReportId
+			where bc.billingCycleId = #qryMaxMonth.billingCycleId#
+				) repB
+			left outer join (select contactID, bannerGNumber, FirstName, LastName, Program, SchoolDistrict
+				,SummerCredits, SummerDays, FallCredits, FallDays, FallCreditsOverage, FallDaysOverage
+				,WinterCredits, WinterDays, WinterCreditsOverage, WinterDaysOverage
+			    ,SpringCredits, SpringDays, SpringCreditsOverage, SpringDaysOverage
+			    ,FYTotalNoOfCredits, FYTotalNoOfDays
+			from billingCycle bc
+				join billingReport br on bc.LatestBillingReportID = br.BillingReportId
+			    join billingReportTerm brt on br.BillingReportId = brt.BillingReportId
+			where bc.billingCycleId = #qryPrevMonth.billingCycleId#
+			  ) repA
+				on repA.contactID = repB.contactID
+					and repA.Program = repB.Program
+			        and repA.SchoolDistrict = repB.SchoolDistrict
+			where repB.SummerCredits != IFNULL(repA.SummerCredits,0)
+				or repB.SummerDays != IFNULL(repA.SummerDays,0)
+				<cfif maxMonth GT 9>
+					or repB.FallCredits != IFNULL(repA.FallCredits,0)
+					or repB.FallDays != IFNULL(repA.FallDays,0)
+					or repB.FallCreditsOverage != IFNULL(repA.FallCreditsOverage,0)
+					or repB.FallDaysOverage != IFNULL(repA.FallDaysOverage,0)
+				</cfif>
+				<cfif maxMonth GT 21>
+					or repB.WinterCredits != IFNULL(repA.WinterCredits,0)
+					or repB.WinterDays != IFNULL(repA.WinterDays,0)
+					or repB.WinterCreditsOverage != IFNULL(repA.WinterCreditsOverage,0)
+					or repB.WinterDaysOverage != IFNULL(repA.WinterDaysOverage,0)
+				</cfif>
+				<cfif maxMonth GT 23>
+					or repB.SpringCredits != IFNULL(repA.SpringCredits,0)
+					or repB.SpringDays != IFNULL(repA.SpringDays,0)
+					or repB.SpringCreditsOverage != IFNULL(repA.SpringCreditsOverage,0)
+					or repB.SpringDaysOverage != IFNULL(repA.SpringDaysOverage,0)
+				</cfif>
+			union
+			select repA.SchoolDistrict, repA.Program
+				,repA.contactID, repA.bannerGNumber, repA.FirstName, repA.LastName
+				,round(ifnull(repB.SummerCredits,0) - ifnull(repA.SummerCredits,0),1) SummerCredits
+			    ,round(ifnull(repB.SummerDays,0) - ifnull(repA.SummerDays,0),1) SummerDays
+			    ,round(ifnull(repB.FallCredits,0) - ifnull(repA.FallCredits,0),1) FallCredits
+			    ,round(ifnull(repB.FallDays,0) - ifnull(repA.FallDays,0),1) FallDays
+			    ,round(ifnull(repB.FallCreditsOverage,0) - ifnull(repA.FallCreditsOverage,0),1) FallCreditsOverage
+			    ,round(ifnull(repB.FallDaysOverage,0) - ifnull(repA.FallDaysOverage,0),1) FallDaysOverage
+			    ,round(ifnull(repB.WinterCredits,0) - ifnull(repA.WinterCredits,0),1) WinterCredits
+			    ,round(ifnull(repB.WinterDays,0) - ifnull(repA.WinterDays,0),1) WinterDays
+			    ,round(ifnull(repB.WinterCreditsOverage,0) - ifnull(repA.WinterCreditsOverage,0),1) WinterCreditsOverage
+			    ,round(ifnull(repB.WinterDaysOverage,0) - ifnull(repA.WinterDaysOverage,0),1) WinterDaysOverage
+			    ,round(ifnull(repB.SpringCredits,0) - ifnull(repA.SpringCredits,0),1) SpringCredits
+			    ,round(ifnull(repB.SpringDays,0) - ifnull(repA.SpringDays,0),1) SpringDays
+			    ,round(ifnull(repB.SpringCreditsOverage,0) - ifnull(repA.SpringCreditsOverage,0),1) SpringCreditsOverage
+			    ,round(ifnull(repB.SpringDaysOverage,0) - ifnull(repA.SpringDaysOverage,0),1) SpringDaysOverage
+			    ,round(ifnull(repB.FYTotalNoOfCredits,0) - ifnull(repA.FYTotalNoOfCredits,0),1) FYTotalNoOfCredits
+			    ,round(ifnull(repB.FYTotalNoOfDays,0) - ifnull(repA.FYTotalNoOfDays,0),1) FYTotalNoOfDays
+			from
+			(select contactID, bannerGNumber, FirstName, LastName, Program, SchoolDistrict
+				,SummerCredits, SummerDays, FallCredits, FallDays, FallCreditsOverage, FallDaysOverage
+				,WinterCredits, WinterDays, WinterCreditsOverage, WinterDaysOverage
+			    ,SpringCredits, SpringDays, SpringCreditsOverage, SpringDaysOverage
+			    ,FYTotalNoOfCredits, FYTotalNoOfDays
+			from billingCycle bc
+				join billingReport br on bc.LatestBillingReportID = br.BillingReportId
+			    join billingReportTerm brt on br.BillingReportId = brt.BillingReportId
+			where bc.billingCycleId = #qryPrevMonth.billingCycleId#
+			  ) repA
+			left outer join (select contactID, bannerGNumber, FirstName, LastName, Program, SchoolDistrict
+				,SummerCredits, SummerDays, FallCredits, FallDays, FallCreditsOverage, FallDaysOverage
+				,WinterCredits, WinterDays, WinterCreditsOverage, WinterDaysOverage
+			    ,SpringCredits, SpringDays, SpringCreditsOverage, SpringDaysOverage
+			    ,FYTotalNoOfCredits, FYTotalNoOfDays
+			from billingCycle bc
+				join billingReport br on bc.LatestBillingReportID = br.BillingReportId
+			    join billingReportTerm brt on br.BillingReportId = brt.BillingReportId
+			where bc.billingCycleId =  #qryMaxMonth.billingCycleId#
+				) repB
+				on repA.contactID = repB.contactID
+					and repA.Program = repB.Program
+			        and repA.SchoolDistrict = repB.SchoolDistrict
+			where repB.contactID is null
+				or IFNULL(repB.SummerCredits,0) != IFNULL(repA.SummerCredits,0)
+				or IFNULL(repB.SummerDays,0) != IFNULL(repA.SummerDays,0)
+				<cfif maxMonth GT 9>
+					or IFNULL(repB.FallCredits,0) != IFNULL(repA.FallCredits,0)
+					or IFNULL(repB.FallDays,0) != IFNULL(repA.FallDays,0)
+					or IFNULL(repB.FallCreditsOverage,0) != IFNULL(repA.FallCreditsOverage,0)
+					or IFNULL(repB.FallDaysOverage,0) != IFNULL(repA.FallDaysOverage,0)
+				</cfif>
+				<cfif maxMonth GT 21>
+					or IFNULL(repB.WinterCredits,0) != IFNULL(repA.WinterCredits,0)
+					or IFNULL(repB.WinterDays,0) != IFNULL(repA.WinterDays,0)
+					or IFNULL(repB.WinterCreditsOverage,0) != IFNULL(repA.WinterCreditsOverage,0)
+					or IFNULL(repB.WinterDaysOverage,0) != IFNULL(repA.WinterDaysOverage,0)
+				</cfif>
+				<cfif maxMonth GT 23>
+					or IFNULL(repB.SpringCredits,0) != IFNULL(repA.SpringCredits,0)
+					or IFNULL(repB.SpringDays,0) != IFNULL(repA.SpringDays,0)
+					or IFNULL(repB.SpringCreditsOverage,0) != IFNULL(repA.SpringCreditsOverage,0)
+					or IFNULL(repB.SpringDaysOverage,0) != IFNULL(repA.SpringDaysOverage,0)
+				</cfif>
+
+				) data
+				order by SchoolDistrict, Program, Lastname, Firstname
+		</cfquery>
+		<cfreturn data>
+	</cffunction>
 	<cffunction name="getStudentDiffCountAttendance">
 		<cfset data = getBillingDifferencesAttendance()>
 		<cfreturn data.recordCount>
 	</cffunction>
-
+	<cffunction name="getStudentDiffCountTerm">
+		<cfset data = getBillingDifferencesTerm()>
+		<cfreturn data.recordCount>
+	</cffunction>
 	<cffunction name="getBillingStudentAudit" access="remote" returnformat="JSON">
 		<cfargument name="bannerGNumber">
 		<cfargument name="monthNumber">
@@ -1093,23 +1268,25 @@
 			select max(billingCloseDate) closeDate
 			from billingCycle
 			where billingType = 'attendance'
-			  and billingCycleId < (select max(billingCycleId) from billingCycle where billingType = 'attendance')
+			  and billingCycleId <= (select max(billingCycleId) from billingCycle where billingType = 'attendance' and billingCloseDate is not null)
 		</cfquery>
 
 		<cfquery name="data">
-			select bs.bannerGNumber, al.columnName
-				, al.oldValue, al.newValue, ifnull(al.action, 'inserted') action
+			select bs.bannerGNumber, bsp.firstName, bsp.lastName, al.columnName , al.oldValue, al.newValue, ifnull(al.action, 'inserted') action
 				, Date_Format(ifnull(al.changedDate, bs.dateLastUpdated),'%m/%d/%y') changedDate
 				, ifnull(al.changedBy, bs.lastUpdatedBy) changedBy
-			from billingStudent bs
+		        , bs.billingStudentId
+		    from billingStudent bs
+				join billingStudentProfile bsp on bs.ContactID = bsp.contactID
 				left outer join auditLog al on bs.BillingStudentID = al.idValue
 				    and al.tableName = 'BillingStudent'
-					and al.columnName in ('Program', 'DistrictID', 'IncludeFlag')
+					and al.columnName in ('Program', 'DistrictID', 'IncludeFlag', 'AdjustedDaysPerMonth', 'GeneratedBilledAmount', 'GeneratedOverageAmount')
 			where ifnull(al.changedDate, bs.dateLastUpdated) >= <cfqueryparam value="#DateFormat(getAuditLogDate.closeDate,'yyyy-mm-dd')#">
-				and bannerGNumber = <cfqueryparam value="#arguments.bannerGNumber#">
+				and bs.bannerGNumber = <cfqueryparam value="#arguments.bannerGNumber#">
 				and BillingStartDate = <cfqueryparam value="#DateFormat(getStartingDate.billingStartDate,'yyyy-mm-dd')#">
 			order by al.columnName, al.changedDate;
 		</cfquery>
+		<!---><cfdump var="#data#">--->
 		<cfreturn data>
 	</cffunction>
 

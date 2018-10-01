@@ -9,7 +9,7 @@
 <cfif url.type EQ 'Term'>
 	<cfinvoke component="pcclinks.bill.LookUp" method="getOpenTerms" returnvariable="openTerms"></cfinvoke>
 	<cfset openBillingStartDate = openTerms.billingStartDate>
-	<cfset correctionCount = 0>
+	<cfinvoke component="pcclinks.bill.Report" method="getStudentDiffCountTerm" returnVariable="correctionCount">
 <cfelse>
 	<cfinvoke component="pcclinks.bill.LookUp" method="getFirstOpenAttendanceDate" returnvariable="openBillingStartDate"></cfinvoke>
 	<cfinvoke component="pcclinks.bill.Report" method="getStudentDiffCountAttendance" returnVariable="correctionCount">
@@ -49,7 +49,7 @@ h4{
 			<div class="row">
 				<div class="small-12 columns">
 					<div class="callout primary">
-						<b>Corrections exist for previous months.</b> View <a href="reportBillingDifferences.cfm?type=Attendance">here</a>
+						<b>Corrections exist for previous months.</b> View <a href="<cfif url.type EQ 'Term'>reportBillingDifferencesTerm.cfm<cfelse>reportBillingDifferencesAttendance.cfm</cfif>">here</a>
 					</div>
 				</div>
 			</div>

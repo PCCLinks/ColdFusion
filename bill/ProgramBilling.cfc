@@ -80,7 +80,24 @@
 		<cfreturn data>
 	</cffunction>
 
-
+	<cffunction name="getPastProgramYears" >
+		<cfargument name="billingStudentId" required="true">
+		<cfquery name="currentProgramYear">
+			select distinct ProgramYear, bs.contactId
+			from bannerCalendar bc
+				join billingStudent bs on bc.Term = bs.Term
+			where bs.billingStudentId = <cfqueryparam value="#arguments.billingStudentId#">
+		</cfquery>
+		<cfquery name="data">
+			select distinct ProgramYear
+			from bannerCalendar bc
+				join billingStudent bs on bc.Term = bs.Term
+			where bs.contactId = #currentProgramYear.contactId#
+				and bc.ProgramYear < '#currentProgramYear.ProgramYear#'
+		</cfquery>
+		<cfreturn data>
+	</cffunction>
+			
 	<cffunction name="getOtherBilling" returntype="query" access="remote">
 		<cfargument name="contactId" required="true">
 		<cfargument name="term" required="true">

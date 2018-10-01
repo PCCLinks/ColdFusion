@@ -135,7 +135,9 @@
 
 		<cfset appObj.logEntry(value="program = #local.program#", level=3)>
 
-		<!--- not the right billing type, return -1 --->
+		<!---------------------------------------------------------------->
+		<!--- IF not the right Billing Type, RETURN -1 --->
+		<!---------------------------------------------------------------->
 		<cfif local.program CONTAINS 'attendance' AND arguments.billingType NEQ 'attendance' >
 			<cfset local.errorMsg = "Student assigned to program = #local.program# which is not valid for #arguments.billingType# billing.">
 			<cfset appObj.logEntry(value="#local.errorMsg#  BannerGNumber=#arguments.contactRow.bannerGNumber#")>
@@ -143,7 +145,9 @@
 			<cfset appObj.logDump(label="arguments", value = "#arguments#") >
 			<cfreturn [-1, '', "#local.errorMsg#"] >
 
-		<!--- meets the billing type criteria --->
+		<!---------------------------------------------------------------->
+		<!--- ELSE meets the billing type criteria --->
+		<!---------------------------------------------------------------->
 		<cfelse>
 
 			<!---------------------------------->
@@ -159,7 +163,9 @@
 			</cfquery>
 			<cfset appObj.logDump(label="qryResult", value=qryResult, level=3) >
 
-			<!--- create a record if one does not exist --->
+			<!---------------------------------------------------------------->
+			<!--- CREATE a record if one does not exist --->
+			<!---------------------------------------------------------------->
 			<cfif qry.recordcount EQ 0 >
 				<cfset appObj.logDump(label="qry", value=qry, level=3) >
 				<cfset appObj.logDump(label="program", value="#local.program#", level=3) >
@@ -222,7 +228,7 @@
 									,<cfqueryparam value="#bannerPerson.firstname#">
 									,<cfqueryparam value="#bannerPerson.lastname#">
 									,<cfqueryparam value="#bannerPerson.dob#">
-									,<cfqueryparam value="#bannerPerson.gender#">
+									,<cfif len(bannerPerson.gender) EQ 0>NULL<cfelse><cfqueryparam value="#bannerPerson.gender#"></cfif>
 									,<cfqueryparam value="#bannerPerson.ethnicity#">
 									,<cfqueryparam value="#bannerPerson.STU_STREET1#">
 									,<cfqueryparam value="#bannerPerson.STU_CITY#">
@@ -256,16 +262,26 @@
 						</cfif>
 					</cfif>
 
+					<!---------------------------------------------------------------->
+					<!--- ERROR TRAPPING FOR INSERT ---------------------------------->
+					<!---------------------------------------------------------------->
 					<cfcatch type="any">
 						<cfset appObj.logDump(label="contactRow", value=arguments.contactRow) >
 						<cfset appObj.logEntry(value = DateFormat(arguments.billingStartDate,'yyyy-mm-dd')) >
-						<cfrethrow />
+						<cfset msg = "Error with SetUpBilling.cfc->getBillingStudent INSERT for billingStartDate: #arguments.billingStartDate#, billingEndDate: #arguments.billingEndDate#, bannerGNumber: #arguments.contactRow.bannerGNumber#. Error is: #cfcatch.message#.  Is School District Populated??">
+						<cfset appObj.logEntry(value = msg) >
+						<cfset appObj.emailError(msg)>
+						<cfreturn [-1, '', "#msg#"] >
 					</cfcatch>
 				</cftry>
 				<cfset appObj.logEntry(value="billingstudentid=#local.billingstudentid#", level=5) >
 				<cfset appObj.logDump(label="resultBillingstudent", value=resultBillingstudent, level=5) >
-			<!--- else grab the id of the current  record --->
+			<!---------------------------------------------------------------->
+			<!--- ELSE Record EXISTS									------>
+			<!--- GRAB the id of the current  record					------>
+			<!---------------------------------------------------------------->
 			<cfelse>
+				<cftry>
 				<cfquery name="update">
 					UPDATE billingStudent
 					SET billingStartDate = <cfqueryparam value="#DateFormat(arguments.billingStartDate,'yyyy-mm-dd')#">,
@@ -276,8 +292,20 @@
 						LastUpdatedBy = '#Session.username#'
 					WHERE billingStudentId = <cfqueryparam value="#qry.billingstudentid#" >
 				</cfquery>
+				<!---------------------------------------------------------------->
+				<!--- ERROR TRAPPING FOR UPDATE ---------------------------------->
+				<!---------------------------------------------------------------->
+				<cfcatch type="any">
+					<cfset appObj.logDump(label="contactRow", value=arguments.contactRow) >
+					<cfset appObj.logEntry(value = DateFormat(arguments.billingStartDate,'yyyy-mm-dd')) >
+					<cfset msg = "Error with SetUpBilling.cfc->getBillingStudent UPDATE for beginDate: #arguments.beginDate#, endDate: #arguments.endDate#, bannerGNumber: #arguments.contactRow.bannerGNumber#. Error is: #cfcatch.message#.">
+					<cfset appObj.logEntry(value = msg) >
+					<cfset appObj.emailError(msg)>
+					<cfreturn [-1, '', "#msg#"] >
+				</cfcatch>
+				</cftry>
 				<cfset local.billingstudentid = #qry.billingstudentid#>
-			</cfif> <!--- end get billing  student record --->
+			</cfif> <!--- end if billing  student record insert or update --->
 
 			<!--- debug code --->
 			<cfset appObj.logEntry(value="billingstudentid=#local.billingstudentid#", level=5) >
@@ -727,7 +755,8 @@
 				where billingStartDate = <cfqueryparam value="#DateFormat(arguments.billingStartDate,'yyyy-mm-dd')#">
 					and billingType = 'Attendance'
 			</cfquery>
-		</cfif>
+		</cfif> <!--- end if billingType eq term or attendance --->
+
 		<cfset arguments.billingStartDate = billingCycle.billingStartDate>
 		<cfset arguments.billingEndDate = billingCycle.billingEndDate>
 		<cfset arguments.term = billingCycle.term>

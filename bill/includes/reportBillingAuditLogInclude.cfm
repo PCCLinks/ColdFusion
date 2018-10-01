@@ -1,13 +1,22 @@
+<style>
+.ui-widget-content a {
+    color:#1779ba;
+}
+</style>
+
 <b>Program or School District Changes</b><br/>
 <table id="dt_billingStudentAudit" class="compact">
 	<thead>
 		<th>G Number</th>
+		<th>First name</th>
+		<th>Last Name</th>
 		<th>Info</th>
 		<th>Old Value</th>
 		<th>New Value</th>
 		<th>Action</th>
 		<th>Changed Date</th>
 		<th>Changed By</th>
+		<th>BillingStudentId</th>
 	</thead>
 	<tbody>
 </table>
@@ -31,11 +40,14 @@
 </table>
 
 <script>
-	var dtBS;
-	var dtBSI;
-function getAuditData(bannerGNumber, monthNumber){
+var dtBS;
+var dtBSI;
+var indexOfBillingStudentId = 9;
+var indexOfBannerGNumber = 0;
+
+function reportBillingAuditLogInclude_getAuditData(bannerGNumber, monthNumber){
 	if(dtBS){
-		dtBS.destroy();
+		dtBS.destroy(false);
 	}
 	dtBS = $('#dt_billingStudentAudit').DataTable({
 		processing:true,
@@ -53,11 +65,19 @@ function getAuditData(bannerGNumber, monthNumber){
 			error: function (xhr, textStatus, thrownError) {
 			        handleAjaxError(xhr, textStatus, thrownError)
 				},
-	     }
+	     },
+		columnDefs:[
+			{targets: indexOfBillingStudentId, visible: false, searchable: true},
+			{targets:indexOfBannerGNumber,
+				render: function ( data, type, row ) {
+           				return '<a href="javascript:getBillingStudent(' + row[indexOfBillingStudentId] + ', true)">' + data + '</a>';
+     				}
+			}
+  		],
     });
 
 	if(dtBSI){
-		dtBSI.destroy();
+		dtBSI.destroy(false);
 	}
 	dtBSI = $('#dt_billingStudentItemAudit').DataTable({
 		processing:true,

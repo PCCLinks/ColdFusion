@@ -1,6 +1,7 @@
 <cfinvoke component="pcclinks.bill.ProgramBilling" method="getBillingStudentForYear"  returnvariable="qryBillingStudentEntries">
 	<cfinvokeargument name="billingStudentId" value="#url.billingStudentId#">
 </cfinvoke>
+
 <cfset Session.qryBillingStudentEntries = qryBillingStudentEntries>
 
 <!--- assuming sorted by billingDate desc --->

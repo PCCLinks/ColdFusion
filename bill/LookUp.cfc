@@ -153,6 +153,23 @@
 		</cfquery>
 		<cfreturn data>
 	</cffunction>
+	<cffunction name="getFirstOpenAttendanceORLastClosedQuery" access="remote" >
+		<cfquery name="data">
+			SELECT min(billingStartDate) billingStartDate, min(Term) Term
+			FROM billingCycle
+			WHERE billingType = 'attendance'
+				and billingCloseDate IS NULL
+		</cfquery>
+		<cfif len(data.billingStartDate) EQ 0 >
+			<cfquery name="data">
+				SELECT max(billingStartDate) billingStartDate, max(Term) Term
+				FROM billingCycle
+				WHERE billingType = 'attendance'
+					and billingCloseDate IS NOT NULL
+			</cfquery>
+		</cfif>
+		<cfreturn data>
+	</cffunction>
 	<cffunction name="getAttendanceDatesToBill" access="remote" returnformat="JSON">
 		<cfargument name="term" required=true>
 		<cfargument name="billingStartDate" >
@@ -318,6 +335,23 @@
 		</cfquery>
 		<cfreturn data.attendanceBillDate>
 	</cffunction>
+	<cffunction name="getFirstOpenAttendanceDateorLastClosed" access="remote" >
+		<cfquery name="data">
+			SELECT min(billingStartDate) attendanceBillDate
+			FROM billingCycle
+			WHERE billingType = 'attendance'
+				and billingCloseDate IS NULL
+		</cfquery>
+		<cfif len(data.attendanceBillDate) EQ 0 >
+			<cfquery name="data">
+				SELECT max(billingStartDate) attendanceBillDate
+				FROM billingCycle
+				WHERE billingType = 'attendance'
+					and billingCloseDate IS NOT NULL
+			</cfquery>
+		</cfif>
+		<cfreturn data.attendanceBillDate>
+	</cffunction>
 	<cffunction name="getLatestDateAttendanceMonth" access="remote" returntype="date">
 		<cfquery name="data">
 				SELECT max(billingStartDate) lastAttendanceBillDate
@@ -365,7 +399,7 @@
 			order by fnGetBillingStatus(billingStudentId)
 		</cfquery>
 		<cfreturn data>
-	</cffunction>			
+	</cffunction>
 	<cffunction name="convertTerm">
 		<cfargument name="term" required="true">
 		<cfset d = "">

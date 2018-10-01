@@ -2,11 +2,12 @@
 <cfinclude template="includes/header.cfm" />
 
 <cfinvoke component="LookUp" method="getCurrentYearTerms" returnvariable="qryTerms"></cfinvoke>
+
 <cfif url.type EQ 'Term'>
 	<cfinvoke component="LookUp" method="getNextTermToBill" returnvariable="termToBill"></cfinvoke>
 	<cfset billingStartDate = ''>
 <cfelse>
-	<cfinvoke component="LookUp" method="getLastAttendanceDateClosed" returnvariable="attendanceData"></cfinvoke>
+	<cfinvoke component="LookUp" method="getFirstOpenAttendanceORLastClosedQuery" returnvariable="attendanceData"></cfinvoke>
 	<cfset termToBill = attendanceData.Term>
 	<cfset billingStartDate = attendanceData.billingStartDate>
 </cfif>
@@ -33,7 +34,7 @@
 						--Select Term--
 					</option>
 					<cfoutput query="qryTerms">
-					<option  value="#term#" <cfif qryTerms.term EQ termToBill>selected</cfif> >#termDescription#</option>
+					<option  value="#term#" <cfif qryTerms.term EQ termToBill>selected</cfif> > #termDescription#</option>
 					</cfoutput>
 				</select>
 			</label>
