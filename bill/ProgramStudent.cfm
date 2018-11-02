@@ -335,14 +335,24 @@ table.dataTable thead th.tooltipformat {
 
 		<!-- next and prev options -->
 		function gridNext(){
-			var indexes = table_list.rows({search:'applied'}).indexes();
 			var next;
+
+			//collection of selected row indexes in the order being displayed
+			var indexes = table_list.rows({search:'applied'}).indexes();
+
+			//iterate through, to find out the position of the current row
 			$.each(indexes, function(i, index){
 				if(index == selectedRow.index()){
 					next = i + 1;
 				}
 			});
 
+			//are we at the bottom of the page?
+			var pageNo = table_list.page.info().page+1; //0 based add 1 for usage in denominator
+			if(table_list.page.len() == next/pageNo){
+				table_list.page('next').draw( 'page' );
+			}
+			//move down to the next row and select it
 			table_list.rows(indexes[next]).select();
 			$(table_list.row(indexes[next]).node()).click();
 		}

@@ -1,4 +1,4 @@
-<cfinvoke component="pcclinks.bill.programBilling" method="getStudentForCRNAndTerm" returnvariable="data">
+<cfinvoke component="pcclinks.bill.programBilling" method="getAttendanceStudentForCRNAndTerm" returnvariable="data">
 	<cfinvokeargument name="term" value="#url.term#">
 	<cfinvokeargument name="crn" value="#url.crn#">
 </cfinvoke>

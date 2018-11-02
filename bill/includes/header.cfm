@@ -21,6 +21,7 @@
 				<li><a href="SetUpBilling.cfm?type=Term">Set Up Billing</a></li>
 		 		<li><a href="AddStudent.cfm?type=Term">Add Student</a></li>
 				<li><a href="ReportSummary.cfm?type=Term">Reporting</a></li>
+				<li><a href="ReportTermSummary.cfm">Term Summary</a></li>
 			</ul>
 		</li>
 		 <li><a>Attendance Billing</a>
@@ -42,7 +43,7 @@
 				<li><a href="ProgramStudent.cfm">Review Billing</a></li>
 		 		<li><a href="ProgramReview.cfm">Coach Review</a></li>
 				<li><a href="ReportSIDNYComparison.cfm">SIDNY Comparison Report</a></li>
-				<li><a href="ReportPreviousPeriodComparison.cfm">Check for Differences from Previous Period</a></li>
+				<!---><li><a href="ReportPreviousPeriodComparison.cfm">Check for Differences from Previous Period</a></li>--->
 		 		<li><a href="Transcript.cfm">Transcript</a></li>
 			</ul>
 		</li>

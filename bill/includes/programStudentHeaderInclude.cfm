@@ -57,13 +57,13 @@
 			</div>
 			<div class="small-1 columns">
 				<cfif readonly>
-					<cfif LEN(#EXITDATE#) EQ 0>None<cfelse>#DateFormat(EXITDATE,"m/d/yy")#</cfif>
-				<cfelse><input id="exitDateH#attributes.billingStudentId#" name="exitDateH#attributes.billingStudentId#" value="#DateFormat(EXITDATE,"m/d/yy")#"
+					<cfif LEN(#EXITDATE#) EQ 0>None<cfelse>#DateFormat(EXITDATE,"m/d/yyyy")#</cfif>
+				<cfelse><input id="exitDateH#attributes.billingStudentId#" name="exitDateH#attributes.billingStudentId#" value="#DateFormat(EXITDATE,"m/d/yyyy")#"
 							style="width:75px;" type="text" class="fdatepicker" onChange="javascript:updateStudentHeaderExitDate('exitDateH#attributes.billingStudentId#', #attributes.billingStudentId#);">
 				</cfif>
 			</div>
-			<div class="small-1 columns"><cfif LEN(#SIDNYExitDate#) EQ 0>None<cfelse>#DateFormat(SIDNYExitDate,"m/d/yy")#</cfif></div>
-			<div class="small-1 columns">#term#<br/>#DateFormat(billingStartDate,'m/d/yy')#</div>
+			<div class="small-1 columns"><cfif LEN(#SIDNYExitDate#) EQ 0>None<cfelse>#DateFormat(SIDNYExitDate,"m/d/yyyy")#</cfif></div>
+			<div class="small-1 columns">#term#<br/>#DateFormat(billingStartDate,'m/d/yyyy')#</div>
 			<div class="small-1 columns">#schooldistrict#</div>
 			<div class="small-1 columns" id="billingStatusH#attributes.billingStudentId#"><cfif noBannerAttr><span style="color:red"></cfif>#billingstatus#<cfif noBannerAttr></span></cfif></div>
 			<div class="small-1 columns">

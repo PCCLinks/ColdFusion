@@ -8,7 +8,7 @@
 </cfinvoke>
 
 <div class="callout primary">
-<cfoutput>Date: #DateFormat(url.billingStartDate,'m/d/yy')#&nbsp;Class:
+<cfoutput>Date: #DateFormat(url.billingStartDate,'m/d/yyyy')#&nbsp;Class:
 	<cfif data.subj EQ url.crn>#url.crn#
 	<cfelse>#data.subj#-#data.crse#&nbsp;#data.title#&nbsp;(#url.crn#)
 	</cfif>
@@ -32,7 +32,7 @@
 		</cfif>
 	</cfif>
 	<div class="row">
-		<div class="small-5 medium-6 columns display readonly">#data.lastname#, #data.firstname# <cfif len(data.exitDate) GT 0><span style="color:red">Exit Date: #DateFormat(data.exitDate,'m/d/yy')#</span></cfif> (#data.bannerGNumber#)</div>
+		<div class="small-5 medium-6 columns display readonly">#data.lastname#, #data.firstname# <cfif len(data.exitDate) GT 0><span style="color:red">Exit Date: #DateFormat(data.exitDate,'m/d/yyyy')#</span></cfif> (#data.bannerGNumber#)</div>
 		<div class="small-3 medium-3 columns display readonly">#enrolledTag#</div>
 		<div class="small-3 medium-3 columns display"><a href="javascript:removeItem(#data.billingStudentItemId#, #data.billingStudentId#)">Remove from Class</a></div>
 	</div>

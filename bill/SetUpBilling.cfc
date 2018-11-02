@@ -40,7 +40,7 @@
 				WHERE STU_ID IN (<cfqueryparam value="#local.inList#" list="yes" cfsqltype="String">)
 			</cfquery>
 			<cfset appObj.logEntry(value="PROCEDURE getStudentsToBill combine query #Now()#", level=5) >
-			<cfquery dbtype="query" name="final">
+			<cfquery dbtype="query" name="combined">
 				SELECT bannerGNumber, contactId, program, enrolledDate, exitDate, schoolDistrict, districtID, PIDM, firstname, lastname
 				FROM qry
 				UNION
@@ -48,6 +48,12 @@
 				FROM qry, pidm
 				WHERE qry.bannerGNumber = pidm.STU_ID
 				AND qry.PIDM IS NULL
+			</cfquery>
+			<!---- combine in case row in qry that has null pidm, but attribute added, so also exists in second part of union ---->
+			<cfquery dbtype="query" name="final">
+				SELECT bannerGNumber, contactId, program, enrolledDate, exitDate, schoolDistrict, districtID, max(PIDM) PIDM, firstname, lastname
+				FROM combined
+				GROUP BY bannerGNumber, contactId, program, enrolledDate, exitDate, schoolDistrict, districtID, firstname, lastname
 			</cfquery>
 		<!--- no missing PIDM so simpler query --->
 		<cfelse>
@@ -138,7 +144,8 @@
 		<!---------------------------------------------------------------->
 		<!--- IF not the right Billing Type, RETURN -1 --->
 		<!---------------------------------------------------------------->
-		<cfif local.program CONTAINS 'attendance' AND arguments.billingType NEQ 'attendance' >
+		<cfif (local.program CONTAINS 'attendance' AND arguments.billingType NEQ 'attendance')
+			OR (local.program DOES NOT CONTAIN 'attendance' AND arguments.billingType EQ 'attendance')>
 			<cfset local.errorMsg = "Student assigned to program = #local.program# which is not valid for #arguments.billingType# billing.">
 			<cfset appObj.logEntry(value="#local.errorMsg#  BannerGNumber=#arguments.contactRow.bannerGNumber#")>
 			<cfset appObj.logEntry(value="FUNCTION getBillingStudent #Now()#")>
@@ -530,6 +537,7 @@
 			from billingStudent
 			where term = <cfqueryparam value="#arguments.term#">
 				and program like '%attendance%'
+				and billingStartDate < <cfqueryparam value="#DateFormat(arguments.billingStartDate, 'yyyy-mm-dd')#">
 		</cfquery>
 
 		<!--- first time for the term so run against all active students --->
@@ -737,7 +745,7 @@
 		<cfargument name="bannerGNumber" default="" required="true">
 		<cfargument name = "billingStartDate" type="date" >
 		<!---><cfargument name = "billingEndDate">--->
-		<cfargument name="crn" >
+		<cfargument name="crn" default="">
 		<cfargument name= "term" >
 		<cfargument name="billingType" required=true>
 

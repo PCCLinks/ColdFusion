@@ -1,10 +1,11 @@
 <cfset pcc_title = 'PCC Links Billing' />
 <cfinclude template="includes/header.cfm">
-
+<cfinvoke component="LookUp" method="getMaxTerm"  returnvariable="maxTerm"></cfinvoke>
 <cfinvoke component="Report" method="termReport" returnvariable="qryData">
 	<cfinvokeargument name="program" value="#url.program#">
 	<cfinvokeargument name="schooldistrict" value="#url.schooldistrict#">
 	<cfinvokeargument name="programYear" value="#url.programYear#">
+	<cfinvokeargument name="term" value="#maxTerm#">
 </cfinvoke>
 
 

@@ -248,6 +248,7 @@
 			ajax:{
 				url:"setUpBilling.cfc?method=getBannerPerson",
 				type:'POST',
+				cache: false,
 				data: function(d){
 						d.bannerGNumber = $('#bannerGNumberSearch').val();
 						},
@@ -268,6 +269,7 @@
 			ajax:{
 				url:"setUpBilling.cfc?method=getBannerCourse",
 				type:'POST',
+				cache: false,
 				data: function(d){
 						d.bannerGNumber = $('#bannerGNumberSearch').val();
 						},

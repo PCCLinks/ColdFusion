@@ -1,4 +1,3 @@
-
 <cfinvoke component="pcclinks.bill.LookUp" method="getFirstOpenAttendanceDate" returnvariable="openAttendanceDate"></cfinvoke>
 <cfinvoke component="pcclinks.bill.LookUp" method="getLastAttendanceDateClosed" returnvariable="lastClosedAttendance"></cfinvoke>
 
@@ -154,7 +153,7 @@
 						<th>Crse</th>
 						<th>CRN</th>
 						<th>Title</th>
-						<th>## Students</th>
+						<th># Students</th>
 					</tr>
 					</thead>
 					<tbody>

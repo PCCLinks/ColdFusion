@@ -32,7 +32,7 @@
 
 <cfsavecontent variable="pcc_scripts">
 <script type="text/javascript">
-	$('#billingStartDate').datepicker({ dateFormat: 'mm/dd/yy' });
+	$('#billingStartDate').datepicker({ dateFormat: 'mm/dd/yyyy' });
 	function closeBillingCycle(){
 		var r = confirm("Are you sure you want to close this billing cycle?");
 		if(r){

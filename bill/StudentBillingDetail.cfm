@@ -54,9 +54,9 @@
 			<div class="small-2 columns">#bannerGNumber#</div>
 			<div class="small-2 columns">#FIRSTNAME# #LASTNAME#</div>
 			<div class="small-1 columns">#PROGRAM#</div>
-			<div class="small-1 columns">#DateFormat(ENROLLEDDATE,"m/d/yy")#</div>
-			<div class="small-1 columns"><cfif LEN(#EXITDATE#) EQ 0>None<cfelse>#DateFormat(EXITDATE,"m/d/yy")#</cfif></div>
-			<div class="small-1 columns"><cfif LEN(#BillingDate#) EQ 0>N/A<cfelse>#DateFormat(BillingDate,"m/d/yy")#</cfif></div>
+			<div class="small-1 columns">#DateFormat(ENROLLEDDATE,"m/d/yyyy")#</div>
+			<div class="small-1 columns"><cfif LEN(#EXITDATE#) EQ 0>None<cfelse>#DateFormat(EXITDATE,"m/d/yyyy")#</cfif></div>
+			<div class="small-1 columns"><cfif LEN(#BillingDate#) EQ 0>N/A<cfelse>#DateFormat(BillingDate,"m/d/yyyy")#</cfif></div>
 		</div>
 	</div>
 </cfoutput>

@@ -26,6 +26,7 @@
 		<cfargument name="programYear" required = "true">
 		<cfargument name="program" default="">
 		<cfargument name="schooldistrict" default="">
+		<cfargument name="term" required="true">
 
 		<cfquery name="data" >
 			SELECT firstname, lastname, bannergnumber
@@ -64,7 +65,8 @@
 			WHERE FYTotalNoOfCredits <> 0
                 and program = <cfqueryparam value="#arguments.program#">
                 and schoolDistrict = <cfqueryparam value="#arguments.schooldistrict#">
-				and bc.programYear = <cfqueryparam value="#programYear#">
+				and bc.programYear = <cfqueryparam value="#arguments.programYear#">
+				and bc.term = <cfqueryparam value="#arguments.term#">
 			ORDER BY lastname, firstname, billingStartDate
 		</cfquery>
 		<cfset list = "">
@@ -100,8 +102,8 @@
 				,DATE_FORMAT(dob,'%m/%d/%Y') dob
 				,DATE_FORMAT(exitdate,'%m/%d/%Y') exitDate
 				,DATE_FORMAT(entryDate,'%m/%d/%Y') enrolledDate
-				,DATE_FORMAT(billingStartDate, '%m/%d/%Y') ReportStartDate
-				,DATE_FORMAT(LAST_DAY(billingEndDate), '%m/%d/%Y') ReportEndDate
+				,DATE_FORMAT(IFNULL(bcStart.billingStartDate, bc.billingStartDate), '%m/%d/%Y') ReportStartDate
+				,DATE_FORMAT(LAST_DAY(IFNULL(bcEnd.billingEndDate, bc.billingEndDate)), '%m/%d/%Y') ReportEndDate
 				,ROUND(TotalEnrollment,1)  Enrl
 				,schooldistrict
 				,program
@@ -120,6 +122,9 @@
 				,ROUND(TotalAttendance,1) Attnd,
 				bs.billingStudentId billingStudentIdMostCurrent
 			FROM billingCycle bc
+				<!--- this handles if billing month is split term --->
+			    left outer join billingCycle bcStart on bc.StartingAttendanceBillingCycleId = bcStart.billingCycleId
+			    left outer join billingCycle bcEnd on bc.EndingAttendanceBillingCycleId = bcEnd.billingCycleId
 				join billingReport br on bc.LatestBillingReportID = br.billingReportId
 				join billingReportAttendance bra
 					on br.billingReportId = bra.billingReportId
@@ -128,7 +133,9 @@
 					on bra.contactID = bs.contactID
 			WHERE program = <cfqueryparam value="#arguments.program#">
                 and schoolDistrict = <cfqueryparam value="#arguments.schooldistrict#">
-				and bc.billingStartDate = <cfqueryparam value="#DateFormat(arguments.billingStartDate,'yyyy-mm-dd')#">
+				and (bc.billingStartDate = <cfqueryparam value="#DateFormat(arguments.billingStartDate,'yyyy-mm-dd')#">
+					OR bcStart.billingStartDate = <cfqueryparam value="#DateFormat(arguments.billingStartDate,'yyyy-mm-dd')#">
+					OR bcEnd.billingStartDate = <cfqueryparam value="#DateFormat(arguments.billingStartDate,'yyyy-mm-dd')#">)
 			ORDER BY bsp.lastname, bsp.firstname, bc.billingStartDate
 		</cfquery>
 
@@ -261,8 +268,8 @@
 		<cfquery name="data">
 			select bsp.LastName,
 				bsp.FirstName,
-				gender,
-				ethnicity,
+				case when gender="0" then NULL else gender end gender,
+				CASE WHEN ethnicity="0" then NULL else ethnicity end ethnicity,
 				DATE_FORMAT(bsp.DOB, '%m/%d/%Y') DOB,
 				fnGetGrade(dob, #cal.bannerYear#) Grade,
 				DATE_FORMAT(min(bs.billingStartDate), '%m/%d/%Y') EntryDate,
@@ -306,7 +313,7 @@
 				select bs.contactId, bs.exitDateGroupBy exitDate
 					,bsp.FirstName, bsp.LastName, bs.Program, schooldistrict
 					,MIN(bs.billingStartDate) entryDate
-					,MAX(bs.billingStudentId) lastbillingStudentId
+					,substring_index(MAX(CONCAT(bs.billingStartDate,'|',bs.billingStudentId)),"|",-1) lastbillingStudentId
 				from (select contactId
 						,(select min(exitDate) from billingStudent where billingStartDate >= bsSub.billingStartDate and bannerGNumber = bsSub.bannerGNumber) exitDateGroupBy
 						, billingStartDate
@@ -547,6 +554,41 @@
 		<cfreturn data>
 	</cffunction>
 
+	<cffunction name="termSummary" returntype="query" returnformat="json"  access="remote">
+		<cfargument name="term" required="true">
+		<cfquery name="data">
+			select CRN, CRSE, SUBJ, Title, CASE WHEN bs.IncludeFlag=0 OR bs.IncludeFlag IS NULL THEN 'Student NOT Billed' ELSE NULL END IncludeStudent
+				,bsp.bannerGNumber, bsp.firstName, bsp.lastName, bs.billingStudentId, bsi.Credits
+				,schoolDistrict, bs.Program
+			    ,CASE WHEN bsi.IncludeFlag=0 OR bsi.IncludeFlag IS NULL THEN 'Class NOT Billed' ELSE NULL END IncludeClass
+			    ,bs.exitDate
+			    ,sidnyExitDate.exitDate sidnyExitDate
+			from billingStudent bs
+				join billingStudentItem bsi on bs.billingStudentId = bsi.billingStudentId
+			    left outer join billingStudentProfile bsp on bs.contactid = bsp.contactId
+			    left outer join keySchoolDistrict sd on bs.districtId = sd.keySchoolDistrictId
+			    join (select enrolled.contactId, exitDate
+					  from (select contactId, max(statusDate) enrolledDate
+							from status s
+							where keyStatusID in (2,13,14,15,16)
+								and undoneStatusID is null
+							group by contactId) enrolled
+						 left outer join (select contactId, max(statusDate) exitDate
+										  from status s
+										  where keyStatusID in (3,12)
+											 and undoneStatusID IS NULL
+										  group by contactId) exited
+								on enrolled.contactId = exited.contactId
+									and enrolledDate < exitDate) sidnyExitDate
+					on bs.contactId = sidnyExitDate.contactId
+			where bs.term = <cfqueryparam value="#arguments.term#">
+				and bs.program not like '%attendance%'
+			order by CRN, lastname
+		</cfquery>
+		<!---><cfset Session.termSummaryPrint = data>--->
+		<cfreturn data>
+	</cffunction>
+
 	<cffunction name="updateOverrideTotal" access="remote">
 		<cfargument name="program" required="true">
 		<cfargument name="schooldistrict" required="true">
@@ -696,6 +738,7 @@
 			where bsPrev.includeFlag = 1
 				and bsPrev.billingStartDate = '#DateFormat(prevPeriod.billingStartDate, "yyyy-mm-dd")#'
 			 	and bsPrev.program <cfif arguments.billingType EQ 'Term'>not</cfif> like '%attendance%'
+			 	and bsPrev.generatedBilledAmount != 0
 			 	and (
 			 		(bsCurrent.billingStudentId is null and bsPrev.exitDate is null)
 						or (bsPrev.program != bsCurrent.program and bsPrev.exitDate is null )
@@ -951,20 +994,26 @@
 			    ,round(repB.TotalAttendance - ifnull(repA.TotalAttendance,0),1) Attendance
 			from
 			(select contactID, bannerGNumber, FirstName, LastName, Program, SchoolDistrict
-				,June, July, August, September, October, November, December, January, February
-			    ,March, April, May, TotalAttendance
+				,sum(June) June, sum(July) July, sum(August) August, sum(September) September
+                ,sum(October) October, sum(November) November, sum(December) December
+                ,sum(January) January, sum(February) February, sum(March) March, sum(April) April
+                ,sum(May)May, sum(TotalAttendance) TotalAttendance
 			from billingCycle bc
 				join billingReport br on bc.LatestBillingReportID = br.BillingReportId
 			    join billingReportAttendance bra on br.BillingReportId = bra.BillingReportId
 			where bc.billingCycleId = #qryMaxMonth.billingCycleId#
+			group by contactID, bannerGNumber, FirstName, LastName, Program, SchoolDistrict
 				) repB
 			left outer join (select contactID, bannerGNumber, FirstName, LastName, Program, SchoolDistrict
-				,June, July, August, September, October, November, December, January, February
-			    ,March, April, May, TotalAttendance
+				,sum(June) June, sum(July) July, sum(August) August, sum(September) September
+                ,sum(October) October, sum(November) November, sum(December) December
+                ,sum(January) January, sum(February) February, sum(March) March, sum(April) April
+                ,sum(May)May, sum(TotalAttendance) TotalAttendance
 			from billingCycle bc
 				join billingReport br on bc.LatestBillingReportID = br.BillingReportId
 			    join billingReportAttendance bra on br.BillingReportId = bra.BillingReportId
 			where bc.billingCycleId = #qryPrevMonth.billingCycleId#
+			group by contactID, bannerGNumber, FirstName, LastName, Program, SchoolDistrict
 			  ) repA
 				on repA.contactID = repB.contactID
 					and repA.Program = repB.Program
@@ -1021,20 +1070,26 @@
 			    ,round(ifnull(repB.TotalAttendance,0) - repA.TotalAttendance,1) TotalAttendance
 			from
 			(select contactID, bannerGNumber, FirstName, LastName, Program, SchoolDistrict
-				,June, July, August, September, October, November, December, January, February
-			    ,March, April, May, TotalAttendance
+				,sum(June) June, sum(July) July, sum(August) August, sum(September) September
+                ,sum(October) October, sum(November) November, sum(December) December
+                ,sum(January) January, sum(February) February, sum(March) March, sum(April) April
+                ,sum(May)May, sum(TotalAttendance) TotalAttendance
 			from billingCycle bc
 				join billingReport br on bc.LatestBillingReportID = br.BillingReportId
 			    join billingReportAttendance bra on br.BillingReportId = bra.BillingReportId
 			where bc.billingCycleId = #qryPrevMonth.billingCycleId#
+			group by contactID, bannerGNumber, FirstName, LastName, Program, SchoolDistrict
 			  ) repA
 			left outer join (select contactID, bannerGNumber, FirstName, LastName, Program, SchoolDistrict
-				,June, July, August, September, October, November, December, January, February
-			    ,March, April, May, TotalAttendance
+				,sum(June) June, sum(July) July, sum(August) August, sum(September) September
+                ,sum(October) October, sum(November) November, sum(December) December
+                ,sum(January) January, sum(February) February, sum(March) March, sum(April) April
+                ,sum(May)May, sum(TotalAttendance) TotalAttendance
 			from billingCycle bc
 				join billingReport br on bc.LatestBillingReportID = br.BillingReportId
 			    join billingReportAttendance bra on br.BillingReportId = bra.BillingReportId
 			where bc.billingCycleId =  #qryMaxMonth.billingCycleId#
+			group by contactID, bannerGNumber, FirstName, LastName, Program, SchoolDistrict
 				) repB
 				on repA.contactID = repB.contactID
 					and repA.Program = repB.Program
@@ -1098,7 +1153,7 @@
 		</cfif>
 
 		<cfquery name="qryPrevMonth">
-			select substring_index(maxmonth,':',-1) billingCycleId, substring_index(maxmonth,':',1) monthNumber
+			select IFNULL(substring_index(maxmonth,':',-1),#qryMaxMonth.billingCycleId#) billingCycleId, IFNULL(substring_index(maxmonth,':',1),#qryMaxMonth.monthNumber#) monthNumber
             from(
 			select max(concat(month(billingStartDate),':',bc.billingCycleId)) maxmonth
 			from billingCycle bc
@@ -1268,7 +1323,13 @@
 			select max(billingCloseDate) closeDate
 			from billingCycle
 			where billingType = 'attendance'
-			  and billingCycleId <= (select max(billingCycleId) from billingCycle where billingType = 'attendance' and billingCloseDate is not null)
+			 <!--- date last ran billing --->
+			  and billingStartDate < (select max(IFNULL(bcStart.BillingStartDate, bcEnd.BillingStartDate))
+										from billingCycle bcEnd
+											<!--- handling if billing with month of split terms --->
+											left outer join billingCycle bcStart on bcEnd.StartingAttendanceBillingCycleId = bcStart.billingCycleId
+										where bcEnd.billingType = 'attendance'
+										and bcEnd.billingCloseDate IS NOT NULL)
 		</cfquery>
 
 		<cfquery name="data">
