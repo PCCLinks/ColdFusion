@@ -1,32 +1,5 @@
-<cfinvoke component="pcclinks.bill.LookUp" method="getFirstOpenAttendanceDate" returnvariable="openAttendanceDate"></cfinvoke>
+<cfinvoke component="pcclinks.bill.LookUp" method="getOpenAttendanceDates" returnvariable="openAttendanceDates"></cfinvoke>
 <cfinvoke component="pcclinks.bill.LookUp" method="getLastAttendanceDateClosed" returnvariable="lastClosedAttendance"></cfinvoke>
-
-<cfif isDefined("openAttendanceDate") and openAttendanceDate NEQ "">
-	<cfinvoke component="pcclinks.bill.SetUpBilling" method="getStudentsNeedingBannerAttributes" returnvariable="attendanceStudentsNeedingBannerAttr">
-		<cfinvokeargument name="billingStartDate" value="#openAttendanceDate#">
-		<cfinvokeargument name="billingType" value="attendance">
-	</cfinvoke>
-
-	<cfinvoke component="pcclinks.bill.Report" method="getAttendanceEnteredByStudent" returnvariable="attendanceEnteredByStudent">
-		<cfinvokeargument name="billingStartDate" value="#openAttendanceDate#">
-	</cfinvoke>
-
-	<cfinvoke component="pcclinks.bill.Report" method="getAttendanceEnteredByClass" returnvariable="attendanceEnteredByClass">
-		<cfinvokeargument name="billingStartDate" value="#openAttendanceDate#">
-	</cfinvoke>
-
-	<cfinvoke component="pcclinks.bill.Report" method="getClassesNoHours" returnvariable="classesNoHours">
-		<cfinvokeargument name="billingStartDate" value="#openAttendanceDate#">
-	</cfinvoke>
-	<cfinvoke component="pcclinks.bill.Report" method="getStudentsNoHours" returnvariable="studentsNoHours">
-		<cfinvokeargument name="billingStartDate" value="#openAttendanceDate#">
-	</cfinvoke>
-	<cfinvoke component="pcclinks.bill.Report" method="getStudentsNoClasses" returnvariable="studentsNoClasses">
-		<cfinvokeargument name="billingStartDate" value="#openAttendanceDate#">
-	</cfinvoke>
-	<cfinvoke component="pcclinks.bill.LookUp" method="getOpenTerms" returnvariable="qryTerms"></cfinvoke>
-	<cfinvoke component="pcclinks.bill.LookUp" method="getOpenAttendanceDates" returnvariable="billingDates"></cfinvoke>
-</cfif>
 
 <style>
 .checkmark{
@@ -47,174 +20,47 @@
 
 <hr>
 <a href="SetUpBilling.cfm?type=Attendance">Set Up Billing</a><br>
-<ul><li><b><cfif LEN(openAttendanceDate)>
-		Billing in Progress: <cfoutput>#DateFormat(openAttendanceDate,'yyyy-mm-dd')#</cfoutput>
+<ul><cfif openAttendanceDates.recordcount GT 0>
+	    <cfloop query="#openAttendanceDates#">
+		<li><b>Billing in Progress: <cfoutput>#DateFormat(billingStartDate,'yyyy-mm-dd')#</cfoutput></b></li>
+		</cfloop>
 		<cfelse>
-		No Billing In Progress
-		</cfif></b>
-	</li>
+		<b>No Billing In Progress</b>
+		</cfif>
 	<li>Last Month Closed: <cfoutput>#DateFormat(lastClosedAttendance.billingStartDate,'yyyy-mm-dd')#</cfoutput></li>
 </ul>
 
-<cfif LEN(openAttendanceDate)>
-
-	<hr>
-	<a href="javascript:showMissingAttrAttendance()" id="missingAttrLinkAttendance">Show Student List Missing Banner Attributes</a>
-	<div id="missingAttrAttendance">
-		<table class="w3-table w3-bordered" id="tableMissingAttr">
-			<thead>
-			<tr>
-				<th>G Number</th>
-				<th>Firstname</th>
-				<th>Lastname</th>
-				<th>Program</th>
-				<th>Status</th>
-			</tr>
-			</thead>
-			<tbody>
-			<cfoutput query="attendanceStudentsNeedingBannerAttr">
-			<tr>
-				<td>#bannerGNumber#</td>
-				<td>#firstname#</td>
-				<td>#lastname#</td>
-				<td>#program#</td>
-				<td>#Status#</td>
-			</tr>
-			</cfoutput>
-			</tbody>
-		</table>
-	</div>
-
-	<hr>
-	<a href="ReportSIDNYComparison.cfm?billingStartDate=<cfoutput>#openAttendanceDate#</cfoutput>" >Check for SIDNY Differences</a><br>
-	<a href="ReportPreviousPeriodComparison.cfm?Type=Attendance&billingStartDate=<cfoutput>#openAttendanceDate#</cfoutput>" >Check for Differences from Previous Month</a><br>
-	<a href="AddScenario.cfm">Attendance Scenarios</a>
-
-	<hr>
-	<a href="AttendanceEntry.cfm">Enter Attendance</a><br>
-	<ul class="circle">
-		<li># students entered: <cfoutput>#attendanceEnteredByStudent.NumStudentsEntered#</cfoutput></li>
-		<li># students with no hours entered: <cfoutput>#attendanceEnteredByStudent.NumStudentsNoHours#</cfoutput>
-		<a href="javascript:showStudents()" id="showStudentsMissingHoursLink">Show Student List with No Hours Entered</a>
-		<div id="studentsMissingHours">
-		<table class="w3-table w3-bordered">
-			<thead>
-			<tr>
-				<th>G Number</th>
-				<th>Firstname</th>
-				<th>Lastname</th>
-			</tr>
-			</thead>
-			<tbody>
-			<cfoutput query="studentsNoHours">
-			<tr>
-				<td>#bannerGNumber#</td>
-				<td>#firstname#</td>
-				<td>#lastname#</td>
-			</tr>
-			</cfoutput>
-			</tbody>
-		</table>
-		<a href="javascript:exportNoHours()" class="button">Export</a>
-		</div>
+<cfif openAttendanceDates.recordcount GT 0>
+	<!-- Tabs -->
+	<ul class="tabs" data-tabs id="attendance-tabs">
+	<cfset i = 0>
+	<cfloop query="#openAttendanceDates#">
+		<li class="tabs-title <cfif i EQ 0>is-active</cfif>">
+			<a href="#attendance<cfoutput>#DateFormat(billingStartDate,'yyyy-mm-dd')#</cfoutput>" <cfif i EQ 0>aria-selected="true"</cfif>>Attendance <cfoutput>#DateFormat(billingStartDate,'yyyy-mm-dd')#</cfoutput></a>
 		</li>
-		<li># students with no classes entered: <cfoutput>#attendanceEnteredByStudent.NumStudentsNoClasses#</cfoutput>
-		<a href="javascript:showStudentsNoClasses()" id="showStudentsMissingClassesLink">Show Student List with No Classes</a>
-		<div id="studentsMissingClasses">
-		<table class="w3-table w3-bordered">
-			<thead>
-			<tr>
-				<th>G Number</th>
-				<th>Firstname</th>
-				<th>Lastname</th>
-			</tr>
-			</thead>
-			<tbody>
-			<cfoutput query="studentsNoClasses">
-			<tr>
-				<td>#bannerGNumber#</td>
-				<td>#firstname#</td>
-				<td>#lastname#</td>
-			</tr>
-			</cfoutput>
-			</tbody>
-		</table>
-		<a href="javascript:exportNoHours()" class="button">Export</a>
-		</div>
-		</li>
-		<li># classes entered: <cfoutput>#attendanceEnteredByClass.NumClassesEntered#</cfoutput></li>
-		<li># classes with no hours entered: <cfoutput>#attendanceEnteredByClass.NumClassesNoHours#</cfoutput>
-			<a href="javascript:showClasses()" id="showClassesLink">Show Class List with No Hours Entered</a>
-			<div id="classesMissingHours">
-				<table class="w3-table w3-bordered">
-					<thead>
-					<tr>
-						<th>Subj</th>
-						<th>Crse</th>
-						<th>CRN</th>
-						<th>Title</th>
-						<th># Students</th>
-					</tr>
-					</thead>
-					<tbody>
-					<cfoutput query="classesNoHours">
-					<tr>
-						<td>#subj#</td>
-						<td>#crse#</td>
-						<td>#crn#</td>
-						<td>#Title#</td>
-						<td>#NumOfStudents#</td>
-					</tr>
-					</cfoutput>
-					</tbody>
-				</table>
-				<a href="javascript:exportNoHours()" class="button">Export</a>
-			</div>
-		</li>
+	    <cfset i = i + 1>
+	</cfloop>
 	</ul>
-	<a href="ReportAttendanceEntry.cfm" >Review Attendance - Summary Report</a><br>
 
-	<hr>
-	<a href="SetExit.cfm" >Set Exit Reason and Dates</a><br>
-
-	<hr>
-	<a href=<cfoutput>"ReportSIDNYComparison.cfm?billingStartDate=#openAttendanceDate#"</cfoutput>>Recheck SIDNY Differences</a><br>
-	<a href="ReportPreviousPeriodComparison.cfm?billingStartDate=<cfoutput>#openAttendanceDate#</cfoutput>&Type=Attendance" >Recheck for Differences from Previous Month</a><br>
-
-	<hr>
-	<a href="javascript:showForm('calculateBillingAttendance');">Generate Calculations</a><br>
-	<!-- CALCULATE BILLING -->
-	<div class="callout" id="calculateBillingAttendance">
-	<p><b>Calculate Billing</b></p>
-	<cfmodule template="calculateBillingInclude.cfm"
-		billingDates = "#billingDates#"
-		qryTerms = "#qryTerms#"
-		billingType = "attendance"
-		openBillingStartDate = "#openAttendanceDate#"
-		divIdName = "calculateBillingAttendance">
+	<!-- tab content -->
+	<div class="tabs-content" data-tabs-content="attendance-tabs">
+	<cfset i = 0>
+	<cfloop query="#openAttendanceDates#">
+		<div class = "tabs-panel <cfif i EQ 0>is-active</cfif>" id="attendance<cfoutput>#DateFormat(billingStartDate,'yyyy-mm-dd')#</cfoutput>">
+    		<cfmodule template="indexAttendanceIncludeByDate.cfm"  openAttendanceDate="#billingStartDate#" >
+  		</div>
+	    <cfset i = i + 1>
+	</cfloop>
 	</div>
-	<div id="billedInfo">
-	<cfmodule template="attendanceBilledInfoInclude.cfm"
-		billingStartDate = "#openAttendanceDate#">
-	</div>
-
-	<hr>
-	<a href="ReportSummary.cfm?type=Attendance">Run Billing Reports</a><br>
-
-	<hr>
-	<a href="javascript:showForm('closeBillingCycleAttendance');">Close Billing Cycle for <cfoutput>#DateFormat(openAttendanceDate,'yyyy-mm-dd')#</cfoutput></a><br>
-	<!-- CLOSE BILLING CYCLE -->
-	<div class="callout" id="closeBillingCycleAttendance">
-	<cfmodule template="closeBillingCycleInclude.cfm"
-		billingDates = "#billingDates#"
-		qryTerms = "#qryTerms#"
-		billingType = "attendance"
-		openBillingStartDate = "#openAttendanceDate#"
-		divIdName = "closeBillingCycleAttendance">
-	</div>
-	<hr>
 </cfif>
 
+<!--- build an array object to be used below to build calls
+  to specific pages / billingDates in javascript below
+--->
+<cfset datePageTagArray = []>
+<cfloop query="openAttendanceDates">
+	<cfset ArrayAppend(datePageTagArray, DateFormat(billingStartDate,"yyyymmdd"))>
+</cfloop>
 
 <script type="text/javascript">
 	var linkStudentMissingHoursShow= "Show Student List with No Hours Entered";
@@ -223,74 +69,82 @@
 	var linkStudentMissingClassesHide = "Hide Student No Classes List";
 	var linkClassTextShow = "Show Class List with No Hours Entered";
 	var linkClassTextHide = "Hide Class List";
-	var linkMissingAttribShowAttendance = "";
-	<cfif isDefined("attendanceStudentsNeedingBannerAttr")>
- 		linkMissingAttribShowAttendance  = "<cfif attendanceStudentsNeedingBannerAttr.recordcount GT 0>Show </cfif><cfoutput>#attendanceStudentsNeedingBannerAttr.recordcount#</cfoutput> Student(s) Missing Banner Attributes."
-	</cfif>
+	<cfloop array="#datePageTagArray#" item="pageTag">
+	var linkMissingAttribShowAttendance<cfoutput>#pageTag#</cfoutput>;
+	</cfloop>
 	var linkMissingAttribHideAttendance  = "Hide Student List Missing Banner Attributes"
 
 	$(document).ready(function() {
-		$('#calculateBillingAttendance').hide();
-		$('#closeBillingCycleAttendance').hide();
-		$('#studentsMissingHours').hide();
-		$('#showStudentsMissingHoursLink').text(linkStudentMissingHoursShow);
-		$('#studentsMissingClasses').hide();
-		$('#showStudentsMissingClassesLink').text(linkStudentMissingClassesShow);
-		$('#classesMissingHours').hide();
-		$('#showClassesLink').text(linkClassTextShow);
-		$('#missingAttrAttendance').hide();
-		$('#missingAttrLinkAttendance').text(linkMissingAttribShowAttendance);
+		<cfloop array="#datePageTagArray#" item="pageTag">
+			$('#missingAttrLinkAttendance<cfoutput>#pageTag#</cfoutput>').text(getLinkMissingAttribText<cfoutput>#pageTag#</cfoutput>());
+		</cfloop>
+		<cfloop array="#datePageTagArray#" item="pageTag">
+			pageStartUp('<cfoutput>#pageTag#</cfoutput>');
+		</cfloop>
+	});
 
-		$('#tableMissingAttr').DataTable({
+	function pageStartUp(pageTag){
+
+		$('#calculateBillingAttendance'+pageTag).hide();
+		$('#closeBillingCycleAttendance'+pageTag).hide();
+		$('#studentsMissingHours'+pageTag).hide();
+		$('#showStudentsMissingHoursLink'+pageTag).text(linkStudentMissingHoursShow);
+		$('#studentsMissingClasses'+pageTag).hide();
+		$('#showStudentsMissingClassesLink'+pageTag).text(linkStudentMissingClassesShow);
+		$('#classesMissingHours'+pageTag).hide();
+		$('#showClassesLink'+pageTag).text(linkClassTextShow);
+		$('#missingAttrAttendance'+pageTag).hide();
+
+		$('#tableMissingAttr'+pageTag).DataTable({
 			dom: '<"top"B>rt<"bottom">',
 			buttons:[{extend: 'csv',
             text: 'export'}],
             paging:false
 		});
 
-	});
-	function rePopulateBillingInfo(){
+	}
+	function rePopulateBillingInfo(openAttendanceDate, pageTag){
 		$.ajax({
-	       	url:'includes/attendanceBilledInfoInclude.cfm?billingStartDate=<cfoutput>#openAttendanceDate#</cfoutput>',
+	       	url:'includes/attendanceBilledInfoInclude.cfm?billingStartDate=openAttendanceDate',
 	       	type: 'get',
 	       	success: function (data, textStatus, jqXHR) {
-	        	$('#billedInfo').html(data);
+	        	$('#billedInfo'+pageTag).html(data);
 	    	},
 			error: function (jqXHR, exception) {
 	      		handleAjaxError(jqXHR, exception);
 			}
 	    });
 	}
-	function showClasses(){
-		if($('#showClassesLink').text() == linkClassTextShow){
-			$('#showClassesLink').text(linkClassTextHide);
-			$('#classesMissingHours').show();
+	function showClasses(pageTag){
+		if($('#showClassesLink'+pageTag).text() == linkClassTextShow){
+			$('#showClassesLink'+pageTag).text(linkClassTextHide);
+			$('#classesMissingHours'+pageTag).show();
 		}else{
-			$('#showClassesLink').text(linkClassTextShow);
-			$('#classesMissingHours').hide();
+			$('#showClassesLink'+pageTag).text(linkClassTextShow);
+			$('#classesMissingHours'+pageTag).hide();
 		}
 	}
-	function showStudents(){
-		if($('#showStudentsMissingHoursLink').text() == linkStudentMissingHoursShow){
-			$('#showStudentsMissingHoursLink').text(linkStudentMissingHoursHide);
-			$('#studentsMissingHours').show();
+	function showStudents(pageTag){
+		if($('#showStudentsMissingHoursLink'+pageTag).text() == linkStudentMissingHoursShow){
+			$('#showStudentsMissingHoursLink'+pageTag).text(linkStudentMissingHoursHide);
+			$('#studentsMissingHours'+pageTag).show();
 		}else{
-			$('#showStudentsMissingHoursLink').text(linkStudentMissingHoursShow);
-			$('#studentsMissingHours').hide();
+			$('#showStudentsMissingHoursLink'+pageTag).text(linkStudentMissingHoursShow);
+			$('#studentsMissingHours'+pageTag).hide();
 		}
 	}
-	function showStudentsNoClasses(){
-		if($('#showStudentsMissingClassesLink').text() == linkStudentMissingClassesShow){
-			$('#showStudentsMissingClassesLink').text(linkStudentMissingClassesHide);
-			$('#studentsMissingClasses').show();
+	function showStudentsNoClasses(pageTag){
+		if($('#showStudentsMissingClassesLink'+pageTag).text() == linkStudentMissingClassesShow){
+			$('#showStudentsMissingClassesLink'+pageTag).text(linkStudentMissingClassesHide);
+			$('#studentsMissingClasses'+pageTag).show();
 		}else{
-			$('#showStudentsMissingClassesLink').text(linkStudentMissingClassesShow);
-			$('#studentsMissingClasses').hide();
+			$('#showStudentsMissingClassesLink'+pageTag).text(linkStudentMissingClassesShow);
+			$('#studentsMissingClasses'+pageTag).hide();
 		}
 	}
-	function exportNoHours(){
+	function exportNoHours(openAttendanceDate){
 		 $.ajax({
-		 	url: 'Report.cfc?method=attendanceEntry&billingStartDate=<cfoutput>#openAttendanceDate#</cfoutput>&noHoursOnly=true',
+		 	url: 'Report.cfc?method=attendanceEntry&billingStartDate=openAttendanceDate&noHoursOnly=true',
 		 	type:'get',
 		 	cache:false,
 		 	success: function(data){
@@ -298,9 +152,9 @@
 		 	}
 		 });
 	}
-	function exportNoClasses(){
+	function exportNoClasses(openAttendanceDate){
 		 $.ajax({
-		 	url: 'Report.cfc?method=attendanceEntry&billingStartDate=<cfoutput>#openAttendanceDate#</cfoutput>&noClassesOnly=true',
+		 	url: 'Report.cfc?method=attendanceEntry&billingStartDate=openAttendanceDate&noClassesOnly=true',
 		 	type:'get',
 		 	cache:false,
 		 	success: function(data){
@@ -308,13 +162,8 @@
 		 	}
 		 });
 	}
-	function showMissingAttrAttendance(){
-		if($('#missingAttrLinkAttendance').text() == linkMissingAttribShowAttendance){
-			$('#missingAttrLinkAttendance').text(linkMissingAttribHideAttendance);
-			$('#missingAttrAttendance').show();
-		}else{
-			$('#missingAttrLinkAttendance').text(linkMissingAttribShowAttendance);
-			$('#missingAttrAttendance').hide();
-		}
+	function showMissingAttrAttendance(pageTag){
+		//dynamic function call to call to specific page
+		window['showMissingAttrAttendance'+pageTag]();
 	}
 </script>

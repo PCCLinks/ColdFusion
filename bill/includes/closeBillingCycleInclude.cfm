@@ -28,7 +28,18 @@
 	<cfset divIdName = "#attributes.divIdName#">
 	<cfset showCancelButton=true>
 </cfif>
+
+<cfparam name="formName" default="">
 <cfset formName = "frmCloseBilling" & billingType>
+<cfif isDefined('attributes.formName')>
+	<cfset formName = "#attributes.formName#">
+</cfif>
+
+<!--- if this page is included on a page with tabs, allows it to be unique --->
+<cfparam name="pageTag" default="">
+<cfif isDefined('attributes.pageTag')>
+	<cfset pageTag = attributes.pageTag>
+</cfif>
 
 <form id=<cfoutput>"#formName#"</cfoutput> action="report.cfc?method=closeBillingCycle" method="post">
 	<input type="hidden" name="billingType" id="billingType" value=<cfoutput>"#billingType#"</cfoutput>>
