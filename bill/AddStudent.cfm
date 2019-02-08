@@ -13,7 +13,7 @@
 	<cfinvoke component="LookUp" method="getOpenTerms" returnvariable="qryOpenTerm"></cfinvoke>
 <cfelse>
 	<cfinvoke component="LookUp" method="getYTDBillingStartDates" returnvariable="qrybillingStartDates"></cfinvoke>
-	<cfinvoke component="LookUp" method="getFirstOpenAttendanceDate" returnvariable="openAttendanceDate"></cfinvoke>
+	<cfinvoke component="LookUp" method="getLastOpenAttendanceDate" returnvariable="openAttendanceDate"></cfinvoke>
 </cfif>
 
 <cfinvoke component="LookUp" method="getPrograms" returnvariable="qryPrograms"></cfinvoke>

@@ -60,7 +60,7 @@
 		</div>
 	<hr>
 	<a href="ReportSIDNYComparison.cfm?billingStartDate=<cfoutput>#openTerms.billingStartDate#</cfoutput>" >Check for SIDNY Differences</a><br>
-	<a href="ReportPreviousPeriodComparison.cfm?billingStartDate=<cfoutput>#openTerms.billingStartDate#</cfoutput>" >Check for Differences from Previous Period</a><br>
+	<a href="ReportPreviousPeriodComparison.cfm?billingStartDate=<cfoutput>#openTerms.billingStartDate#</cfoutput>&type=term" >Check for Differences from Previous Period</a><br>
 	<hr>
 	Program Review of Billing
 	<table class="w3-table w3-bordered">

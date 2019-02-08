@@ -335,6 +335,15 @@
 		</cfquery>
 		<cfreturn data.attendanceBillDate>
 	</cffunction>
+	<cffunction name="getLastOpenAttendanceDate" access="remote" >
+		<cfquery name="data">
+			SELECT max(billingStartDate) attendanceBillDate
+			FROM billingCycle
+			WHERE billingType = 'attendance'
+				and billingCloseDate IS NULL
+		</cfquery>
+		<cfreturn data.attendanceBillDate>
+	</cffunction>
 	<cffunction name="getFirstOpenAttendanceDateorLastClosed" access="remote" >
 		<cfquery name="data">
 			SELECT min(billingStartDate) attendanceBillDate

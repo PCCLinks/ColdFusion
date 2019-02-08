@@ -872,6 +872,11 @@
 											from billingCycle
 											where #sqlLimitField# = <cfqueryparam value="#argField#">
 												and billingType=<cfqueryparam value="#arguments.billingType#">)
+				and contactRecordStart < (select distinct billingEndDate
+											from billingCycle
+											where #sqlLimitField# = <cfqueryparam value="#argField#">
+												and billingType=<cfqueryparam value="#arguments.billingType#">)
+
 		</cfquery>
 		<cfquery name="combined" dbtype="query">
 			select bannerGNumber, firstname, lastname, program, status
