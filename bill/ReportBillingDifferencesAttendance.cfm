@@ -2,7 +2,8 @@
 
 <cfinvoke component="Report" method="getBillingDifferencesAttendance" returnvariable="data"></cfinvoke>
 
-<cfset maxMonth = data.adjMaxMonth>
+<!--- adjusted month to show order for program year ie. June - Dec - May, Jan = 101, Feb 102 etc --->
+<cfset adjMaxMonth = data.adjMaxMonth>
 <cfinvoke component="Lookup" method="getCurrentProgramYear" returnvariable="programyear"></cfinvoke>
 
 <div class="callout primary"><b><p>Billing Differences Report</p></b>
@@ -21,37 +22,37 @@
 			<th style="border-bottom-style:solid">Student</th>
 			<th style="border-bottom-style:solid">G Number</th>
 			<th style="border-bottom-style:solid">Jun</th>
-			<cfif maxMonth GT 6 >
+			<cfif adjMaxMonth GT 7 >
 			<th style="border-bottom-style:solid">Jul</th>
 			</cfif>
-			<cfif maxMonth GT 7 >
+			<cfif adjMaxMonth GT 8 >
 			<th style="border-bottom-style:solid">Aug</th>
 			</cfif>
-			<cfif maxMonth GT 8 >
+			<cfif adjMaxMonth GT 9 >
 			<th style="border-bottom-style:solid">Sept</th>
 			</cfif>
-			<cfif maxMonth GT 9 >
+			<cfif adjMaxMonth GT 10 >
 			<th style="border-bottom-style:solid">Oct</th>
 			</cfif>
-			<cfif maxMonth GT 10 >
+			<cfif adjMaxMonth GT 11 >
 			<th style="border-bottom-style:solid">Nov</th>
 			</cfif>
-			<cfif maxMonth GT 11 >
+			<cfif adjMaxMonth GT 12 >
 			<th style="border-bottom-style:solid">Dec</th>
 			</cfif>
-			<cfif maxMonth GT 12 >
+			<cfif adjMaxMonth GT 101 >
 			<th style="border-bottom-style:solid">Jan</th>
 			</cfif>
-			<cfif maxMonth GT 21 >
+			<cfif adjMaxMonth GT 102 >
 			<th style="border-bottom-style:solid">Feb</th>
 			</cfif>
-			<cfif maxMonth GT 22 >
+			<cfif adjMaxMonth GT 103 >
 			<th style="border-bottom-style:solid">Mar</th>
 			</cfif>
-			<cfif maxMonth GT 23 >
+			<cfif adjMaxMonth GT 104 >
 			<th style="border-bottom-style:solid">Apr</th>
 			</cfif>
-			<cfif maxMonth GT 24 >
+			<cfif adjMaxMonth GT 105 >
 			<th style="border-bottom-style:solid">May</th>
 			</cfif>
 		</tr>
@@ -64,37 +65,37 @@
 			<td style="text-align:left">#firstname# #lastname#</td>
 			<td style="text-align:left">#bannerGNumber#</td>
 			<td><a href="javascript:showDetails('#bannerGNumber#', 6)">#June#</a></td>
-			<cfif maxMonth GT 6 >
+			<cfif adjMaxMonth GT 7 >
 			<td><a href="javascript:showDetails('#bannerGNumber#', 7)">#July#</a></td>
 			</cfif>
-			<cfif maxMonth GT 7 >
+			<cfif adjMaxMonth GT 8 >
 			<td><a href="javascript:showDetails('#bannerGNumber#', 8)">#August#</a></td>
 			</cfif>
-			<cfif maxMonth GT 8 >
+			<cfif adjMaxMonth GT 9 >
 			<td><a href="javascript:showDetails('#bannerGNumber#', 9)">#September#</a></td>
 			</cfif>
-			<cfif maxMonth GT 9 >
+			<cfif adjMaxMonth GT 10 >
 			<td><a href="javascript:showDetails('#bannerGNumber#', 10)">#October#</a></td>
 			</cfif>
-			<cfif maxMonth GT 10 >
+			<cfif adjMaxMonth GT 11 >
 			<td><a href="javascript:showDetails('#bannerGNumber#', 11)">#November#</a></td>
 			</cfif>
-			<cfif maxMonth GT 11 >
+			<cfif adjMaxMonth GT 12 >
 			<td><a href="javascript:showDetails('#bannerGNumber#', 12)">#December#</a></td>
 			</cfif>
-			<cfif maxMonth GT 12 >
+			<cfif adjMaxMonth GT 101 >
 			<td><a href="javascript:showDetails('#bannerGNumber#', 1)">#January#</a></td>
 			</cfif>
-			<cfif maxMonth GT 21 >
+			<cfif adjMaxMonth GT 102 >
 			<td><a href="javascript:showDetails('#bannerGNumber#', 2)">#February#</a></td>
 			</cfif>
-			<cfif maxMonth GT 122 >
+			<cfif adjMaxMonth GT 103 >
 			<td><a href="javascript:showDetails('#bannerGNumber#', 3)">#March#</a></td>
 			</cfif>
-			<cfif maxMonth GT 23 >
+			<cfif adjMaxMonth GT 104 >
 			<td><a href="javascript:showDetails('#bannerGNumber#', 4)">#April#</a></td>
 			</cfif>
-			<cfif maxMonth GT 24 >
+			<cfif adjMaxMonth GT 105 >
 			<td><a href="javascript:showDetails('#bannerGNumber#', 5)">#May#</a></td>
 			</cfif>
 		</tr>
@@ -124,7 +125,7 @@
 		} );
 
 		function updateHeader(){
-			$.get('Report.cfc?method=getLastBillingGeneratedMessage&includeTitle=false&billingType=attendance&programYear=<cfoutput>#programyear#</cfoutput>', function(data){
+			$.get('Report.cfc?method=getLastBillingGeneratedMessage&includeTitle=false&includeCorrections=false&billingType=attendance&programYear=<cfoutput>#programyear#</cfoutput>', function(data){
 				$('#heading').html(data);
 			});
 		}

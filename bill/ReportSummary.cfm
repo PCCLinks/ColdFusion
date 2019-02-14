@@ -9,10 +9,8 @@
 <cfif url.type EQ 'Term'>
 	<cfinvoke component="pcclinks.bill.LookUp" method="getOpenTerms" returnvariable="openTerms"></cfinvoke>
 	<cfset openBillingStartDate = openTerms.billingStartDate>
-	<cfinvoke component="pcclinks.bill.Report" method="getStudentDiffCountTerm" returnVariable="correctionCount">
 <cfelse>
 	<cfinvoke component="pcclinks.bill.LookUp" method="getFirstOpenAttendanceDate" returnvariable="openBillingStartDate"></cfinvoke>
-	<cfinvoke component="pcclinks.bill.Report" method="getStudentDiffCountAttendance" returnVariable="correctionCount">
 </cfif>
 <cfinvoke component="Lookup" method="getCurrentProgramYear" returnvariable="currentProgramYear"></cfinvoke>
 
@@ -42,19 +40,10 @@ h4{
 </div>
 <div class="row">
 	<div class="small-6 columns">
-			<div class="row">
-				<div id="heading" class="small-12 columns"></div>
-			</div>
-			<cfif correctionCount GT 0>
-			<div class="row">
-				<div class="small-12 columns">
-					<div class="callout primary">
-						<b>Corrections exist for previous months.</b> View <a href="<cfif url.type EQ 'Term'>reportBillingDifferencesTerm.cfm<cfelse>reportBillingDifferencesAttendance.cfm</cfif>">here</a>
-					</div>
-				</div>
-			</div>
-			</cfif>
+		<div class="row">
+			<div id="heading" class="small-12 columns"></div>
 		</div>
+	</div>
 	<div class="small-6 columns">
 			<div class="row">
 				<div class="small-12 columns">
@@ -111,15 +100,20 @@ h4{
 	}
 	function saveValues(formName){
 	 	var $form = $('#'+formName);
+	 	$('#saveMessage'+formName).html("Generating report...will take a minute....");
+	 	$('#saveMessage'+formName).css("color", "red");
+	 	document.body.style.cursor = 'wait';
 	    $.ajax({
 	       	url:$form.attr('action'),
 	       	type: 'POST',
 	       	data: $form.serialize(),
 	       	success: function (data, textStatus, jqXHR) {
 				refresh(true, formName);
+	 			document.body.style.cursor = 'default';
 	    	},
 			error: function (jqXHR, exception) {
 	      		handleAjaxError(jqXHR, exception);
+	 			document.body.style.cursor = 'default';
 			},
 	    });
 	}
