@@ -36,6 +36,7 @@
 			<th>Decree Declared</th>
 			<th>EFC</th>
 			<th>Foster Care Y/N</th>
+			<th>Workforce Connect Y/N</th>
 		</tr>
 	</thead>
 	<tfoot>
@@ -71,6 +72,7 @@
 			<th><input type="text" placeholder="Decree Declared" id="P_DEGREE" /></th>
 			<th><input type="text" placeholder="EFC" id="EFC" /></th>
 			<th><input type="text" placeholder="Foster Care Y/N" id="FosterCareYN" /></th>
+			<th><input type="text" placeholder="Workforce Connect Y/N" id="WorkforceConnectYN" /></th>
 		</tr>
 	</tfoot>
 	<tbody>
@@ -91,7 +93,7 @@ function loadReport(){
 			}
 		},
 		language:{ processing: "<img src='images/ajax-loader.gif' height=35 width=35 style='opacity:0.5;'>&nbsp;&nbsp;Loading data..."},
-		columnDefs:[{targets:[6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30], visible:false}],
+		columnDefs:[{targets:[6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30,31], visible:false}],
 		dom: '<"top"iB>rt<"bottom"lp>',
 		buttons: [
 

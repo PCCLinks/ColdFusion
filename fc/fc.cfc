@@ -502,7 +502,7 @@ all the banner queries need to force a distinct by PIDM
 
 			FROM futureConnect
 				LEFT JOIN futureConnectApplication
-					on futureConnect.bannerGNumber = futureConnectApplication.StudentID
+					on futureConnect.bannerGNumber = futureConnectApplication.bannerGNumber
 						and futureConnectApplication.activeFlag = 1
 				LEFT JOIN (
 					select contactID, max(noteDateAdded) as lastContactDate
@@ -550,6 +550,7 @@ all the banner queries need to force a distinct by PIDM
 			, futureConnect_bannerPerson.preferredName
 			, futureConnect_bannerPerson.gender
 			, futureConnect_bannerPerson.REP_RACE
+			<!--- note this is coming from the original application, and not banner --->
 			, futureConnect_bannerPerson.HighSchool
 			, futureConnect_bannerPerson.parentalStatus
 			, futureConnect_bannerPerson.careerPlan
@@ -597,11 +598,15 @@ all the banner queries need to force a distinct by PIDM
 	<cffunction name="getReportList" access="remote" returnType="query" returnformat="json">
 		<cfset caseloaddata = getCaseload()>
 
-		<cfquery name="fosterCare" >
-			select fc.contactID, CASE WHEN lsc.contactID IS NULL THEN 'N' ELSE 'Y' END FosterCareYN
+		<cfquery name="additionalColumns" >
+			select fc.contactID
+				,CASE WHEN lsc.contactID IS NULL THEN 'N' ELSE 'Y' END FosterCareYN
+				,CASE WHEN epc.contactID IS NULL THEN 'N' ELSE 'Y' END WorkforceConnectYN
 			from futureConnect fc
 				left outer join livingSituationContact lsc
 					on fc.contactID = lsc.contactID and livingSituationID = 3
+				left outer join enrichmentProgramContact epc
+					on fc.contactID = epc.contactID and enrichmentProgramID = 16
 		</cfquery>
 
 		<cfquery dbtype="query" name="qryData" >
@@ -616,6 +621,7 @@ all the banner queries need to force a distinct by PIDM
 			,O_EARNED
 			,gender
 			,REP_RACE
+			<!--- note this is coming from the application and not banner --->
 			,HighSchool
 			,parentalStatus
 			,careerPlan
@@ -636,8 +642,9 @@ all the banner queries need to force a distinct by PIDM
 		    ,P_DEGREE
 		    ,EFC
 		    ,FosterCareYN
-			from caseloaddata, fosterCare
-			where caseloaddata.contactID = fosterCare.contactID
+		    ,WorkforceConnectYN
+			from caseloaddata, additionalColumns
+			where caseloaddata.contactID = additionalColumns.contactID
 		</cfquery>
 
 		<cfreturn qryData>
