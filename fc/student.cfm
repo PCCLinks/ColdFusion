@@ -71,7 +71,6 @@ function loadStudent(pidm, maxTerm, doSave){
 		data: {'method':'getMaxRegistration','pidm': pidm, 'maxterm': maxTerm},
 		success: function(data){
 			termData = jQuery.parseJSON(data);
-
 			//create a mapping of columns for use
 			var colMap = new Object();
 			for(var i = 0; i < termData.COLUMNS.length; i++) {
@@ -165,8 +164,7 @@ function loadStudent_panelDashboard_studentCharts(pidm, cohort, bannerGNumber){
 		        handleAjaxError(xhr, textStatus, thrownError);
 		},
 		success:function(data){
-			data = data.substring(1,data.length-1);
-			termArray = data.split(",");
+			termArray = JSON.parse(data).toString().split(',');
 			loadStudentCharts_GPA(bannerGNumber, termArray);
 			loadStudentCharts_Credits(bannerGNumber, termArray);
 		}
@@ -183,8 +181,7 @@ function loadStudentCharts_GPA(bannerGNumber, termArray){
 		        handleAjaxError(xhr, textStatus, thrownError);
 		},
 		success:function(data){
-			data = data.substring(1,data.length-1);
-			gPAArray = data.split(",");
+			gPAArray = JSON.parse(data).toString().split(',');
 			buildStudentChart('line', termArray, gPAArray, 'graphGPA', 'rgba(144, 103, 167, 1.0)', 'rgba(144, 103, 167, 1.0)', 4, 0.5);
 		}
 	});
@@ -200,14 +197,17 @@ function loadStudentCharts_Credits(bannerGNumber, termArray){
 		        handleAjaxError(xhr, textStatus, thrownError);
 		},
 		success:function(data){
-			data = data.substring(1,data.length-1);
-			creditsEarnedArray = data.split(",");
+			creditsEarnedArray = JSON.parse(data).toString().split(',');
 			buildStudentChart('bar', termArray, creditsEarnedArray, 'graphCreditsEarned', 'rgba(144, 103, 167, 1.0)', 'rgba(144, 103, 167, 1.0)', 30, 5);
 		}
 	});
 }
 
 function buildStudentChart(type, labels, data, ctx, bgcolors, bcolors, yAxesMax, yAxesStep){
+	var offset = false;
+	if(labels.length == 1 || type == "bar"){
+		offset = true;
+	}
 	var myChart = new Chart(ctx, {
 		type: type,
 		data: {
@@ -230,6 +230,7 @@ function buildStudentChart(type, labels, data, ctx, bgcolors, bcolors, yAxesMax,
 			   xAxes: [{
 			        gridLines: {
 			            display: false,
+			            offsetGridLines: offset,
 			        }
 			    }], //end xAxis
 			    yAxes: [{
@@ -330,6 +331,7 @@ function addZero($time) {
   }
   return $time;
 }
+
 
 
 </script>

@@ -679,6 +679,11 @@ all the banner queries need to force a distinct by PIDM
 
 	<cffunction name="getStudentTermMetrics" access="remote" returntype="query">
 		<cfargument name="bannerGNumber" required="yes" >
+		<cfquery name="currentTerm">
+			SELECT Term
+			FROM sidny.bannerCalendar
+			WHERE now() between TermBeginDate and TermEndDate
+		</cfquery>
 		<cfset termData = getTermData()>
 		<cfquery name="StudentTermMetrics" dbtype="query">
 			SELECT  STU_ID
@@ -687,6 +692,7 @@ all the banner queries need to force a distinct by PIDM
 				, T_EARNED
 			FROM termData
 			WHERE STU_ID = <cfqueryparam  value="#arguments.bannerGNumber#">
+			  AND Term < #currentTerm.Term#
 			ORDER BY TERM ASC
 		</cfquery>
 		<cfset appObj.logEntry(value="finished getStudentTermMetrics", level=2)>
